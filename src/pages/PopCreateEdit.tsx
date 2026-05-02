@@ -352,6 +352,39 @@ const PopCreateEdit = () => {
                             </SelectContent>
                           </Select>
                         </div>
+                        <div className="space-y-1 md:col-span-2">
+                          <Label>Arquivo</Label>
+                          {m.url ? (
+                            <div className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/30 p-2 text-xs">
+                              {m.tipo === "imagem" && (
+                                <img src={m.url} alt={m.nome} className="h-12 w-12 rounded object-cover" />
+                              )}
+                              <a href={m.url} target="_blank" rel="noreferrer" className="font-medium text-primary underline">
+                                {m.nome || "Abrir arquivo"}
+                              </a>
+                              <label className="ml-auto cursor-pointer text-xs text-muted-foreground underline">
+                                Substituir
+                                <input
+                                  type="file"
+                                  className="hidden"
+                                  accept={acceptByTipo[m.tipo]}
+                                  onChange={(e) => e.target.files?.[0] && uploadMidiaFile(m.uid, e.target.files[0])}
+                                />
+                              </label>
+                            </div>
+                          ) : (
+                            <Input
+                              type="file"
+                              accept={acceptByTipo[m.tipo]}
+                              disabled={m.uploading}
+                              onChange={(e) => e.target.files?.[0] && uploadMidiaFile(m.uid, e.target.files[0])}
+                            />
+                          )}
+                          {m.uploading && <p className="text-xs text-muted-foreground">Enviando…</p>}
+                          {!m.url && !m.uploading && (
+                            <p className="text-xs text-muted-foreground">Sem arquivo enviado. A referência inline aparecerá, mas sem visualização.</p>
+                          )}
+                        </div>
                         <div className="md:col-span-2"><Button variant="destructive" size="sm" onClick={() => removeMidia(m.uid)}>Remover</Button></div>
                       </CardContent>
                     </Card>
