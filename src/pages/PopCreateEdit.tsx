@@ -118,6 +118,7 @@ const PopCreateEdit = () => {
       referencia: m.referencia,
       etapaOrdem: m.etapa_id ? ordemPorEtapaId.get(m.etapa_id) ?? null : null,
       ordem: m.ordem,
+      url: m.url ?? null,
     })));
   }, [isEdit, popData]);
 
