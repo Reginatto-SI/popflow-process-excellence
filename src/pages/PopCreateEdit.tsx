@@ -187,6 +187,7 @@ const PopCreateEdit = () => {
       nome: m.nome,
       tipo: m.tipo,
       ordem: m.ordem,
+      url: m.url,
     })),
   });
 
