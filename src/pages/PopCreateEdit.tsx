@@ -21,6 +21,8 @@ import {
   type PopMidiaTipo,
   type PopVisibilidade,
 } from "@/hooks/usePops";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 type TabKey = "informacoes" | "etapas" | "midias" | "revisao";
 
