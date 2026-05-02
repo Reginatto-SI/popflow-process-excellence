@@ -189,19 +189,42 @@ const PopCreateEdit = () => {
     setSteps(next);
   };
 
-  const addMidia = () =>
+  const addMidia = () => {
+    const newUid = uid();
+    const n = midias.length + 1;
     setMidias([...midias, {
-      uid: uid(),
-      tipo: "documento",
-      nome: `Anexo ${midias.length + 1}`,
-      referencia: `midia${midias.length + 1}`,
+      uid: newUid,
+      tipo: "imagem",
+      nome: `Anexo ${n}`,
+      referencia: `midia-${n}`,
       etapaOrdem: null,
-      ordem: midias.length + 1,
+      ordem: n,
       url: null,
+      refTouched: false,
     }]);
+    setExpandedMidiaUid(newUid);
+  };
 
-  const updateMidia = (uidM: string, field: keyof Omit<MidiaItem, "uid" | "ordem">, value: string | number | null) =>
-    setMidias((prev) => prev.map((m) => (m.uid === uidM ? { ...m, [field]: value } as MidiaItem : m)));
+  const updateMidia = (
+    uidM: string,
+    field: keyof Omit<MidiaItem, "uid" | "ordem">,
+    value: string | number | null,
+  ) =>
+    setMidias((prev) => prev.map((m) => {
+      if (m.uid !== uidM) return m;
+      // Edição manual da referência → sanitiza e marca como tocada
+      if (field === "referencia") {
+        return { ...m, referencia: slugifyRef(String(value ?? "")), refTouched: true };
+      }
+      // Auto-gera referência a partir do nome enquanto o usuário não a editou manualmente
+      if (field === "nome") {
+        const nextNome = String(value ?? "");
+        const next: MidiaItem = { ...m, nome: nextNome };
+        if (!m.refTouched) next.referencia = slugifyRef(nextNome) || m.referencia;
+        return next;
+      }
+      return { ...m, [field]: value } as MidiaItem;
+    }));
 
   const removeMidia = (uidM: string) => setMidias((prev) => prev.filter((m) => m.uid !== uidM));
 
