@@ -143,6 +143,7 @@ export interface MidiaInput {
   nome: string;
   tipo: PopMidiaTipo;
   ordem: number;
+  url?: string | null;
 }
 
 export interface CreatePopInput {
