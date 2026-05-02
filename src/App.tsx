@@ -7,6 +7,7 @@ import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import PopsList from "./pages/PopsList.tsx";
 import PopCreateEdit from "./pages/PopCreateEdit.tsx";
+import PopDetail from "./pages/PopDetail.tsx";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +21,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/pops" element={<PopsList />} />
           <Route path="/pops/novo" element={<PopCreateEdit />} />
+          <Route path="/pops/:id" element={<PopDetail />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
