@@ -191,3 +191,14 @@ Permitindo:
 - Auto-complete inteligente
 - Histórico de buscas
 - Recomendações baseadas em uso
+
+---
+
+## 🎯 Referência de Protótipo
+
+Tela(s) relacionadas:
+
+- [01-dashboard-popflow.html] — Busca global no topo
+- [02-listagem-de-pops-popflow.html] — Busca de procedimentos
+- [03-detalhe-do-pop-popflow.html] — Acesso ao conteúdo do POP
+

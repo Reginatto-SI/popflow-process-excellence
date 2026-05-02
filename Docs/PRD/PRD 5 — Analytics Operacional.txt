@@ -214,3 +214,12 @@ Permitindo:
 - Sugestões de melhoria via IA
 - Benchmark entre empresas
 - Previsão de tempo de execução
+
+---
+
+## 🎯 Referência de Protótipo
+
+Tela(s) relacionadas:
+
+- [10-analytics-popflow.html] — Painel de indicadores operacionais
+

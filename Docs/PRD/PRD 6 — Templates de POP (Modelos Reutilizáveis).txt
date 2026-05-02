@@ -190,3 +190,12 @@ Permitindo:
 - Templates por nicho (contabilidade, fiscal, RH)
 - Recomendação de templates por IA
 - Marketplace de processos
+
+---
+
+## 🎯 Referência de Protótipo
+
+Tela(s) relacionadas:
+
+- [08-biblioteca-de-templates-popflow.html] — Biblioteca e uso de templates
+

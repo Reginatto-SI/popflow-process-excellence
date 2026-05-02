@@ -211,3 +211,12 @@ Permitindo:
 - Alertas inteligentes com IA
 - Automação de fluxos
 - Regras personalizadas por empresa
+
+---
+
+## 🎯 Referência de Protótipo
+
+Tela(s) relacionadas:
+
+- [11-notificacoes-popflow.html] — Central de notificações e alertas
+

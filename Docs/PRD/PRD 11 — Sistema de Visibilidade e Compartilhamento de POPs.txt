@@ -234,3 +234,14 @@ Permitindo:
 - Compartilhamento com usuários específicos
 - Permissões por POP
 - Biblioteca pública de processos
+
+---
+
+## 🎯 Referência de Protótipo
+
+Tela(s) relacionadas:
+
+- [02-listagem-de-pops-popflow.html] — Visão geral e status dos POPs
+- [03-detalhe-do-pop-popflow.html] — Detalhes e metadados de visibilidade
+- [04-criar-pop-popflow.html] — Configuração de dados do POP no fluxo de criação
+

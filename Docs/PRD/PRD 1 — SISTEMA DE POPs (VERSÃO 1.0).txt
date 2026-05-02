@@ -201,3 +201,15 @@ Criar um sistema onde:
 Esse PRD já está pronto pra você usar no Lovable como **Knowledge Base**, exatamente como a documentação recomenda 
 
 ---
+
+---
+
+## 🎯 Referência de Protótipo
+
+Tela(s) relacionadas:
+
+- [01-dashboard-popflow.html] — Dashboard geral
+- [02-listagem-de-pops-popflow.html] — Listagem de POPs
+- [03-detalhe-do-pop-popflow.html] — Detalhe do POP
+- [04-criar-pop-popflow.html] — Criação e edição de POP
+

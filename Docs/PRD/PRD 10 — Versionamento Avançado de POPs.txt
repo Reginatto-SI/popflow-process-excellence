@@ -238,3 +238,12 @@ Permitindo:
 - Aprovação obrigatória de versões
 - Logs detalhados de alterações
 - Timeline de mudanças
+
+---
+
+## 🎯 Referência de Protótipo
+
+Tela(s) relacionadas:
+
+- [07-historico-de-versoes-popflow.html] — Histórico e comparação de versões
+
