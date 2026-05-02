@@ -98,18 +98,20 @@ const PopsList = () => {
   };
 
   const handleNavigateToPop = (id: string) => {
-    void id;
-    // TODO(Lovable): integrar com router (Lovable) para navegação real para /pops/:id.
+    navigate(`/pops/${id}`);
   };
 
   const handlePopAction = (id: string, action: "visualizar" | "editar" | "excluir") => {
     // TODO(Lovable): aplicar permissões por role antes de executar ações sensíveis como editar/excluir.
-    if (action === "visualizar" || action === "editar") {
+    if (action === "visualizar") {
       handleNavigateToPop(id);
+    }
+
+    if (action === "editar") {
+      navigate(`/pops/${id}/editar`);
     }
   };
 
-  // TODO(Lovable): integrar navegação real com router para /pops/:id e manter validação de permissões por role nas ações.
   // TODO(Lovable): paginação real deve usar page/pageSize e totalCount retornados pelo backend.
   // TODO(Lovable): aplicar escopo por empresa_id (multi-tenant) nas consultas e nas regras de visibilidade por empresa.
 
