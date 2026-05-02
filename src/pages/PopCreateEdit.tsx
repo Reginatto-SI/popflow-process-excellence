@@ -23,6 +23,7 @@ import {
 } from "@/hooks/usePops";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { MediaMentionTextarea } from "@/components/MediaMentionTextarea";
 
 type TabKey = "informacoes" | "etapas" | "midias" | "revisao";
 
