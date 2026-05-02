@@ -359,7 +359,7 @@ const PopCreateEdit = () => {
                       <CardContent className="grid gap-3 p-4 md:grid-cols-2">
                         <div className="space-y-1"><Label>Título da etapa</Label><Input value={step.titulo} onChange={(e) => updateStep(step.uid, "titulo", e.target.value)} /></div>
                         <div className="space-y-1"><Label>Tempo estimado</Label><Input value={step.tempo} onChange={(e) => updateStep(step.uid, "tempo", e.target.value)} /></div>
-                        <div className="space-y-1 md:col-span-2"><Label>Descrição (digite @ para inserir uma mídia cadastrada)</Label><MediaMentionTextarea value={step.descricao} onChange={(v) => updateStep(step.uid, "descricao", v)} midias={midias.map((m) => ({ referencia: m.referencia, nome: m.nome, tipo: m.tipo }))} rows={2} /></div>
+                        <div className="space-y-1 md:col-span-2"><Label>Descrição (digite @ para inserir uma mídia cadastrada)</Label><MediaMentionTextarea value={step.descricao} onChange={(v) => updateStep(step.uid, "descricao", v)} midias={midias.map((m) => ({ referencia: m.referencia, nome: m.nome, tipo: m.tipo }))} rows={5} /></div>
                         <div className="space-y-1"><Label>Resultado esperado</Label><Input value={step.resultadoEsperado} onChange={(e) => updateStep(step.uid, "resultadoEsperado", e.target.value)} /></div>
                         <div className="space-y-1"><Label>Erro comum</Label><Input value={step.erroComum} onChange={(e) => updateStep(step.uid, "erroComum", e.target.value)} /></div>
                         <div className="space-y-1"><Label>Pré-requisito</Label><Input value={step.preRequisito} onChange={(e) => updateStep(step.uid, "preRequisito", e.target.value)} /></div>
