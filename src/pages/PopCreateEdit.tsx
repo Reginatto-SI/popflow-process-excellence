@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Building2, FileText, Image, Mic, Shield, User, Video } from "lucide-react";
 
 import { AppLayout } from "@/components/AppLayout";
@@ -10,12 +11,39 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
+import {
+  usePop,
+  useCreatePop,
+  useUpdatePop,
+  type ChecklistItem,
+  type CreatePopInput,
+  type PopMidiaTipo,
+  type PopVisibilidade,
+} from "@/hooks/usePops";
 
 type TabKey = "informacoes" | "etapas" | "midias" | "revisao";
-type Visibilidade = "privado" | "empresa";
 
-type StepItem = { id: number; titulo: string; descricao: string; tempo: string; resultadoEsperado: string; erroComum: string; preRequisito: string; checklist: string };
-type MidiaItem = { id: number; tipo: "Imagem" | "Áudio" | "Vídeo" | "Documento/PDF"; nome: string; referencia: string; etapaVinculada: string };
+interface StepItem {
+  uid: string; // local
+  ordem: number;
+  titulo: string;
+  descricao: string;
+  tempo: string;
+  resultadoEsperado: string;
+  erroComum: string;
+  preRequisito: string;
+  checklist: string; // texto separado por ; — convertemos antes de salvar
+}
+
+interface MidiaItem {
+  uid: string;
+  tipo: PopMidiaTipo;
+  nome: string;
+  referencia: string;
+  etapaOrdem: number | null;
+  ordem: number;
+}
 
 const tabs: { key: TabKey; label: string }[] = [
   { key: "informacoes", label: "Informações Gerais" },
@@ -24,126 +52,303 @@ const tabs: { key: TabKey; label: string }[] = [
   { key: "revisao", label: "Revisão Final" },
 ];
 
-// MOCK: dados temporários usados apenas para montar a interface.
-// TODO(Lovable): substituir por dados reais do banco quando a estrutura estiver criada.
-const defaultSteps: StepItem[] = [
-  { id: 1, titulo: "Preparar ambiente", descricao: "Separar materiais e validar limpeza do local.", tempo: "10 min", resultadoEsperado: "Ambiente pronto para execução", erroComum: "Iniciar sem checklist", preRequisito: "Checklist de materiais concluído", checklist: "Mesa limpa; Equipamentos ligados" },
-  { id: 2, titulo: "Executar procedimento", descricao: "Realizar etapa principal conforme padrão interno.", tempo: "20 min", resultadoEsperado: "Execução sem retrabalho", erroComum: "Pular validação intermediária", preRequisito: "Aprovação do responsável", checklist: "Conferir parâmetros; Registrar evidências" },
-];
+const tipoLabel: Record<PopMidiaTipo, string> = {
+  imagem: "Imagem",
+  audio: "Áudio",
+  video: "Vídeo",
+  documento: "Documento/PDF",
+};
 
-// MOCK: mídias de demonstração com referência inline @midiaX.
-const defaultMidias: MidiaItem[] = [
-  { id: 1, tipo: "Imagem", nome: "Foto do setup inicial", referencia: "@midia1", etapaVinculada: "Etapa 1" },
-  { id: 2, tipo: "Vídeo", nome: "Demonstração de execução", referencia: "@midia2", etapaVinculada: "Etapa 2" },
-];
+const uid = () => Math.random().toString(36).slice(2, 10);
+
+const checklistFromString = (s: string): ChecklistItem[] =>
+  s.split(";").map((t) => t.trim()).filter(Boolean).map((texto) => ({ id: crypto.randomUUID(), texto }));
+
+const checklistToString = (items: ChecklistItem[]): string => items.map((i) => i.texto).join("; ");
 
 const PopCreateEdit = () => {
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const isEdit = !!id;
+  const { data: popData, isLoading } = usePop(id);
+  const createPop = useCreatePop();
+  const updatePop = useUpdatePop();
+
   const [activeTab, setActiveTab] = useState<TabKey>("informacoes");
-  const [titulo, setTitulo] = useState("POP de abertura operacional");
-  const [descricao, setDescricao] = useState("Procedimento padrão para abertura da unidade com foco em segurança e qualidade.");
-  const [departamento, setDepartamento] = useState("Operações");
-  const [responsavel, setResponsavel] = useState("Ana Lima");
-  const [visibilidade, setVisibilidade] = useState<Visibilidade>("empresa");
-  const [steps, setSteps] = useState<StepItem[]>(defaultSteps);
-  const [midias, setMidias] = useState<MidiaItem[]>(defaultMidias);
+  const [titulo, setTitulo] = useState("");
+  const [descricao, setDescricao] = useState("");
+  const [departamento, setDepartamento] = useState("");
+  const [responsavel, setResponsavel] = useState("");
+  const [visibilidade, setVisibilidade] = useState<PopVisibilidade>("empresa");
+  const [steps, setSteps] = useState<StepItem[]>([
+    { uid: uid(), ordem: 1, titulo: "Nova etapa 1", descricao: "", tempo: "5 min", resultadoEsperado: "", erroComum: "", preRequisito: "", checklist: "" },
+  ]);
+  const [midias, setMidias] = useState<MidiaItem[]>([]);
 
-  const currentTabIndex = tabs.findIndex((tab) => tab.key === activeTab);
-  const tempoEstimado = useMemo(() => `${steps.reduce((acc, step) => acc + Number(step.tempo.replace(/\D/g, "") || 0), 0)} min`, [steps]);
+  // Carregar dados em modo edição
+  useEffect(() => {
+    if (!isEdit || !popData) return;
+    setTitulo(popData.titulo);
+    setDescricao(popData.descricao);
+    setDepartamento(popData.departamento);
+    setResponsavel(popData.responsavel);
+    setVisibilidade(popData.visibilidade);
+    const etapas = popData.versao_ativa?.etapas ?? [];
+    setSteps(etapas.map((e) => ({
+      uid: e.id,
+      ordem: e.ordem,
+      titulo: e.titulo,
+      descricao: e.descricao,
+      tempo: e.tempo_estimado,
+      resultadoEsperado: e.resultado_esperado,
+      erroComum: e.erro_comum,
+      preRequisito: e.pre_requisito,
+      checklist: checklistToString(e.checklist ?? []),
+    })));
+    const ms = popData.versao_ativa?.midias ?? [];
+    const ordemPorEtapaId = new Map(etapas.map((e) => [e.id, e.ordem]));
+    setMidias(ms.map((m) => ({
+      uid: m.id,
+      tipo: m.tipo,
+      nome: m.nome,
+      referencia: m.referencia,
+      etapaOrdem: m.etapa_id ? ordemPorEtapaId.get(m.etapa_id) ?? null : null,
+      ordem: m.ordem,
+    })));
+  }, [isEdit, popData]);
 
-  const updateStep = (id: number, field: keyof Omit<StepItem, "id">, value: string) => setSteps((prev) => prev.map((step) => (step.id === id ? { ...step, [field]: value } : step)));
+  const currentTabIndex = tabs.findIndex((t) => t.key === activeTab);
+  const tempoEstimado = useMemo(
+    () => `${steps.reduce((acc, s) => acc + Number(s.tempo.replace(/\D/g, "") || 0), 0)} min`,
+    [steps],
+  );
+
+  const updateStep = (uidStep: string, field: keyof Omit<StepItem, "uid" | "ordem">, value: string) =>
+    setSteps((prev) => prev.map((s) => (s.uid === uidStep ? { ...s, [field]: value } : s)));
+
   const moveStep = (index: number, direction: "up" | "down") => {
     const target = direction === "up" ? index - 1 : index + 1;
     if (target < 0 || target >= steps.length) return;
     const next = [...steps];
     [next[index], next[target]] = [next[target], next[index]];
+    next.forEach((s, i) => (s.ordem = i + 1));
     setSteps(next);
   };
 
-  const addStep = () => setSteps([...steps, { id: Date.now(), titulo: `Nova etapa ${steps.length + 1}`, descricao: "Descreva a execução desta etapa.", tempo: "5 min", resultadoEsperado: "Resultado esperado", erroComum: "Erro comum", preRequisito: "Pré-requisito", checklist: "Item 1; Item 2" }]);
-  const addMidia = () => setMidias([...midias, { id: Date.now(), tipo: "Documento/PDF", nome: `Anexo de apoio ${midias.length + 1}`, referencia: `@midia${midias.length + 1}`, etapaVinculada: "Sem vínculo" }]);
+  const addStep = () =>
+    setSteps([...steps, {
+      uid: uid(), ordem: steps.length + 1,
+      titulo: `Nova etapa ${steps.length + 1}`, descricao: "", tempo: "5 min",
+      resultadoEsperado: "", erroComum: "", preRequisito: "", checklist: "",
+    }]);
 
-  const handleDiscard = () => {
-    // MOCK: ação temporária de descarte para resetar estados locais.
-    // TODO(Lovable): integrar confirmação de descarte e navegação segura para /pops.
-    setTitulo("POP de abertura operacional");
-    setDescricao("Procedimento padrão para abertura da unidade com foco em segurança e qualidade.");
-    setDepartamento("Operações");
-    setResponsavel("Ana Lima");
-    setVisibilidade("empresa");
-    setSteps(defaultSteps);
-    setMidias(defaultMidias);
-    setActiveTab("informacoes");
+  const removeStep = (uidStep: string) => {
+    const next = steps.filter((s) => s.uid !== uidStep);
+    next.forEach((s, i) => (s.ordem = i + 1));
+    setSteps(next);
   };
 
-  const handleSubmitForReview = () => {
-    // TODO(Lovable): enviar dados para backend e iniciar fluxo de revisão.
-    console.log("Enviar para revisão (mock):", { titulo, descricao, departamento, responsavel, visibilidade, steps, midias, status: "revisão" });
+  const addMidia = () =>
+    setMidias([...midias, {
+      uid: uid(),
+      tipo: "documento",
+      nome: `Anexo ${midias.length + 1}`,
+      referencia: `midia${midias.length + 1}`,
+      etapaOrdem: null,
+      ordem: midias.length + 1,
+    }]);
+
+  const updateMidia = (uidM: string, field: keyof Omit<MidiaItem, "uid" | "ordem">, value: string | number | null) =>
+    setMidias((prev) => prev.map((m) => (m.uid === uidM ? { ...m, [field]: value } as MidiaItem : m)));
+
+  const removeMidia = (uidM: string) => setMidias((prev) => prev.filter((m) => m.uid !== uidM));
+
+  const buildPayload = (): CreatePopInput => ({
+    titulo, descricao, departamento, responsavel, visibilidade,
+    etapas: steps.map((s) => ({
+      ordem: s.ordem,
+      titulo: s.titulo,
+      descricao: s.descricao,
+      tempo_estimado: s.tempo,
+      pre_requisito: s.preRequisito,
+      resultado_esperado: s.resultadoEsperado,
+      erro_comum: s.erroComum,
+      checklist: checklistFromString(s.checklist),
+    })),
+    midias: midias.map((m) => ({
+      etapa_ordem: m.etapaOrdem,
+      referencia: m.referencia,
+      nome: m.nome,
+      tipo: m.tipo,
+      ordem: m.ordem,
+    })),
+  });
+
+  const handleSave = async () => {
+    if (!titulo.trim()) {
+      toast.error("Informe o título");
+      return;
+    }
+    try {
+      if (isEdit && id) {
+        await updatePop.mutateAsync({ popId: id, input: buildPayload() });
+        toast.success("POP atualizado");
+        navigate(`/pops/${id}`);
+      } else {
+        const newId = await createPop.mutateAsync(buildPayload());
+        toast.success("POP criado");
+        navigate(`/pops/${newId}`);
+      }
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
   };
 
-  // TODO(Lovable): empresa_id será obrigatório em todas as entidades do POP (pop, etapas, mídias e revisões).
-  // TODO(Lovable): permissões por role devem controlar quem pode criar, editar, revisar e publicar.
-  // TODO(Lovable): status suportados no fluxo real: rascunho, revisão, publicado.
-  // TODO(Lovable): visibilidade do MVP: privado e empresa (expansão futura por departamento, sem implementar agora).
-  // TODO(Lovable): ao editar POP publicado, criar nova versão e nunca sobrescrever a versão anterior.
+  const handleDiscard = () => navigate("/pops");
+
+  if (isEdit && isLoading) {
+    return <AppLayout title="Editando POP"><p className="p-6 text-sm text-muted-foreground">Carregando...</p></AppLayout>;
+  }
 
   return (
-    <AppLayout title="Criar Novo POP">
+    <AppLayout title={isEdit ? "Editar POP" : "Criar Novo POP"}>
       <div className="mx-auto w-full max-w-7xl space-y-5 pb-24">
         <header className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Criar Novo POP</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Configure as informações, etapas, mídias e revisão do procedimento.</p>
+            <h1 className="text-2xl font-semibold tracking-tight">{isEdit ? "Editar POP" : "Criar Novo POP"}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">Configure as informações, etapas, mídias e revisão.</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleDiscard}>Descartar</Button>
-            <Button>Salvar Rascunho</Button>
+            <Button onClick={handleSave} disabled={createPop.isPending || updatePop.isPending}>Salvar</Button>
           </div>
         </header>
 
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabKey)}>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabKey)}>
           <TabsList className="h-auto w-full justify-start rounded-none border-b bg-transparent p-0">
-            {tabs.map((tab) => <TabsTrigger key={tab.key} value={tab.key} className="rounded-none border-b-2 border-transparent px-2 py-2 text-muted-foreground data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground">{tab.label}</TabsTrigger>)}
+            {tabs.map((tab) => (
+              <TabsTrigger key={tab.key} value={tab.key} className="rounded-none border-b-2 border-transparent px-2 py-2 text-muted-foreground data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground">{tab.label}</TabsTrigger>
+            ))}
           </TabsList>
         </Tabs>
 
         <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
           <div className="space-y-4">
-            {activeTab === "informacoes" && <Card><CardContent className="grid gap-4 p-5 md:grid-cols-2"> 
-              <div className="space-y-2 md:col-span-2"><Label>Título do POP</Label><Input className="focus-visible:ring-2" value={titulo} onChange={(e) => setTitulo(e.target.value)} /></div>
-              <div className="space-y-2 md:col-span-2"><Label>Descrição detalhada</Label><Textarea className="focus-visible:ring-2" value={descricao} onChange={(e) => setDescricao(e.target.value)} rows={4} /></div>
-              <div className="space-y-2"><Label>Departamento</Label><Input className="focus-visible:ring-2" value={departamento} onChange={(e) => setDepartamento(e.target.value)} /></div>
-              <div className="space-y-2"><Label>Responsável</Label><div className="relative"><User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input className="pl-9 focus-visible:ring-2" placeholder="Buscar responsável..." value={responsavel} onChange={(e) => setResponsavel(e.target.value)} /></div></div>
-              <div className="space-y-2"><Label>Visibilidade</Label><Select value={visibilidade} onValueChange={(v) => setVisibilidade(v as Visibilidade)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="privado">Privado</SelectItem><SelectItem value="empresa">Empresa</SelectItem></SelectContent></Select></div>
-              <p className="text-xs text-muted-foreground md:col-span-2">Dados de demonstração — serão conectados ao banco posteriormente.</p>
-            </CardContent></Card>}
-
-            {activeTab === "etapas" && <Card><CardHeader className="flex flex-row items-center justify-between"><CardTitle>Etapas</CardTitle><Button onClick={addStep}>Adicionar etapa</Button></CardHeader><CardContent className="space-y-3">{steps.map((step, index) => (
-              <Card key={step.id}><CardContent className="grid gap-3 p-4 md:grid-cols-2">
-                <div className="space-y-1"><Label>Título da etapa</Label><Input className="focus-visible:ring-2" value={step.titulo} onChange={(e) => updateStep(step.id, "titulo", e.target.value)} /></div>
-                <div className="space-y-1"><Label>Tempo estimado</Label><Input className="focus-visible:ring-2" value={step.tempo} onChange={(e) => updateStep(step.id, "tempo", e.target.value)} /></div>
-                <div className="space-y-1 md:col-span-2"><Label>Descrição</Label><Textarea className="focus-visible:ring-2" value={step.descricao} onChange={(e) => updateStep(step.id, "descricao", e.target.value)} rows={2} /></div>
-                <div className="space-y-1"><Label>Resultado esperado</Label><Input className="focus-visible:ring-2" value={step.resultadoEsperado} onChange={(e) => updateStep(step.id, "resultadoEsperado", e.target.value)} /></div>
-                <div className="space-y-1"><Label>Erro comum</Label><Input className="focus-visible:ring-2" value={step.erroComum} onChange={(e) => updateStep(step.id, "erroComum", e.target.value)} /></div>
-                <div className="space-y-1"><Label>Pré-requisito</Label><Input className="focus-visible:ring-2" value={step.preRequisito} onChange={(e) => updateStep(step.id, "preRequisito", e.target.value)} /></div>
-                <div className="space-y-1"><Label>Checklist</Label><Input className="focus-visible:ring-2" value={step.checklist} onChange={(e) => updateStep(step.id, "checklist", e.target.value)} /></div>
-                <div className="md:col-span-2 flex flex-wrap gap-2"><Button variant="outline" size="sm" onClick={() => moveStep(index, "up")}>Mover para cima</Button><Button variant="outline" size="sm" onClick={() => moveStep(index, "down")}>Mover para baixo</Button><Button variant="destructive" size="sm" onClick={() => setSteps(steps.filter((s) => s.id !== step.id))}>Remover</Button></div>
+            {activeTab === "informacoes" && (
+              <Card><CardContent className="grid gap-4 p-5 md:grid-cols-2">
+                <div className="space-y-2 md:col-span-2"><Label>Título do POP</Label><Input value={titulo} onChange={(e) => setTitulo(e.target.value)} /></div>
+                <div className="space-y-2 md:col-span-2"><Label>Descrição detalhada</Label><Textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} rows={4} /></div>
+                <div className="space-y-2"><Label>Departamento</Label><Input value={departamento} onChange={(e) => setDepartamento(e.target.value)} /></div>
+                <div className="space-y-2"><Label>Responsável</Label><div className="relative"><User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input className="pl-9" value={responsavel} onChange={(e) => setResponsavel(e.target.value)} /></div></div>
+                <div className="space-y-2"><Label>Visibilidade</Label><Select value={visibilidade} onValueChange={(v) => setVisibilidade(v as PopVisibilidade)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="privado">Privado</SelectItem><SelectItem value="empresa">Empresa</SelectItem></SelectContent></Select></div>
               </CardContent></Card>
-            ))}</CardContent></Card>}
+            )}
 
-            {activeTab === "midias" && <Card><CardHeader className="flex flex-row items-center justify-between"><CardTitle>Mídias</CardTitle><Button onClick={addMidia}>Adicionar mídia</Button></CardHeader><CardContent className="space-y-3">{midias.map((midia) => (
-              <div key={midia.id} className="rounded-md border p-3 text-sm">
-                <p><strong>Tipo:</strong> {midia.tipo}</p><p><strong>Nome:</strong> {midia.nome}</p><p><strong>Referência:</strong> {midia.referencia}</p><p><strong>Etapa vinculada:</strong> {midia.etapaVinculada}</p>
-              </div>
-            ))}<p className="text-xs text-muted-foreground">Dados mockados — futuramente serão vinculados ao armazenamento e banco de dados pelo Lovable.</p></CardContent></Card>}
+            {activeTab === "etapas" && (
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between"><CardTitle>Etapas</CardTitle><Button onClick={addStep}>Adicionar etapa</Button></CardHeader>
+                <CardContent className="space-y-3">
+                  {steps.map((step, index) => (
+                    <Card key={step.uid}>
+                      <CardContent className="grid gap-3 p-4 md:grid-cols-2">
+                        <div className="space-y-1"><Label>Título da etapa</Label><Input value={step.titulo} onChange={(e) => updateStep(step.uid, "titulo", e.target.value)} /></div>
+                        <div className="space-y-1"><Label>Tempo estimado</Label><Input value={step.tempo} onChange={(e) => updateStep(step.uid, "tempo", e.target.value)} /></div>
+                        <div className="space-y-1 md:col-span-2"><Label>Descrição (use @midia1, @imagem1, @audio1, @video1, @documento1)</Label><Textarea value={step.descricao} onChange={(e) => updateStep(step.uid, "descricao", e.target.value)} rows={2} /></div>
+                        <div className="space-y-1"><Label>Resultado esperado</Label><Input value={step.resultadoEsperado} onChange={(e) => updateStep(step.uid, "resultadoEsperado", e.target.value)} /></div>
+                        <div className="space-y-1"><Label>Erro comum</Label><Input value={step.erroComum} onChange={(e) => updateStep(step.uid, "erroComum", e.target.value)} /></div>
+                        <div className="space-y-1"><Label>Pré-requisito</Label><Input value={step.preRequisito} onChange={(e) => updateStep(step.uid, "preRequisito", e.target.value)} /></div>
+                        <div className="space-y-1"><Label>Checklist (separe por ;)</Label><Input value={step.checklist} onChange={(e) => updateStep(step.uid, "checklist", e.target.value)} /></div>
+                        <div className="md:col-span-2 flex flex-wrap gap-2">
+                          <Button variant="outline" size="sm" onClick={() => moveStep(index, "up")}>Mover para cima</Button>
+                          <Button variant="outline" size="sm" onClick={() => moveStep(index, "down")}>Mover para baixo</Button>
+                          <Button variant="destructive" size="sm" onClick={() => removeStep(step.uid)}>Remover</Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
 
-            {activeTab === "revisao" && <Card><CardHeader><CardTitle>Revisão Final</CardTitle></CardHeader><CardContent className="space-y-2 text-sm"><p><strong>Título:</strong> {titulo}</p><p><strong>Departamento:</strong> {departamento}</p><p><strong>Responsável:</strong> {responsavel}</p><p><strong>Visibilidade:</strong> {visibilidade === "privado" ? "Privado" : "Empresa"}</p><p><strong>Quantidade de etapas:</strong> {steps.length}</p><p><strong>Quantidade de mídias:</strong> {midias.length}</p><p><strong>Status inicial:</strong> Rascunho</p><div className="flex gap-2 pt-2"><Button variant="outline">Salvar Rascunho</Button><Button onClick={handleSubmitForReview}>Enviar para Revisão</Button></div></CardContent></Card>}
+            {activeTab === "midias" && (
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between"><CardTitle>Mídias</CardTitle><Button onClick={addMidia}>Adicionar mídia</Button></CardHeader>
+                <CardContent className="space-y-3">
+                  {midias.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma mídia ainda.</p>}
+                  {midias.map((m) => (
+                    <Card key={m.uid}>
+                      <CardContent className="grid gap-3 p-4 md:grid-cols-2">
+                        <div className="space-y-1"><Label>Nome</Label><Input value={m.nome} onChange={(e) => updateMidia(m.uid, "nome", e.target.value)} /></div>
+                        <div className="space-y-1"><Label>Referência (ex: midia1)</Label><Input value={m.referencia} onChange={(e) => updateMidia(m.uid, "referencia", e.target.value)} /></div>
+                        <div className="space-y-1">
+                          <Label>Tipo</Label>
+                          <Select value={m.tipo} onValueChange={(v) => updateMidia(m.uid, "tipo", v as PopMidiaTipo)}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="imagem">Imagem</SelectItem>
+                              <SelectItem value="audio">Áudio</SelectItem>
+                              <SelectItem value="video">Vídeo</SelectItem>
+                              <SelectItem value="documento">Documento</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1">
+                          <Label>Etapa vinculada</Label>
+                          <Select
+                            value={m.etapaOrdem != null ? String(m.etapaOrdem) : "none"}
+                            onValueChange={(v) => updateMidia(m.uid, "etapaOrdem", v === "none" ? null : Number(v))}
+                          >
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">Sem vínculo</SelectItem>
+                              {steps.map((s) => <SelectItem key={s.uid} value={String(s.ordem)}>Etapa {s.ordem} — {s.titulo}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="md:col-span-2"><Button variant="destructive" size="sm" onClick={() => removeMidia(m.uid)}>Remover</Button></div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
+            {activeTab === "revisao" && (
+              <Card>
+                <CardHeader><CardTitle>Revisão Final</CardTitle></CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  <p><strong>Título:</strong> {titulo}</p>
+                  <p><strong>Departamento:</strong> {departamento}</p>
+                  <p><strong>Responsável:</strong> {responsavel}</p>
+                  <p><strong>Visibilidade:</strong> {visibilidade === "privado" ? "Privado" : "Empresa"}</p>
+                  <p><strong>Etapas:</strong> {steps.length}</p>
+                  <p><strong>Mídias:</strong> {midias.length}</p>
+                  <div className="flex gap-2 pt-2">
+                    <Button onClick={handleSave} disabled={createPop.isPending || updatePop.isPending}>
+                      {isEdit ? "Salvar alterações" : "Criar POP"}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           <aside className="space-y-3">
-            <Card><CardHeader><CardTitle>Resumo do POP</CardTitle></CardHeader><CardContent className="space-y-2 text-sm"><p><strong>Versão:</strong> 1.0 (Rascunho)</p><p><strong>Tempo estimado:</strong> {tempoEstimado}</p><p><strong>Quantidade de etapas:</strong> {steps.length}</p><p><strong>Quantidade de mídias:</strong> {midias.length}</p><p><strong>Status:</strong> rascunho</p></CardContent></Card>
-            <Card><CardHeader><CardTitle>Dica do especialista</CardTitle></CardHeader><CardContent className="text-sm text-muted-foreground">Descreva resultados esperados e erros comuns em cada etapa para reduzir retrabalho na execução operacional.</CardContent></Card>
-            <Card><CardHeader><CardTitle>Observação de mock</CardTitle></CardHeader><CardContent className="text-xs text-muted-foreground">Esta tela usa dados mockados. A integração real com banco, autenticação, permissões e empresa_id será feita posteriormente pelo Lovable.</CardContent></Card>
-            <Card><CardContent className="grid grid-cols-2 gap-2 p-4 text-xs text-muted-foreground"><span className="inline-flex items-center gap-1"><Image className="h-3 w-3" />Imagem</span><span className="inline-flex items-center gap-1"><Mic className="h-3 w-3" />Áudio</span><span className="inline-flex items-center gap-1"><Video className="h-3 w-3" />Vídeo</span><span className="inline-flex items-center gap-1"><FileText className="h-3 w-3" />Documento/PDF</span><span className="inline-flex items-center gap-1"><Building2 className="h-3 w-3" />Empresa</span><span className="inline-flex items-center gap-1"><Shield className="h-3 w-3" />Privado</span></CardContent></Card>
+            <Card><CardHeader><CardTitle>Resumo do POP</CardTitle></CardHeader><CardContent className="space-y-2 text-sm">
+              <p><strong>Versão:</strong> {popData?.versao_ativa?.numero ?? "v1.0"} ({popData?.versao_ativa?.status ?? "rascunho"})</p>
+              <p><strong>Tempo estimado:</strong> {tempoEstimado}</p>
+              <p><strong>Etapas:</strong> {steps.length}</p>
+              <p><strong>Mídias:</strong> {midias.length}</p>
+            </CardContent></Card>
+            <Card><CardHeader><CardTitle>Dica</CardTitle></CardHeader><CardContent className="text-sm text-muted-foreground">Descreva resultados esperados e erros comuns em cada etapa para reduzir retrabalho.</CardContent></Card>
+            <Card><CardContent className="grid grid-cols-2 gap-2 p-4 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1"><Image className="h-3 w-3" />Imagem</span>
+              <span className="inline-flex items-center gap-1"><Mic className="h-3 w-3" />Áudio</span>
+              <span className="inline-flex items-center gap-1"><Video className="h-3 w-3" />Vídeo</span>
+              <span className="inline-flex items-center gap-1"><FileText className="h-3 w-3" />Documento</span>
+              <span className="inline-flex items-center gap-1"><Building2 className="h-3 w-3" />Empresa</span>
+              <span className="inline-flex items-center gap-1"><Shield className="h-3 w-3" />Privado</span>
+            </CardContent></Card>
           </aside>
         </div>
       </div>
@@ -153,7 +358,9 @@ const PopCreateEdit = () => {
           <Badge variant="outline">Etapa atual: {tabs[currentTabIndex].label}</Badge>
           <div className="flex gap-2">
             <Button variant="outline" disabled={currentTabIndex === 0} onClick={() => setActiveTab(tabs[currentTabIndex - 1].key)}>Voltar</Button>
-            <Button onClick={() => currentTabIndex === tabs.length - 1 ? handleSubmitForReview() : setActiveTab(tabs[currentTabIndex + 1].key)}>{currentTabIndex === tabs.length - 1 ? "Enviar para Revisão" : "Próxima etapa"}</Button>
+            <Button onClick={() => currentTabIndex === tabs.length - 1 ? handleSave() : setActiveTab(tabs[currentTabIndex + 1].key)}>
+              {currentTabIndex === tabs.length - 1 ? (isEdit ? "Salvar" : "Criar POP") : "Próxima etapa"}
+            </Button>
           </div>
         </div>
       </div>
