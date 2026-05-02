@@ -400,24 +400,68 @@ const PopCreateEdit = () => {
               </Card>
             )}
 
-            {activeTab === "revisao" && (
-              <Card>
-                <CardHeader><CardTitle>Revisão Final</CardTitle></CardHeader>
-                <CardContent className="space-y-2 text-sm">
-                  <p><strong>Título:</strong> {titulo}</p>
-                  <p><strong>Departamento:</strong> {departamento}</p>
-                  <p><strong>Responsável:</strong> {responsavel}</p>
-                  <p><strong>Visibilidade:</strong> {visibilidade === "privado" ? "Privado" : "Empresa"}</p>
-                  <p><strong>Etapas:</strong> {steps.length}</p>
-                  <p><strong>Mídias:</strong> {midias.length}</p>
-                  <div className="flex gap-2 pt-2">
-                    <Button onClick={handleSave} disabled={createPop.isPending || updatePop.isPending}>
-                      {isEdit ? "Salvar alterações" : "Criar POP"}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            {activeTab === "revisao" && (() => {
+              // Mesma regex usada no PopDetail (cobre @Sintegra, @midia1, etc.)
+              const refRegex = /@([A-Za-zÀ-ÿ0-9_-]+)/g;
+              const refsNoTexto = new Set<string>();
+              steps.forEach((s) => {
+                for (const m of s.descricao.matchAll(refRegex)) refsNoTexto.add(m[1]);
+              });
+              const refsCadastradas = new Set(midias.map((m) => m.referencia));
+              const refsSemMidia = [...refsNoTexto].filter((r) => !refsCadastradas.has(r));
+              const midiasNaoUsadas = midias.filter((m) => !refsNoTexto.has(m.referencia));
+              const semUpload = midias.filter((m) => !m.url);
+
+              return (
+                <Card>
+                  <CardHeader><CardTitle>Revisão Final</CardTitle></CardHeader>
+                  <CardContent className="space-y-3 text-sm">
+                    <p><strong>Título:</strong> {titulo}</p>
+                    <p><strong>Departamento:</strong> {departamento}</p>
+                    <p><strong>Responsável:</strong> {responsavel}</p>
+                    <p><strong>Visibilidade:</strong> {visibilidade === "privado" ? "Privado" : "Empresa"}</p>
+                    <p><strong>Etapas:</strong> {steps.length}</p>
+                    <p><strong>Mídias:</strong> {midias.length}</p>
+
+                    {refsSemMidia.length === 0 && midiasNaoUsadas.length === 0 && semUpload.length === 0 ? (
+                      <p className="rounded-md border border-emerald-300 bg-emerald-50/50 p-2 text-emerald-800">
+                        Tudo certo: todas as referências têm mídia e todas as mídias estão referenciadas e enviadas.
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        {refsSemMidia.length > 0 && (
+                          <div className="rounded-md border border-amber-300 bg-amber-50/50 p-2 text-amber-900">
+                            <p className="font-medium">Referências sem mídia ({refsSemMidia.length})</p>
+                            <p className="text-xs">Estas referências aparecem no texto mas não têm mídia cadastrada:</p>
+                            <p className="mt-1 text-xs">{refsSemMidia.map((r) => `@${r}`).join(", ")}</p>
+                          </div>
+                        )}
+                        {midiasNaoUsadas.length > 0 && (
+                          <div className="rounded-md border border-amber-300 bg-amber-50/50 p-2 text-amber-900">
+                            <p className="font-medium">Mídias não referenciadas ({midiasNaoUsadas.length})</p>
+                            <p className="text-xs">Estas mídias foram cadastradas mas não aparecem em nenhuma etapa:</p>
+                            <p className="mt-1 text-xs">{midiasNaoUsadas.map((m) => `@${m.referencia}`).join(", ")}</p>
+                          </div>
+                        )}
+                        {semUpload.length > 0 && (
+                          <div className="rounded-md border border-amber-300 bg-amber-50/50 p-2 text-amber-900">
+                            <p className="font-medium">Mídias sem arquivo ({semUpload.length})</p>
+                            <p className="text-xs">Estas mídias não têm arquivo enviado — a referência inline aparecerá sem visualização:</p>
+                            <p className="mt-1 text-xs">{semUpload.map((m) => `@${m.referencia}`).join(", ")}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="flex gap-2 pt-2">
+                      <Button onClick={handleSave} disabled={createPop.isPending || updatePop.isPending}>
+                        {isEdit ? "Salvar alterações" : "Criar POP"}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })()}
           </div>
 
           <aside className="space-y-3">
