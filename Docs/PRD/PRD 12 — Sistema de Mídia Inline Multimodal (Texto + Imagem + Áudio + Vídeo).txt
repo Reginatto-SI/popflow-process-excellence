@@ -1,0 +1,270 @@
+# 📄 PRD 12 — Sistema de Mídia Inline Multimodal (Texto + Imagem + Áudio + Vídeo)
+
+---
+
+## 🧠 1. VISÃO
+
+Este módulo permite que diferentes tipos de mídia (imagem, áudio, vídeo e documento/PDF) sejam inseridos e referenciados diretamente dentro do texto das etapas de um POP, criando uma experiência interativa e contextualizada.
+
+O objetivo é transformar o POP em um guia multimídia, onde o usuário acessa conteúdos complementares no momento exato da execução.
+
+---
+
+## 🎯 2. OBJETIVO
+
+- Suportar múltiplos tipos de mídia dentro das etapas
+- Permitir referência contextual no texto
+- Melhorar compreensão de processos complexos
+- Reduzir ambiguidades e erros
+- Criar experiência de tutorial interativo multimídia
+
+---
+
+## 🔑 3. CONCEITO PRINCIPAL
+
+O usuário pode inserir referências no texto como:
+
+@midia1  
+@midia2  
+
+Cada mídia pode ser:
+
+- imagem
+- áudio
+- vídeo
+- documento/PDF
+
+---
+
+## 🔄 4. FLUXO PRINCIPAL
+
+### Criação da etapa
+
+1. Usuário adiciona mídias:
+   - upload de imagem
+   - upload de áudio (MP3)
+   - upload de vídeo
+   - upload de documento/PDF
+
+2. Sistema gera identificadores:
+   - midia1
+   - midia2
+   - midia3
+
+3. Usuário insere no texto:
+
+"Ouça a explicação em @midia2 antes de continuar"
+
+---
+
+### Execução
+
+1. Texto é exibido
+2. @midiaX vira elemento interativo
+3. Usuário clica
+4. Sistema exibe a mídia correspondente
+
+---
+
+## 🧱 5. FUNCIONALIDADES (MVP)
+
+### 📌 Tipos de mídia suportados
+
+- Imagem
+- Áudio (MP3)
+- Vídeo
+- Documento/PDF
+
+---
+
+### 📌 Inserção no texto
+
+- Digitação manual (@midia1)
+ou
+- Botão: “Inserir mídia”
+
+---
+
+### 📌 Renderização inteligente
+
+@midia1 vira:
+
+- botão
+- chip
+- ou link estilizado
+
+---
+
+### 📌 Comportamento por tipo
+
+#### 🖼️ Imagem
+- Exibir em modal central/lightbox
+
+---
+
+#### 🎧 Áudio
+- Exibir mini-player flutuante discreto
+- Ações: reproduzir, pausar e fechar
+
+---
+
+#### 🎥 Vídeo
+- Exibir em modal central com player
+- Controles básicos
+
+---
+
+#### 📄 Documento/PDF
+- Exibir em modal central de visualização
+- Permitir nova aba quando tecnicamente mais adequado
+
+---
+
+### 📌 Visualização contextual sem drawer lateral (RECOMENDADO)
+
+- Ao clicar na mídia inline, abrir o conteúdo de forma contextual, sem drawer lateral permanente
+- Manter foco do usuário na etapa atual da execução
+- Evitar poluição visual e compressão lateral da tela principal
+
+---
+
+## 🧩 6. ESTRUTURA DE DADOS
+
+### MidiaEtapa
+- id
+- etapa_id
+- tipo (imagem, audio, video, documento)
+- nome_referencia (midia1, midia2)
+- url
+- ordem
+
+---
+
+### Etapa
+- descricao (texto com @midiaX)
+
+---
+
+## 🔄 7. PROCESSAMENTO DO TEXTO
+
+Sistema deve:
+
+1. Detectar padrões:
+   @midia1
+
+2. Substituir por componente interativo
+
+3. Associar com MidiaEtapa correspondente
+
+---
+
+## 🧠 8. REGRAS IMPORTANTES
+
+- Referência deve existir
+- Validar tipo de mídia
+- Evitar referências quebradas
+- Garantir performance (lazy loading)
+
+---
+
+## 🎨 9. UX / UI PRINCÍPIOS
+
+- Interação simples e clara
+- Feedback visual imediato
+- Não interromper leitura
+- Mídia acessível no momento certo
+- Interface limpa
+
+---
+
+## 💡 10. EXPERIÊNCIA DO USUÁRIO
+
+Exemplo:
+
+"Antes de prosseguir, ouça @midia2"
+
+Usuário:
+
+- clica
+- áudio começa a tocar
+- continua leitura
+
+---
+
+## 🚫 11. FORA DO ESCOPO (AGORA)
+
+- Streaming avançado
+- Anotações em vídeo/imagem
+- Transcrição automática de áudio
+- Sincronização automática texto + áudio
+
+---
+
+## 📈 12. MÉTRICAS DE SUCESSO
+
+- Uso de mídias por etapa
+- Tempo de execução reduzido
+- Engajamento com conteúdo
+- Redução de erros operacionais
+
+---
+
+## 🔥 13. DIFERENCIAL ESTRATÉGICO
+
+Este módulo transforma o sistema de:
+
+👉 Texto com anexos  
+em  
+👉 Experiência multimídia interativa
+
+Permitindo:
+
+- Melhor aprendizado
+- Maior clareza
+- Redução de dúvidas
+- Treinamento mais eficiente
+
+---
+
+## 💡 14. FUTURO (EXPANSÃO)
+
+- Transcrição automática de áudio
+- Legenda em vídeo
+- Destaque em imagem (highlight)
+- Sincronização áudio + texto
+- Suporte a PDF interativo
+
+---
+
+## 🚀 15. INSIGHT FINAL
+
+Isso transforma seu produto em:
+
+👉 Documentação ❌  
+👉 Plataforma de treinamento interativa ✔️
+---
+
+## 🗂️ 16. EXTENSÃO — DOCUMENTOS INLINE
+
+### Tipos suportados
+
+- imagem
+- áudio
+- vídeo
+- documento
+
+### Formatos de documento
+
+- PDF
+- TXT
+- DOC/DOCX
+- XLS/XLSX
+- outros
+
+### Regras de exibição
+
+- imagem/vídeo: modal central
+- áudio: mini-player flutuante discreto (reproduzir, pausar e fechar)
+- PDF/TXT: visualização no modal
+- DOC/DOCX e XLS/XLSX: download/abertura externa
+

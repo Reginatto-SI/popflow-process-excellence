@@ -1,0 +1,194 @@
+# 📄 PRD 2 — Execução de Processos com Tracking de Usuário
+
+---
+
+## 🧠 1. VISÃO
+
+Este módulo tem como objetivo permitir a execução controlada dos POPs (Procedimentos Operacionais Padrão), registrando quem executou cada etapa, quando executou e garantindo rastreabilidade completa dos processos operacionais.
+
+O foco aqui é sair de “documentação” e entrar em **execução real com controle e histórico**.
+
+---
+
+## 🎯 2. OBJETIVO
+
+- Permitir que usuários executem POPs passo a passo
+- Registrar o progresso da execução
+- Identificar quem executou cada etapa
+- Criar histórico auditável de processos
+- Reduzir erros operacionais e retrabalho
+- Permitir acompanhamento por gestores
+
+---
+
+## 👤 3. TIPOS DE USUÁRIO ENVOLVIDOS
+
+### Executor
+- Responsável por executar o POP
+- Marca etapas como concluídas
+- Interage com checklist e anexos
+
+### Gestor
+- Acompanha execuções
+- Identifica gargalos e erros
+- Valida execução quando necessário
+
+---
+
+## 🔄 4. FLUXO DE EXECUÇÃO
+
+### Início da execução
+1. Usuário acessa um POP
+2. Clica em “Iniciar execução”
+3. Sistema cria uma instância de execução
+
+---
+
+### Durante execução
+1. Sistema apresenta etapas em sequência
+2. Usuário interage com:
+   - Checklist
+   - Instruções
+   - Anexos
+3. Usuário marca etapa como concluída
+4. Sistema registra:
+   - Usuário
+   - Data/hora
+   - Tempo gasto
+
+---
+
+### Finalização
+1. Usuário conclui última etapa
+2. Execução é marcada como “finalizada”
+3. Sistema registra tempo total
+
+---
+
+## 🧱 5. FUNCIONALIDADES (MVP)
+
+### 📌 Execução de POP
+- Botão “Iniciar execução”
+- Criação de instância de execução
+- Status:
+  - Não iniciada
+  - Em andamento
+  - Concluída
+
+---
+
+### 📌 Controle de Etapas
+- Marcar etapa como concluída
+- Destaque da etapa atual
+- Avanço automático para próxima etapa
+
+---
+
+### 📌 Tracking (RASTREABILIDADE)
+Para cada etapa:
+
+Registrar:
+- Usuário que executou
+- Data/hora de início
+- Data/hora de conclusão
+- Tempo gasto
+
+---
+
+### 📌 Progresso
+- Barra de progresso (%)
+- Indicador:
+  - Ex: 3 de 7 etapas concluídas
+
+---
+
+### 📌 Histórico de Execuções
+- Lista de execuções realizadas
+- Exibir:
+  - Usuário
+  - Data
+  - Tempo total
+  - Status
+
+---
+
+### 📌 Modo Execução
+Interface simplificada focada em:
+
+- Etapa atual em destaque
+- Botão “Concluir etapa”
+- Navegação clara
+- Redução de distrações
+
+---
+
+## 🧩 6. ESTRUTURA DE DADOS
+
+### Execução
+- id
+- pop_id
+- usuario_id
+- status (em_andamento, concluido)
+- data_inicio
+- data_fim
+- tempo_total
+
+---
+
+### ExecucaoEtapa
+- id
+- execucao_id
+- etapa_id
+- usuario_id
+- data_inicio
+- data_fim
+- tempo_gasto
+- concluido (boolean)
+
+---
+
+## 🎨 7. UX / UI PRINCÍPIOS
+
+- Foco total em execução (não edição)
+- Interface limpa e direta
+- Destaque visual da etapa atual
+- Feedback imediato ao concluir etapa
+- Progressão clara e intuitiva
+- Abertura de mídia inline de forma contextual (modal/mini-player), sem drawer lateral fixo comprimindo a tela
+
+---
+
+## 🚫 8. FORA DO ESCOPO (AGORA)
+
+- Aprovação formal por gestor
+- Auditoria avançada
+- Logs detalhados de ações
+- Alertas automáticos
+- Integração com outros sistemas
+
+---
+
+## 📈 9. MÉTRICAS DE SUCESSO
+
+- Tempo médio de execução por POP
+- Taxa de conclusão
+- Tempo por etapa
+- Identificação de gargalos
+- Número de execuções por usuário
+
+---
+
+## 🔥 10. DIFERENCIAL ESTRATÉGICO
+
+Este módulo transforma o sistema de:
+
+👉 Documentação estática  
+em  
+👉 Sistema operacional executável e rastreável
+
+Isso permite:
+
+- Padronização real
+- Auditoria de processos
+- Escalabilidade da operação
+- Redução de dependência de pessoas-chave

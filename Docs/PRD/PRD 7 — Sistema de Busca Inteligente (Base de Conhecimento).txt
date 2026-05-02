@@ -1,0 +1,193 @@
+# 📄 PRD 7 — Sistema de Busca Inteligente (Base de Conhecimento)
+
+---
+
+## 🧠 1. VISÃO
+
+Este módulo transforma o sistema em uma base de conhecimento pesquisável, permitindo que usuários encontrem rapidamente processos, etapas, instruções e soluções sem precisar navegar manualmente.
+
+O objetivo é criar um “Google interno” dos processos da empresa.
+
+---
+
+## 🎯 2. OBJETIVO
+
+- Permitir busca rápida por POPs e etapas
+- Reduzir tempo para encontrar informações
+- Aumentar produtividade operacional
+- Facilitar uso do sistema no dia a dia
+- Evitar dependência de colegas para dúvidas simples
+
+---
+
+## 👤 3. USUÁRIOS
+
+### Executor
+- Busca como fazer tarefas específicas
+- Resolve dúvidas rapidamente
+
+### Criador de POP
+- Reutiliza conteúdo existente
+- Evita duplicação de processos
+
+### Gestor
+- Garante acesso rápido ao conhecimento
+
+---
+
+## 🔄 4. FLUXO PRINCIPAL
+
+### Busca simples
+1. Usuário digita na barra de busca
+2. Sistema retorna:
+   - POPs relevantes
+   - Etapas específicas
+   - Conteúdos relacionados
+
+---
+
+### Acesso direto
+1. Usuário clica no resultado
+2. Sistema leva direto:
+   - Para o POP
+   ou
+   - Para a etapa específica dentro do POP
+
+---
+
+## 🧱 5. FUNCIONALIDADES (MVP)
+
+### 📌 Barra de busca global
+- Presente no topo do sistema
+- Acessível de qualquer tela
+
+---
+
+### 📌 Busca por:
+
+- Título do POP
+- Nome da etapa
+- Descrição
+- Resultado esperado
+- Erros comuns
+- Tags
+
+---
+
+### 📌 Resultados
+
+Exibir lista com:
+
+- Nome do POP
+- Nome da etapa (se aplicável)
+- Trecho do conteúdo (preview)
+- Departamento
+- Relevância
+
+---
+
+### 📌 Tipos de resultado
+
+- POP completo
+- Etapa específica
+- Conteúdo interno (texto)
+
+---
+
+### 📌 Destaque de palavras-chave
+- Highlight nos termos buscados
+
+---
+
+### 📌 Filtros
+
+- Departamento
+- Tipo (POP ou etapa)
+- Status (publicado, rascunho)
+
+---
+
+## 🧩 6. ESTRUTURA DE DADOS (INDEXAÇÃO)
+
+Campos que devem ser indexados:
+
+### POP
+- titulo
+- descricao
+- tags
+
+---
+
+### Etapa
+- titulo
+- descricao
+- resultado_esperado
+- erro_comum
+
+---
+
+## 🔎 7. RELEVÂNCIA (LÓGICA DE BUSCA)
+
+Prioridade de resultados:
+
+1. Match no título do POP
+2. Match no título da etapa
+3. Match na descrição
+4. Match em erro comum
+5. Match em resultado esperado
+
+---
+
+## 🎨 8. UX / UI PRINCÍPIOS
+
+- Busca rápida (instantânea)
+- Interface simples (tipo Google)
+- Resultados claros e organizados
+- Clique leva direto ao ponto relevante
+- Highlight visual do termo buscado
+
+---
+
+## 🚫 9. FORA DO ESCOPO (AGORA)
+
+- Busca semântica (IA)
+- Correção automática de texto (did you mean)
+- Sugestões inteligentes
+- Busca por áudio
+- Busca por imagem
+
+---
+
+## 📈 10. MÉTRICAS DE SUCESSO
+
+- Número de buscas por usuário
+- Tempo até encontrar informação
+- Redução de dúvidas operacionais
+- Aumento de uso do sistema
+
+---
+
+## 🔥 11. DIFERENCIAL ESTRATÉGICO
+
+Este módulo transforma o sistema de:
+
+👉 Navegação manual  
+em  
+👉 Acesso instantâneo à informação
+
+Permitindo:
+
+- Aumento de produtividade
+- Redução de dependência entre pessoas
+- Uso contínuo do sistema
+- Centralização real do conhecimento
+
+---
+
+## 💡 12. FUTURO (EXPANSÃO)
+
+- Busca semântica com IA
+- Sugestões automáticas de POPs
+- Auto-complete inteligente
+- Histórico de buscas
+- Recomendações baseadas em uso

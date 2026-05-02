@@ -1,0 +1,201 @@
+# 📄 PRD 3 — Sistema de Revisão e Aprovação de POPs
+
+---
+
+## 🧠 1. VISÃO
+
+Este módulo tem como objetivo garantir que todos os POPs (Procedimentos Operacionais Padrão) passem por um processo de validação antes de serem utilizados na operação.
+
+O foco é assegurar qualidade, consistência e confiabilidade dos processos documentados.
+
+---
+
+## 🎯 2. OBJETIVO
+
+- Garantir que POPs sejam revisados antes de uso
+- Evitar publicação de processos incorretos ou incompletos
+- Criar controle de aprovação por gestores
+- Manter histórico de mudanças
+- Aumentar confiança na base de conhecimento
+
+---
+
+## 👤 3. TIPOS DE USUÁRIO ENVOLVIDOS
+
+### Criador de POP
+- Cria e edita POPs
+- Envia para revisão
+
+### Revisor (Analista Sênior / Gestor)
+- Avalia o POP
+- Aprova ou solicita ajustes
+
+### Gestor
+- Pode aprovar POPs críticos
+- Acompanha qualidade geral dos processos
+
+---
+
+## 🔄 4. FLUXO DE REVISÃO
+
+### Criação
+1. Usuário cria ou edita um POP
+2. POP fica com status: **Rascunho**
+
+---
+
+### Envio para revisão
+1. Usuário clica em “Enviar para revisão”
+2. Status muda para: **Em revisão**
+3. POP entra na fila de revisão
+
+---
+
+### Revisão
+1. Revisor acessa lista de POPs pendentes
+2. Analisa:
+   - Clareza das instruções
+   - Qualidade dos anexos
+   - Existência de erros comuns
+   - Completude das etapas
+3. Revisor pode:
+   - Aprovar
+   - Solicitar ajustes
+
+---
+
+### Aprovação
+1. Se aprovado:
+   - Status muda para: **Publicado**
+   - POP fica disponível para execução
+
+---
+
+### Solicitação de ajustes
+1. Revisor envia feedback
+2. Status volta para: **Rascunho**
+3. Criador faz ajustes e reenviar
+
+---
+
+## 🧱 5. FUNCIONALIDADES (MVP)
+
+### 📌 Status do POP
+- Rascunho
+- Em revisão
+- Publicado
+
+---
+
+### 📌 Sistema de envio para revisão
+- Botão “Enviar para revisão”
+- Mudança de status automática
+
+---
+
+### 📌 Fila de revisão
+- Lista de POPs pendentes
+- Filtros por:
+  - Departamento
+  - Responsável
+  - Data
+
+---
+
+### 📌 Tela de revisão
+Exibir:
+
+- Conteúdo completo do POP
+- Etapas
+- Anexos
+- Checklist
+- Campos de erro comum e resultado esperado
+
+---
+
+### 📌 Ações do revisor
+- Aprovar POP
+- Solicitar ajustes
+- Adicionar comentário geral
+
+---
+
+### 📌 Feedback
+- Campo de comentário obrigatório ao rejeitar
+- Feedback visível para o criador
+
+---
+
+### 📌 Histórico simples
+- Registrar:
+  - Quem aprovou
+  - Quando aprovou
+  - Última alteração
+
+---
+
+## 🧩 6. ESTRUTURA DE DADOS
+
+### POP (atualização)
+- status
+- versao
+- criado_por
+- revisado_por
+- data_revisao
+
+---
+
+### Revisao
+- id
+- pop_id
+- revisor_id
+- status (aprovado, ajustes)
+- comentario
+- data
+
+---
+
+## 🎨 7. UX / UI PRINCÍPIOS
+
+- Processo de revisão simples e rápido
+- Feedback claro e direto
+- Destaque visual para status do POP
+- Fácil acesso à fila de revisão
+- Interface limpa para análise
+
+---
+
+## 🚫 8. FORA DO ESCOPO (AGORA)
+
+- Aprovação em múltiplos níveis
+- Workflow complexo de aprovação
+- SLA de revisão
+- Notificações automáticas
+- Versionamento avançado com diff
+
+---
+
+## 📈 9. MÉTRICAS DE SUCESSO
+
+- Tempo médio de revisão
+- % de POPs aprovados vs rejeitados
+- Quantidade de revisões por POP
+- Tempo até publicação
+- Qualidade percebida pelos usuários
+
+---
+
+## 🔥 10. DIFERENCIAL ESTRATÉGICO
+
+Este módulo transforma o sistema de:
+
+👉 Base de conhecimento aberta  
+em  
+👉 Sistema confiável e validado
+
+Isso garante:
+
+- Qualidade dos processos
+- Confiança dos usuários
+- Redução de erros operacionais
+- Governança interna real

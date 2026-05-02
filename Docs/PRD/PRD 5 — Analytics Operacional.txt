@@ -1,0 +1,216 @@
+# 📄 PRD 5 — Analytics Operacional
+
+---
+
+## 🧠 1. VISÃO
+
+Este módulo tem como objetivo transformar os dados de execução dos POPs em insights operacionais, permitindo que gestores identifiquem gargalos, erros, ineficiências e oportunidades de melhoria.
+
+O foco é evoluir o sistema de execução para um sistema de **gestão baseada em dados**.
+
+---
+
+## 🎯 2. OBJETIVO
+
+- Medir desempenho operacional
+- Identificar gargalos nos processos
+- Monitorar tempo de execução
+- Avaliar produtividade por usuário
+- Detectar etapas problemáticas
+- Apoiar decisões gerenciais
+
+---
+
+## 👤 3. USUÁRIOS
+
+### Gestor
+- Acompanha performance da equipe
+- Identifica problemas
+- Toma decisões
+
+### Admin
+- Visualiza dados globais
+- Analisa eficiência da empresa
+
+---
+
+## 📊 4. PRINCIPAIS INDICADORES (KPIs)
+
+### 📌 Execução de processos
+- Tempo médio por POP
+- Tempo médio por etapa
+- Taxa de conclusão (% de execuções finalizadas)
+- Número de execuções por período
+
+---
+
+### 📌 Performance por usuário
+- Execuções realizadas por usuário
+- Tempo médio de execução por usuário
+- Taxa de conclusão individual
+
+---
+
+### 📌 Gargalos
+- Etapas com maior tempo médio
+- Etapas com maior taxa de erro
+- Etapas mais abandonadas
+
+---
+
+### 📌 Qualidade operacional
+- Número de revisões necessárias por POP
+- Quantidade de erros reportados
+- Frequência de retrabalho
+
+---
+
+## 🔄 5. FUNCIONALIDADES (MVP)
+
+### 📌 Dashboard geral
+
+Exibir:
+
+- Total de execuções
+- Tempo médio geral
+- Taxa de conclusão
+- Ranking de POPs mais utilizados
+
+---
+
+### 📌 Análise por POP
+
+Para cada POP:
+
+- Tempo médio de execução
+- Etapas mais lentas
+- Taxa de conclusão
+- Volume de uso
+
+---
+
+### 📌 Análise por etapa
+
+Para cada etapa:
+
+- Tempo médio
+- Taxa de conclusão
+- Frequência de erro
+- Número de execuções
+
+---
+
+### 📌 Ranking de usuários
+
+- Usuários mais ativos
+- Tempo médio por usuário
+- Execuções concluídas
+
+---
+
+### 📌 Filtros
+
+Permitir filtrar por:
+
+- Período (data)
+- Departamento
+- POP específico
+- Usuário
+
+---
+
+## 🧩 6. ESTRUTURA DE DADOS (DERIVADA)
+
+Esse módulo usa dados já existentes de:
+
+- Execuções
+- ExecucaoEtapa
+- Usuários
+- POPs
+
+---
+
+### Campos importantes:
+
+Execucao:
+- data_inicio
+- data_fim
+- tempo_total
+
+ExecucaoEtapa:
+- tempo_gasto
+- concluido
+
+---
+
+## 📈 7. MÉTRICAS CALCULADAS
+
+Exemplos:
+
+### Tempo médio por POP:
+= soma(tempo_total) / número de execuções
+
+---
+
+### Tempo médio por etapa:
+= soma(tempo_gasto) / número de execuções da etapa
+
+---
+
+### Taxa de conclusão:
+= execuções concluídas / execuções iniciadas
+
+---
+
+## 🎨 8. UX / UI PRINCÍPIOS
+
+- Visual simples e direto
+- Uso de gráficos claros (barra, linha)
+- Destaque para insights importantes
+- Evitar excesso de informação
+- Foco em tomada de decisão
+
+---
+
+## 🚫 9. FORA DO ESCOPO (AGORA)
+
+- Machine learning
+- Previsão de tempo
+- Alertas automáticos
+- Benchmark entre empresas
+- BI avançado
+
+---
+
+## 📈 10. MÉTRICAS DE SUCESSO
+
+- Uso do dashboard por gestores
+- Redução do tempo médio de execução
+- Identificação de gargalos resolvidos
+- Aumento da taxa de conclusão
+
+---
+
+## 🔥 11. DIFERENCIAL ESTRATÉGICO
+
+Este módulo transforma o sistema de:
+
+👉 Ferramenta de execução  
+em  
+👉 Sistema de inteligência operacional
+
+Permitindo:
+
+- Gestão baseada em dados
+- Melhoria contínua
+- Identificação de ineficiências
+- Tomada de decisão estratégica
+
+---
+
+## 💡 12. FUTURO (EXPANSÃO)
+
+- Alertas automáticos de gargalos
+- Sugestões de melhoria via IA
+- Benchmark entre empresas
+- Previsão de tempo de execução

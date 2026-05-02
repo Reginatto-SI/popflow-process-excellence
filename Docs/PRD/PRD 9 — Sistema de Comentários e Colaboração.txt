@@ -1,0 +1,199 @@
+# 📄 PRD 9 — Sistema de Comentários e Colaboração
+
+---
+
+## 🧠 1. VISÃO
+
+Este módulo tem como objetivo permitir colaboração entre usuários dentro dos POPs, possibilitando troca de conhecimento, dúvidas, sugestões de melhoria e comunicação contextualizada diretamente nas etapas dos processos.
+
+O foco é transformar o sistema em um ambiente vivo de aprendizado e melhoria contínua.
+
+---
+
+## 🎯 2. OBJETIVO
+
+- Permitir comunicação dentro do contexto do processo
+- Reduzir dúvidas fora do sistema (WhatsApp, conversa paralela)
+- Facilitar melhoria contínua dos POPs
+- Registrar conhecimento informal (insights, dicas)
+- Aumentar engajamento dos usuários
+
+---
+
+## 👤 3. USUÁRIOS
+
+### Executor
+- Faz perguntas
+- Comenta dificuldades
+- Sugere melhorias
+
+---
+
+### Criador de POP
+- Ajusta processos com base no feedback
+- Responde dúvidas
+
+---
+
+### Gestor / Revisor
+- Acompanha comentários
+- Identifica problemas recorrentes
+- Valida melhorias
+
+---
+
+## 🔄 4. FLUXO PRINCIPAL
+
+### Comentário em etapa
+1. Usuário está executando um POP
+2. Encontra dúvida ou problema
+3. Clica em “Comentar”
+4. Escreve comentário
+5. Comentário fica vinculado à etapa
+
+---
+
+### Resposta
+1. Outro usuário visualiza comentário
+2. Responde diretamente (thread)
+3. Discussão fica registrada
+
+---
+
+### Resolução
+1. Problema é resolvido
+2. Comentário pode ser marcado como:
+   - Resolvido
+   - Pendente
+
+---
+
+## 🧱 5. FUNCIONALIDADES (MVP)
+
+### 📌 Comentários por etapa
+- Cada etapa pode ter comentários
+- Comentários ficam vinculados ao contexto
+
+---
+
+### 📌 Thread de respostas
+- Comentários com respostas (tipo conversa)
+- Organização em formato de thread
+
+---
+
+### 📌 Status do comentário
+- Aberto
+- Resolvido
+
+---
+
+### 📌 Identificação do usuário
+- Nome do autor
+- Data/hora
+
+---
+
+### 📌 Notificação básica
+- Notificar quando:
+  - Alguém responde comentário
+  - Usuário é mencionado (futuro simples)
+
+---
+
+### 📌 Ações
+- Responder comentário
+- Marcar como resolvido
+- Excluir (autor ou admin)
+
+---
+
+## 🧩 6. ESTRUTURA DE DADOS
+
+### Comentario
+- id
+- empresa_id
+- pop_id
+- etapa_id
+- usuario_id
+- texto
+- status (aberto, resolvido)
+- data_criacao
+
+---
+
+### ComentarioResposta
+- id
+- comentario_id
+- usuario_id
+- texto
+- data_criacao
+
+---
+
+## 🎨 7. UX / UI PRINCÍPIOS
+
+- Interface simples (estilo chat leve)
+- Comentários visíveis sem poluir a tela
+- Fácil acesso durante execução
+- Destaque para comentários não resolvidos
+- Organização clara das threads
+
+---
+
+## 💡 8. POSICIONAMENTO NA INTERFACE
+
+Sugestões:
+
+- Aba dentro da etapa (“Comentários”)
+ou
+- Ícone de comentário por etapa
+ou
+- Painel lateral com comentários
+
+---
+
+## 🚫 9. FORA DO ESCOPO (AGORA)
+
+- Chat em tempo real
+- Menções completas (@usuario com autocomplete)
+- Reações (emoji)
+- Upload dentro de comentários
+- Comentários globais por POP
+
+---
+
+## 📈 10. MÉTRICAS DE SUCESSO
+
+- Número de comentários por POP
+- Tempo médio de resposta
+- % de comentários resolvidos
+- Redução de dúvidas externas
+- Aumento de melhorias nos POPs
+
+---
+
+## 🔥 11. DIFERENCIAL ESTRATÉGICO
+
+Este módulo transforma o sistema de:
+
+👉 Documento estático  
+em  
+👉 Plataforma colaborativa
+
+Permitindo:
+
+- Evolução contínua dos processos
+- Registro de conhecimento real do time
+- Engajamento dos usuários
+- Redução de retrabalho
+
+---
+
+## 💡 12. FUTURO (EXPANSÃO)
+
+- Menções com @usuario
+- Comentários com anexos
+- Integração com notificações avançadas
+- Sugestões automáticas de melhoria via IA
+- Conversas vinculadas a erros recorrentes

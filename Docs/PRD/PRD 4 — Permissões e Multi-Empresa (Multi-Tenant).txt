@@ -1,0 +1,222 @@
+# 📄 PRD 4 — Permissões e Multi-Empresa (Multi-Tenant)
+
+---
+
+## 🧠 1. VISÃO
+
+Este módulo transforma o sistema em uma plataforma multi-empresa (multi-tenant), permitindo que diferentes empresas utilizem o sistema de forma isolada, com controle de acesso por usuário, departamento e nível de permissão.
+
+Cada empresa terá seu próprio ambiente seguro, com seus POPs, usuários e execuções totalmente separados.
+
+---
+
+## 🎯 2. OBJETIVO
+
+- Permitir uso do sistema por múltiplas empresas
+- Garantir isolamento total de dados entre empresas
+- Implementar controle de acesso por usuário
+- Definir papéis (roles) e permissões
+- Preparar o sistema para revenda (modelo SaaS)
+
+---
+
+## 🏢 3. CONCEITO DE MULTI-EMPRESA
+
+Cada empresa (tenant) terá:
+
+- Seus próprios usuários
+- Seus próprios POPs
+- Seus próprios departamentos
+- Suas próprias execuções
+- Seus próprios dados
+
+👉 Nenhuma empresa pode ver dados de outra.
+
+---
+
+## 👤 4. TIPOS DE USUÁRIO (ROLES)
+
+### 🔑 Admin da Empresa
+- Gerencia usuários
+- Define permissões
+- Cria departamentos
+- Pode criar/editar/aprovar POPs
+- Acesso total dentro da empresa
+
+---
+
+### 🧠 Gestor
+- Pode revisar e aprovar POPs
+- Acompanha execuções
+- Visualiza indicadores
+
+---
+
+### ✏️ Criador de POP
+- Cria e edita POPs
+- Envia para revisão
+- Não aprova
+
+---
+
+### ⚙️ Executor
+- Apenas executa POPs
+- Marca etapas como concluídas
+
+---
+
+## 🔐 5. CONTROLE DE PERMISSÕES
+
+Permissões devem ser baseadas em:
+
+- Role (papel do usuário)
+- Departamento (opcional)
+
+---
+
+### Exemplo de permissões:
+
+| Ação                     | Admin | Gestor | Criador | Executor |
+|--------------------------|------|--------|---------|----------|
+| Criar POP                | ✅   | ✅     | ✅      | ❌       |
+| Editar POP               | ✅   | ✅     | ✅      | ❌       |
+| Aprovar POP              | ✅   | ✅     | ❌      | ❌       |
+| Executar POP             | ✅   | ✅     | ✅      | ✅       |
+| Gerenciar usuários       | ✅   | ❌     | ❌      | ❌       |
+| Ver indicadores          | ✅   | ✅     | ❌      | ❌       |
+
+---
+
+## 🧱 6. FUNCIONALIDADES (MVP)
+
+### 📌 Multi-empresa (Tenant)
+- Cada usuário pertence a uma empresa
+- Todas as tabelas devem ter:
+  - `empresa_id`
+- Filtrar automaticamente dados por empresa
+
+---
+
+### 📌 Cadastro de Empresa
+- Nome da empresa
+- ID único
+- Data de criação
+
+---
+
+### 📌 Usuários
+- Cadastro de usuário
+- Associação com empresa
+- Associação com role
+- Associação opcional com departamento
+
+---
+
+### 📌 Permissões
+- Controle baseado em role
+- Verificação em ações críticas:
+  - Criar POP
+  - Editar
+  - Aprovar
+  - Gerenciar usuários
+
+---
+
+### 📌 Isolamento de Dados
+- Usuário só acessa dados da sua empresa
+- Bloqueio total entre empresas
+
+---
+
+## 🧩 7. ESTRUTURA DE DADOS
+
+### Empresa
+- id
+- nome
+- data_criacao
+
+---
+
+### Usuario
+- id
+- nome
+- email
+- empresa_id
+- role (admin, gestor, criador, executor)
+- departamento_id (opcional)
+
+---
+
+### Atualização em todas entidades:
+Adicionar:
+
+- empresa_id
+
+Exemplo:
+
+### POP
+- id
+- empresa_id
+- titulo
+- ...
+
+---
+
+### Execucao
+- id
+- empresa_id
+- usuario_id
+- ...
+
+---
+
+## 🔐 8. REGRAS DE SEGURANÇA
+
+- Toda query deve filtrar por `empresa_id`
+- Usuário nunca pode acessar dados de outra empresa
+- Validação de permissões no frontend e backend
+- Operações críticas devem validar role
+
+---
+
+## 🎨 9. UX / UI PRINCÍPIOS
+
+- Interface simples para gestão de usuários
+- Visual claro de permissões
+- Facilidade para admins gerenciarem equipe
+- Evitar complexidade excessiva no início
+
+---
+
+## 🚫 10. FORA DO ESCOPO (AGORA)
+
+- Multi-empresa com troca de contexto (multi login)
+- Permissões customizadas avançadas (RBAC completo)
+- SSO (Single Sign-On)
+- Hierarquia complexa de empresas
+
+---
+
+## 📈 11. MÉTRICAS DE SUCESSO
+
+- Número de empresas cadastradas
+- Número de usuários por empresa
+- Uso por role
+- Adoção por departamento
+
+---
+
+## 🔥 12. DIFERENCIAL ESTRATÉGICO
+
+Este módulo transforma o sistema de:
+
+👉 Ferramenta interna  
+em  
+👉 Plataforma SaaS escalável
+
+Permitindo:
+
+- Revenda do sistema
+- Escala horizontal (várias empresas)
+- Receita recorrente (modelo assinatura)
+- Expansão futura com planos e features

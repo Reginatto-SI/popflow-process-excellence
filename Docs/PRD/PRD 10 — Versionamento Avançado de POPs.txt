@@ -1,0 +1,240 @@
+# 📄 PRD 10 — Versionamento Avançado de POPs
+
+---
+
+## 🧠 1. VISÃO
+
+Este módulo tem como objetivo garantir controle total sobre mudanças nos POPs, permitindo versionamento estruturado, rastreabilidade de alterações e segurança operacional durante execuções.
+
+O foco é transformar o sistema em uma plataforma confiável, auditável e profissional para gestão de processos.
+
+---
+
+## 🎯 2. OBJETIVO
+
+- Manter histórico completo de alterações
+- Evitar perda de informação
+- Garantir consistência durante execuções
+- Permitir auditoria de mudanças
+- Controlar evolução dos processos
+
+---
+
+## 🔄 3. CONCEITO PRINCIPAL
+
+Cada POP possui múltiplas versões.
+
+👉 Uma versão é um “snapshot completo” do POP em determinado momento.
+
+Mudanças NÃO alteram a versão atual diretamente — criam uma nova versão.
+
+---
+
+## 🧱 4. FUNCIONAMENTO
+
+### Criação inicial
+- POP criado como versão **1.0**
+- Status: rascunho → revisão → publicado
+
+---
+
+### Edição de POP publicado
+
+1. Usuário clica em “Editar POP”
+2. Sistema cria uma nova versão baseada na atual
+3. Usuário edita essa nova versão
+4. Nova versão passa por revisão
+5. Ao aprovar → vira versão atual
+
+---
+
+### Execução (regra crítica)
+
+- Cada execução usa uma versão específica
+- A versão é “congelada” no início
+- Mudanças futuras NÃO afetam execuções em andamento
+
+---
+
+## 🧩 5. FUNCIONALIDADES (MVP)
+
+### 📌 Controle de versões
+- Exibir versão atual (ex: 1.2)
+- Histórico de versões
+- Identificação:
+  - Criador
+  - Data
+  - Status
+
+---
+
+### 📌 Criação de nova versão
+- Ao editar, criar nova versão automaticamente
+- Baseada na versão anterior
+
+---
+
+### 📌 Histórico de versões
+Listar:
+
+- Versão
+- Autor
+- Data
+- Status
+- Descrição da mudança (opcional)
+
+---
+
+### 📌 Visualização de versões antigas
+- Permitir abrir versões anteriores
+- Modo somente leitura
+
+---
+
+### 📌 Definir versão ativa
+- Apenas versão publicada pode ser ativa
+- Sistema sempre usa a versão ativa para novas execuções
+
+---
+
+## 🔍 6. COMPARAÇÃO DE VERSÕES (DIFF SIMPLES)
+
+Exibir diferenças entre versões:
+
+- Alterações de texto
+- Mudanças em etapas
+- Inclusão/remoção de itens
+
+Exemplo:
+
+ANTES:
+- Selecionar filtros
+
+DEPOIS:
+- Selecionar filtros + marcar destinatário
+
+---
+
+## 🧩 7. ESTRUTURA DE DADOS
+
+### POP
+- id
+- empresa_id
+- titulo
+
+---
+
+### POP_VERSAO
+- id
+- pop_id
+- numero (1.0, 1.1, 2.0...)
+- status (rascunho, revisao, publicado)
+- criado_por
+- data_criacao
+- descricao_mudanca
+
+---
+
+### ETAPA
+- id
+- pop_versao_id
+- ordem
+- titulo
+- descricao
+- tempo_estimado
+- resultado_esperado
+- erro_comum
+
+---
+
+### EXECUCAO (atualização)
+- id
+- pop_versao_id
+- usuario_id
+- data_inicio
+- data_fim
+
+---
+
+## 🔐 8. REGRAS IMPORTANTES
+
+- Nunca sobrescrever versão existente
+- Toda edição cria nova versão
+- Execuções sempre vinculadas a uma versão
+- Apenas versões “publicadas” podem ser usadas
+- Versões antigas permanecem acessíveis
+
+---
+
+## 🎨 9. UX / UI PRINCÍPIOS
+
+- Versão visível no topo do POP
+- Fácil acesso ao histórico
+- Comparação simples e clara
+- Evitar complexidade técnica para o usuário
+- Segurança e clareza acima de tudo
+
+---
+
+## 💡 10. INTERFACE (SUGESTÃO)
+
+Topo do POP:
+
+Versão 1.2 ▼
+
+Ao clicar:
+
+- Versão 1.2 (Atual)
+- Versão 1.1
+- Versão 1.0
+
+---
+
+Botão:
+
+“Ver histórico de versões”
+
+---
+
+## 🚫 11. FORA DO ESCOPO (AGORA)
+
+- Merge de versões (tipo Git)
+- Versionamento paralelo (branches)
+- Controle avançado de conflitos
+- Edição colaborativa em tempo real
+
+---
+
+## 📈 12. MÉTRICAS DE SUCESSO
+
+- Número de versões por POP
+- Frequência de atualização
+- Redução de erros após mudanças
+- Uso de versões antigas (consulta)
+
+---
+
+## 🔥 13. DIFERENCIAL ESTRATÉGICO
+
+Este módulo transforma o sistema de:
+
+👉 Documento editável  
+em  
+👉 Sistema auditável e seguro
+
+Permitindo:
+
+- Controle total de mudanças
+- Confiabilidade operacional
+- Segurança durante execução
+- Evolução contínua dos processos
+
+---
+
+## 💡 14. FUTURO (EXPANSÃO)
+
+- Comparação visual avançada (highlight)
+- Comentários por versão
+- Aprovação obrigatória de versões
+- Logs detalhados de alterações
+- Timeline de mudanças

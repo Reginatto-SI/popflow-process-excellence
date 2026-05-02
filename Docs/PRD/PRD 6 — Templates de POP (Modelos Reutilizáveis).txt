@@ -1,0 +1,192 @@
+# 📄 PRD 6 — Templates de POP (Modelos Reutilizáveis)
+
+---
+
+## 🧠 1. VISÃO
+
+Este módulo permite criar, gerenciar e reutilizar templates de POPs, possibilitando padronização entre processos e acelerando a criação de novos POPs.
+
+O objetivo é reduzir esforço manual e permitir escalabilidade do sistema entre diferentes empresas e departamentos.
+
+---
+
+## 🎯 2. OBJETIVO
+
+- Permitir criação de modelos reutilizáveis de POP
+- Acelerar criação de novos processos
+- Garantir padronização operacional
+- Facilitar onboarding de novas empresas (SaaS)
+- Criar base de processos replicáveis
+
+---
+
+## 👤 3. USUÁRIOS
+
+### Criador de POP
+- Cria templates
+- Usa templates para novos POPs
+
+### Admin
+- Gerencia templates da empresa
+- Define padrões internos
+
+### (Futuro) Plataforma
+- Pode fornecer templates prontos (biblioteca)
+
+---
+
+## 🔄 4. FLUXO PRINCIPAL
+
+### Criação de template
+1. Usuário cria um POP
+2. Marca como “Salvar como template”
+3. Define nome e categoria
+4. Template fica disponível para reutilização
+
+---
+
+### Uso de template
+1. Usuário clica em “Criar novo POP”
+2. Escolhe:
+   - Criar do zero
+   - Usar template
+3. Seleciona template
+4. Sistema cria novo POP baseado nele
+
+---
+
+## 🧱 5. FUNCIONALIDADES (MVP)
+
+### 📌 Criar template
+- Converter um POP em template
+- Definir:
+  - Nome
+  - Categoria
+  - Descrição
+
+---
+
+### 📌 Biblioteca de templates
+- Lista de templates disponíveis
+- Filtros por:
+  - Departamento
+  - Categoria
+  - Popularidade (futuro)
+
+---
+
+### 📌 Aplicar template
+- Criar POP baseado em template
+- Copiar:
+  - Etapas
+  - Estrutura
+  - Campos (sem dados sensíveis)
+
+---
+
+### 📌 Edição independente
+- Após criar POP a partir do template:
+  - Ele não depende mais do template
+  - Pode ser editado livremente
+
+---
+
+## 🧩 6. O QUE UM TEMPLATE CONTÉM
+
+- Estrutura do POP
+- Etapas
+- Títulos
+- Descrições padrão
+- Checklists
+- Campos:
+  - Resultado esperado
+  - Erros comuns
+  - Tempo estimado
+
+---
+
+## ⚠️ IMPORTANTE
+
+Templates NÃO devem conter:
+
+- Dados específicos de clientes
+- Dados sensíveis
+- Informações internas da empresa
+
+---
+
+## 🧩 7. ESTRUTURA DE DADOS
+
+### Template
+- id
+- empresa_id
+- nome
+- descricao
+- categoria
+- criado_por
+
+---
+
+### TemplateEtapa
+- id
+- template_id
+- ordem
+- titulo
+- descricao
+- tempo_estimado
+- resultado_esperado
+- erro_comum
+
+---
+
+## 🎨 8. UX / UI PRINCÍPIOS
+
+- Processo simples e rápido
+- Seleção visual de templates
+- Preview antes de usar
+- Facilidade de duplicação
+- Interface limpa
+
+---
+
+## 🚫 9. FORA DO ESCOPO (AGORA)
+
+- Marketplace público de templates
+- Templates compartilhados entre empresas
+- Versionamento de templates
+- IA gerando templates automaticamente
+
+---
+
+## 📈 10. MÉTRICAS DE SUCESSO
+
+- % de POPs criados via template
+- Tempo médio de criação de POP
+- Quantidade de templates criados
+- Adoção por usuários
+
+---
+
+## 🔥 11. DIFERENCIAL ESTRATÉGICO
+
+Este módulo transforma o sistema de:
+
+👉 Criação manual de processos  
+em  
+👉 Sistema escalável e padronizado
+
+Permitindo:
+
+- Crescimento rápido
+- Replicação entre empresas
+- Redução de esforço operacional
+- Base estruturada de conhecimento
+
+---
+
+## 💡 12. FUTURO (EXPANSÃO)
+
+- Biblioteca global de templates
+- Templates por nicho (contabilidade, fiscal, RH)
+- Recomendação de templates por IA
+- Marketplace de processos

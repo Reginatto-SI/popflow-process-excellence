@@ -1,0 +1,236 @@
+# 📄 PRD 11 — Sistema de Visibilidade e Compartilhamento de POPs
+
+---
+
+## 🧠 1. VISÃO
+
+Este módulo define como os POPs são visíveis e compartilhados dentro do sistema, permitindo que usuários criem processos privados (uso pessoal) ou compartilhem com a empresa.
+
+O objetivo é equilibrar:
+
+- Liberdade individual (uso pessoal)
+- Padronização organizacional (uso corporativo)
+
+---
+
+## 🎯 2. OBJETIVO
+
+- Permitir criação de POPs privados
+- Permitir compartilhamento com a empresa
+- Criar fluxo natural de evolução de conhecimento
+- Aumentar adoção do sistema
+- Evitar rigidez excessiva no uso
+
+---
+
+## 🔑 3. CONCEITO PRINCIPAL
+
+Cada POP possui um nível de visibilidade.
+
+---
+
+### Tipos de visibilidade:
+
+#### 🔒 Privado
+- Visível apenas para o criador
+- Não aparece para outros usuários
+- Não entra em revisão
+- Uso pessoal
+
+---
+
+#### 🏢 Empresa
+- Visível para todos da empresa (ou conforme permissões)
+- Pode entrar em revisão
+- Pode ser executado
+
+---
+
+#### 👥 Departamento (futuro)
+- Visível apenas para um grupo específico
+
+---
+
+## 👤 4. USUÁRIOS
+
+### Usuário comum
+- Cria POP privado
+- Pode compartilhar depois
+
+---
+
+### Criador de POP
+- Cria POP já como empresa
+- Envia para revisão
+
+---
+
+### Gestor/Admin
+- Visualiza POPs da empresa
+- Aprova ou gerencia
+
+---
+
+## 🔄 5. FLUXO PRINCIPAL
+
+### Criação de POP
+
+1. Usuário clica em “Criar POP”
+2. Escolhe visibilidade:
+
+- 🔒 Só eu (privado)
+- 🏢 Compartilhar com empresa
+
+3. Cria POP normalmente
+
+---
+
+### Evolução natural (fluxo mais importante)
+
+1. Usuário cria POP privado
+2. Usa no dia a dia
+3. Decide compartilhar
+4. Clica em:
+
+👉 “Compartilhar com a empresa”
+
+5. Sistema:
+
+- muda visibilidade
+- envia para revisão
+- inicia fluxo corporativo
+
+---
+
+### POP privado → empresa
+
+- Não é automático
+- Requer ação do usuário
+- Pode exigir revisão
+
+---
+
+## 🧱 6. FUNCIONALIDADES (MVP)
+
+### 📌 Definir visibilidade
+- Campo no POP:
+  - privado
+  - empresa
+
+---
+
+### 📌 Criar POP privado
+- Default pode ser:
+  - privado (recomendado para adoção)
+
+---
+
+### 📌 Compartilhar POP
+
+Botão:
+
+👉 “Tornar público na empresa”
+
+Ação:
+
+- muda visibilidade
+- inicia revisão (se necessário)
+
+---
+
+### 📌 Restrições de acesso
+
+POP privado:
+
+- só criador acessa
+- não aparece na busca global
+- não aparece para outros usuários
+- não entra em analytics da empresa
+
+---
+
+POP empresa:
+
+- visível conforme permissões
+- aparece na busca
+- pode ser executado
+- entra em analytics
+
+---
+
+### 📌 Indicador visual
+
+Exibir no POP:
+
+- 🔒 Privado
+- 🏢 Empresa
+
+---
+
+## 🧩 7. ESTRUTURA DE DADOS
+
+### POP (atualização)
+
+- visibilidade (privado, empresa)
+- owner_id
+
+---
+
+## 🔐 8. REGRAS IMPORTANTES
+
+- Usuário só acessa POP privado próprio
+- POP privado não pode ser acessado por outros
+- POP empresa segue regras de permissão
+- Mudança de visibilidade deve ser controlada
+
+---
+
+## 🎨 9. UX / UI PRINCÍPIOS
+
+- Escolha simples na criação
+- Visual claro de visibilidade
+- Fácil conversão de privado → empresa
+- Evitar complexidade desnecessária
+
+---
+
+## 🚫 10. FORA DO ESCOPO (AGORA)
+
+- Compartilhamento por usuário específico
+- Compartilhamento por grupo avançado
+- Permissões customizadas por POP
+- Controle granular (view/edit)
+
+---
+
+## 📈 11. MÉTRICAS DE SUCESSO
+
+- % de POPs privados criados
+- % de POPs convertidos em empresa
+- Uso por usuário
+- Adoção geral do sistema
+
+---
+
+## 🔥 12. DIFERENCIAL ESTRATÉGICO
+
+Este módulo transforma o sistema de:
+
+👉 Ferramenta rígida  
+em  
+👉 Plataforma flexível e adaptável
+
+Permitindo:
+
+- Adoção natural
+- Uso pessoal + corporativo
+- Crescimento orgânico da base de conhecimento
+
+---
+
+## 💡 13. FUTURO (EXPANSÃO)
+
+- Compartilhamento por departamento
+- Compartilhamento com usuários específicos
+- Permissões por POP
+- Biblioteca pública de processos

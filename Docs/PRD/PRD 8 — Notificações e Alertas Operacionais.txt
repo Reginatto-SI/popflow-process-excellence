@@ -1,0 +1,213 @@
+# 📄 PRD 8 — Notificações e Alertas Operacionais
+
+---
+
+## 🧠 1. VISÃO
+
+Este módulo tem como objetivo tornar o sistema proativo, notificando usuários sobre ações necessárias, execuções pendentes, revisões e problemas operacionais.
+
+O foco é garantir que processos não sejam esquecidos e que a operação funcione de forma contínua e organizada.
+
+---
+
+## 🎯 2. OBJETIVO
+
+- Lembrar usuários de tarefas pendentes
+- Garantir execução de processos críticos
+- Reduzir esquecimentos e atrasos
+- Melhorar organização operacional
+- Aumentar engajamento com o sistema
+
+---
+
+## 👤 3. USUÁRIOS
+
+### Executor
+- Recebe alertas de tarefas a executar
+- É lembrado de processos pendentes
+
+### Gestor
+- Recebe alertas de gargalos e atrasos
+- Acompanha execução da equipe
+
+### Revisor
+- Recebe alertas de POPs pendentes de revisão
+
+---
+
+## 🔄 4. TIPOS DE NOTIFICAÇÃO
+
+### 📌 Execução
+
+- POP iniciado e não finalizado
+- Etapas pendentes
+- Execuções abandonadas
+
+---
+
+### 📌 Revisão
+
+- POP enviado para revisão
+- POP aguardando aprovação
+- POP com ajustes solicitados
+
+---
+
+### 📌 Sistema
+
+- Novo POP publicado
+- Atualização de versão de POP
+- Novo template disponível (futuro)
+
+---
+
+### 📌 Operacional (importante)
+
+- Processo crítico não executado
+- Tempo de execução acima do normal
+- Etapa com alta taxa de erro
+
+---
+
+## 🧱 5. FUNCIONALIDADES (MVP)
+
+### 📌 Notificações no sistema (in-app)
+
+- Ícone de sino no topo
+- Lista de notificações
+- Marcar como lida / não lida
+
+---
+
+### 📌 Tipos de alerta
+
+- Informativo (azul)
+- Atenção (amarelo)
+- Crítico (vermelho)
+
+---
+
+### 📌 Ações rápidas
+
+Cada notificação deve permitir:
+
+- “Ir para o POP”
+- “Ir para a etapa”
+- “Continuar execução”
+- “Revisar POP”
+
+---
+
+### 📌 Estado da notificação
+
+- Não lida
+- Lida
+- Arquivada
+
+---
+
+### 📌 Agrupamento
+
+- Agrupar notificações por tipo
+- Exibir quantidade (badge)
+
+---
+
+## ⏱️ 6. GATILHOS (TRIGGERS)
+
+Notificações devem ser geradas quando:
+
+---
+
+### Execução
+
+- Execução iniciada e parada por X tempo
+- Etapa não concluída após X tempo
+
+---
+
+### Revisão
+
+- POP enviado para revisão
+- POP aguardando ação do revisor
+
+---
+
+### Operacional
+
+- Tempo de execução acima da média
+- Erros recorrentes em etapa
+- Processo não executado no período esperado
+
+---
+
+## 🧩 7. ESTRUTURA DE DADOS
+
+### Notificacao
+- id
+- empresa_id
+- usuario_id
+- tipo (execucao, revisao, sistema, alerta)
+- titulo
+- descricao
+- link (rota interna)
+- status (nao_lida, lida, arquivada)
+- prioridade (baixa, media, alta)
+- data_criacao
+
+---
+
+## 🎨 8. UX / UI PRINCÍPIOS
+
+- Notificações claras e diretas
+- Não poluir o usuário (evitar excesso)
+- Priorizar o que é realmente importante
+- Acesso rápido à ação
+- Visual intuitivo (cores e ícones)
+
+---
+
+## 🚫 9. FORA DO ESCOPO (AGORA)
+
+- Notificações por email
+- Push notifications (mobile)
+- Integração com WhatsApp
+- Regras avançadas personalizadas
+- Automação complexa
+
+---
+
+## 📈 10. MÉTRICAS DE SUCESSO
+
+- Taxa de abertura de notificações
+- Tempo de resposta às notificações
+- Redução de execuções abandonadas
+- Aumento da conclusão de processos
+- Engajamento com o sistema
+
+---
+
+## 🔥 11. DIFERENCIAL ESTRATÉGICO
+
+Este módulo transforma o sistema de:
+
+👉 Ferramenta passiva  
+em  
+👉 Sistema ativo que guia o usuário
+
+Permitindo:
+
+- Operação mais organizada
+- Redução de falhas humanas
+- Execução consistente
+- Engajamento contínuo
+
+---
+
+## 💡 12. FUTURO (EXPANSÃO)
+
+- Notificações por email
+- Integração com Slack / Teams
+- Alertas inteligentes com IA
+- Automação de fluxos
+- Regras personalizadas por empresa

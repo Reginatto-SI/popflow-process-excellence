@@ -1,0 +1,203 @@
+
+
+# 📄 PRD 1 — SISTEMA DE POPs (VERSÃO 1.0)
+
+Vou montar o primeiro PRD completo pra você. Depois a gente pode quebrar em outros (execução, analytics, etc.).
+
+---
+
+## 🧠 1. VISÃO DO PRODUTO
+
+**Nome (provisório):** POPFlow
+
+**Resumo:**
+Sistema para criação, gestão e execução de Procedimentos Operacionais Padrão (POPs), com foco em transformar conhecimento tácito (na cabeça das pessoas) em processos estruturados, executáveis e auditáveis.
+
+---
+
+## 🎯 2. PROBLEMA
+
+Atualmente:
+
+* Processos estão na cabeça das pessoas
+* Falta padronização entre colaboradores
+* Alto risco operacional (erro humano)
+* Treinamento lento e ineficiente
+* Dependência de pessoas específicas
+* Dificuldade em escalar operação
+
+---
+
+## 💡 3. SOLUÇÃO
+
+Criar um sistema onde:
+
+* Processos são documentados como fluxos passo a passo
+* Cada etapa contém instruções + evidências (prints, áudio, docs)
+* Usuário executa o processo guiado
+* Sistema garante consistência e reduz erros
+
+---
+
+## 👤 4. USUÁRIOS
+
+### 1. Executor (operacional)
+
+* Assistente fiscal, contábil, etc.
+* Usa o sistema para seguir processos
+
+### 2. Criador de POP
+
+* Analista mais experiente
+* Documenta processos
+
+### 3. Gestor
+
+* Revisa, aprova e acompanha execução
+
+---
+
+## 🔄 5. FLUXO PRINCIPAL
+
+### Criação do POP:
+
+1. Usuário cria um POP
+2. Define etapas
+3. Adiciona instruções, prints, áudio, checklist
+4. Marca como “em revisão” ou “publicado”
+
+### Execução do POP:
+
+1. Usuário seleciona um POP
+2. Clica em “iniciar execução”
+3. Segue etapas uma a uma
+4. Marca etapas como concluídas
+5. Finaliza processo
+
+---
+
+
+
+## 🧩 5.1 MODOS DE USO
+
+### Modo Consulta
+
+- Navegação livre
+- Scroll completo por todas as etapas
+- Sem obrigatoriedade de interação
+- Foco em leitura rápida
+
+### Modo Execução
+
+- Marcação de etapas
+- Uso opcional de checklist
+- Registro de progresso
+
+## 🧱 6. FUNCIONALIDADES (MVP)
+
+### 📌 POPs
+
+* Criar, editar, excluir
+* Versionamento básico
+* Status (rascunho, revisão, publicado)
+
+### 📌 Etapas
+
+* Ordem sequencial
+* Texto com referências inline de mídia/anexos (ex.: @midia1, @imagem1, @audio1, @video1, @documento1)
+* Checklist interno
+* Campo “erro comum”
+* Campo “resultado esperado”
+* Tempo estimado
+
+### 📌 Execução
+
+* Marcar etapa como concluída
+* Barra de progresso
+* Navegação entre etapas
+
+### 📌 Sistema
+
+* Login e autenticação
+* Organização por departamento
+* Busca de POPs
+
+---
+
+## 🧩 7. ESTRUTURA DE DADOS (SIMPLIFICADA)
+
+### POP
+
+* id
+* título
+* descrição
+* departamento
+* responsável
+* status
+* versão
+* tempo_total_estimado
+
+### Etapa
+
+* id
+* pop_id
+* ordem
+* título
+* descrição
+* tempo_estimado
+* resultado_esperado
+* erro_comum
+* pre_requisito
+
+### Anexo
+
+* id
+* etapa_id
+* tipo (imagem, áudio, documento)
+* url
+
+### Checklist
+
+* id
+* etapa_id
+* descrição
+* concluído (boolean)
+
+---
+
+## 🎨 8. UX / UI PRINCÍPIOS
+
+* Foco em execução, não só documentação
+* Interface limpa (sem poluição)
+* Visual de progresso claro
+* Etapas bem destacadas
+* Conteúdo fácil de consumir
+* Mídia inline contextual sem impor drawer lateral fixo
+
+---
+
+## 🚫 9. FORA DO ESCOPO (AGORA)
+
+* IA automática
+* Transcrição de áudio
+* Automação com sistemas externos
+* Mapa mental avançado
+* Analytics avançado
+
+---
+
+## 📈 10. MÉTRICAS DE SUCESSO
+
+* % de processos documentados
+* Tempo médio de execução
+* Redução de erros operacionais
+* Tempo de onboarding de novos funcionários
+* Uso ativo por usuário
+
+---
+
+## 🔥 Agora o mais importante
+
+Esse PRD já está pronto pra você usar no Lovable como **Knowledge Base**, exatamente como a documentação recomenda 
+
+---
