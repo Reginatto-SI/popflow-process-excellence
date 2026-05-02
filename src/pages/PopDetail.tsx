@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Building2, Clock3, FileAudio2, FileImage, FileText, Film, Lock, PlayCircle, Share2 } from "lucide-react";
+import { Building2, Clock3, FileAudio2, FileImage, FileText, Film, Loader2, Lock, PlayCircle, Share2 } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { AppLayout } from "@/components/AppLayout";
@@ -10,7 +10,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { MediaViewer } from "@/components/MediaViewer";
+import { useToast } from "@/hooks/use-toast";
 import { usePop, type PopMidiaTipo, type PopStatus, type PopMidiaRow, type PopEtapaRow } from "@/hooks/usePops";
+import { useStartExecucao } from "@/hooks/useExecucoes";
 
 const statusLabel: Record<PopStatus, string> = {
   rascunho: "Rascunho",
