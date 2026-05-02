@@ -323,6 +323,7 @@ export function useUpdatePop() {
           nome: m.nome,
           tipo: m.tipo,
           ordem: m.ordem,
+          url: m.url ?? null,
         }));
         const { error: merr } = await supabase.from("pop_midias").insert(midiasInsert);
         if (merr) throw merr;
