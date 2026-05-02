@@ -45,6 +45,8 @@ interface MidiaItem {
   referencia: string;
   etapaOrdem: number | null;
   ordem: number;
+  url: string | null;
+  uploading?: boolean;
 }
 
 const tabs: { key: TabKey; label: string }[] = [
