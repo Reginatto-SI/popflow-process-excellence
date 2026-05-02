@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Building2, Clock3, FileAudio2, FileImage, FileText, Film, Lock, PlayCircle, Share2 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -7,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { MediaViewer } from "@/components/MediaViewer";
 import { usePop, type PopMidiaTipo, type PopStatus, type PopMidiaRow, type PopEtapaRow } from "@/hooks/usePops";
 
 const statusLabel: Record<PopStatus, string> = {
@@ -28,10 +31,14 @@ const mediaIconByType: Record<PopMidiaTipo, ReactNode> = {
   documento: <FileText className="h-3 w-3" />,
 };
 
+// Regex permite letras (incl. acentos), dígitos, _ e -. Cobre @Sintegra, @midia1, @imagem1.
+const REF_REGEX = /@([A-Za-zÀ-ÿ0-9_-]+)/g;
+
 const PopDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: pop, isLoading } = usePop(id);
+  const [viewer, setViewer] = useState<{ open: boolean; midia: PopMidiaRow | null }>({ open: false, midia: null });
 
   if (isLoading) return <AppLayout title="Detalhe do POP"><p className="p-6 text-sm text-muted-foreground">Carregando...</p></AppLayout>;
   if (!pop) return <AppLayout title="Detalhe do POP"><p className="p-6 text-sm text-muted-foreground">POP não encontrado.</p></AppLayout>;
@@ -42,29 +49,46 @@ const PopDetail = () => {
   const midias = versao?.midias ?? [];
   const totalMin = etapas.reduce((acc, e) => acc + Number(e.tempo_estimado.replace(/\D/g, "") || 0), 0);
 
+  const openMidia = (m: PopMidiaRow) => setViewer({ open: true, midia: m });
+
   const renderInline = (descricao: string, midiasDaEtapa: PopMidiaRow[]) => {
-    const matches = [...descricao.matchAll(/@(\w+\d+)/g)];
+    if (!descricao) return null;
+    const matches = [...descricao.matchAll(REF_REGEX)];
     if (matches.length === 0) return descricao;
     const parts: ReactNode[] = [];
     let cursor = 0;
     matches.forEach((match, idx) => {
-      const token = match[0];
-      const ref = match[1];
+      const token = match[0]; // ex: "@Sintegra"
+      const ref = match[1];   // ex: "Sintegra" — preservado (case-sensitive, sem mexer)
       const start = match.index ?? 0;
       const end = start + token.length;
       if (start > cursor) parts.push(descricao.slice(cursor, start));
-      const m = midiasDaEtapa.find((x) => x.referencia === ref);
-      if (!m) parts.push(token);
-      else parts.push(
-        <span key={`${ref}-${idx}`} className="mx-0.5 inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/15 px-2 py-0.5 text-xs font-semibold text-primary">
-          {mediaIconByType[m.tipo]}{token}
-        </span>
-      );
+      // Lookup: primeiro na etapa, depois fallback em todas as mídias do POP
+      const m = midiasDaEtapa.find((x) => x.referencia === ref) ?? midias.find((x) => x.referencia === ref);
+      if (!m) {
+        parts.push(token);
+      } else {
+        parts.push(
+          <button
+            key={`${ref}-${idx}`}
+            type="button"
+            onClick={() => openMidia(m)}
+            className="mx-0.5 inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/15 px-2 py-0.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/25"
+          >
+            {mediaIconByType[m.tipo]}{token}
+          </button>
+        );
+      }
       cursor = end;
     });
     if (cursor < descricao.length) parts.push(descricao.slice(cursor));
     return parts;
   };
+
+  const execucaoMotivo =
+    status !== "publicado"
+      ? "Publique o POP para habilitar a execução."
+      : "A execução será habilitada quando o fluxo de execução for implementado.";
 
   return (
     <AppLayout title="Detalhe do POP">
@@ -82,14 +106,24 @@ const PopDetail = () => {
               </div>
               <h1 className="text-2xl font-semibold">{pop.titulo}</h1>
               <p className="text-sm text-muted-foreground">{pop.departamento || "—"} • Versão {versao?.numero ?? "v1.0"}</p>
-              {pop.descricao && <p className="text-sm text-muted-foreground max-w-3xl">{pop.descricao}</p>}
+              {pop.descricao && <p className="text-sm text-muted-foreground max-w-3xl whitespace-pre-wrap">{pop.descricao}</p>}
             </div>
             <div className="flex flex-wrap gap-2">
               <Button variant="outline"><Share2 className="mr-2 h-4 w-4" />Compartilhar</Button>
               <Button variant="outline" onClick={() => navigate(`/pops/${pop.id}/editar`)}>Editar</Button>
-              <Button onClick={() => navigate(`/execucao/${pop.id}`)} disabled={status !== "publicado"}>
-                <PlayCircle className="mr-2 h-4 w-4" />Iniciar Execução
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    {/* span para o tooltip funcionar mesmo com botão desabilitado */}
+                    <span tabIndex={0}>
+                      <Button disabled>
+                        <PlayCircle className="mr-2 h-4 w-4" />Iniciar Execução
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>{execucaoMotivo}</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
         </div>
@@ -121,7 +155,7 @@ const PopDetail = () => {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3 text-sm">
-                    <p className="text-muted-foreground">{renderInline(etapa.descricao, midiasDaEtapa)}</p>
+                    <p className="text-muted-foreground whitespace-pre-wrap">{renderInline(etapa.descricao, midiasDaEtapa)}</p>
                     <div className="grid gap-2 md:grid-cols-3">
                       <div className="rounded-md border bg-muted/30 p-2"><p className="text-xs font-medium text-muted-foreground">Pré-requisito</p><p>{etapa.pre_requisito || "—"}</p></div>
                       <div className="rounded-md border bg-emerald-50/40 p-2"><p className="text-xs font-medium text-muted-foreground">Resultado esperado</p><p>{etapa.resultado_esperado || "—"}</p></div>
@@ -143,7 +177,7 @@ const PopDetail = () => {
                         <p className="mb-1 font-medium">Mídias vinculadas</p>
                         <div className="flex flex-wrap gap-2">
                           {midiasDaEtapa.map((m) => (
-                            <Button key={m.id} size="sm" variant="secondary">
+                            <Button key={m.id} size="sm" variant="secondary" onClick={() => openMidia(m)}>
                               {mediaIconByType[m.tipo]}<span className="ml-1">{m.nome}</span>
                             </Button>
                           ))}
@@ -174,6 +208,14 @@ const PopDetail = () => {
           </aside>
         </div>
       </div>
+
+      <MediaViewer
+        open={viewer.open}
+        onOpenChange={(open) => setViewer((s) => ({ ...s, open }))}
+        tipo={viewer.midia?.tipo ?? null}
+        url={viewer.midia?.url ?? null}
+        nome={viewer.midia?.nome ?? ""}
+      />
     </AppLayout>
   );
 };

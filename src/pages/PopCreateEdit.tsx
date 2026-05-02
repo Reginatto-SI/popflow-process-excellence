@@ -21,6 +21,8 @@ import {
   type PopMidiaTipo,
   type PopVisibilidade,
 } from "@/hooks/usePops";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 type TabKey = "informacoes" | "etapas" | "midias" | "revisao";
 
@@ -43,6 +45,8 @@ interface MidiaItem {
   referencia: string;
   etapaOrdem: number | null;
   ordem: number;
+  url: string | null;
+  uploading?: boolean;
 }
 
 const tabs: { key: TabKey; label: string }[] = [
@@ -57,6 +61,13 @@ const tipoLabel: Record<PopMidiaTipo, string> = {
   audio: "Áudio",
   video: "Vídeo",
   documento: "Documento/PDF",
+};
+
+const acceptByTipo: Record<PopMidiaTipo, string> = {
+  imagem: "image/*",
+  audio: "audio/*",
+  video: "video/*",
+  documento: "application/pdf,.pdf,.doc,.docx,.xls,.xlsx,.txt",
 };
 
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -114,6 +125,7 @@ const PopCreateEdit = () => {
       referencia: m.referencia,
       etapaOrdem: m.etapa_id ? ordemPorEtapaId.get(m.etapa_id) ?? null : null,
       ordem: m.ordem,
+      url: m.url ?? null,
     })));
   }, [isEdit, popData]);
 
@@ -156,6 +168,7 @@ const PopCreateEdit = () => {
       referencia: `midia${midias.length + 1}`,
       etapaOrdem: null,
       ordem: midias.length + 1,
+      url: null,
     }]);
 
   const updateMidia = (uidM: string, field: keyof Omit<MidiaItem, "uid" | "ordem">, value: string | number | null) =>
@@ -181,8 +194,49 @@ const PopCreateEdit = () => {
       nome: m.nome,
       tipo: m.tipo,
       ordem: m.ordem,
+      url: m.url,
     })),
   });
+
+  const { user } = useAuth();
+
+  /**
+   * Upload de arquivo para o bucket `pop-midias`.
+   * Path: {empresa_id}/{pop_id ou _new}/{uid}-{nome}
+   * Bucket é PÚBLICO no MVP. Migrar para signed URLs no futuro (POPs podem conter dados sensíveis).
+   */
+  const uploadMidiaFile = async (uidM: string, file: File) => {
+    if (!user) {
+      toast.error("Sessão expirada. Faça login novamente.");
+      return;
+    }
+    setMidias((prev) => prev.map((m) => (m.uid === uidM ? { ...m, uploading: true } : m)));
+    try {
+      const { data: usuario, error: uerr } = await supabase
+        .from("usuarios").select("empresa_id").eq("id", user.id).maybeSingle();
+      if (uerr) throw uerr;
+      if (!usuario) throw new Error("Empresa do usuário não encontrada");
+
+      const safeName = file.name.replace(/[^A-Za-z0-9._-]/g, "_");
+      const path = `${usuario.empresa_id}/${id ?? "_new"}/${uidM}-${safeName}`;
+      const { error: upErr } = await supabase.storage
+        .from("pop-midias")
+        .upload(path, file, { upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+
+      const { data: pub } = supabase.storage.from("pop-midias").getPublicUrl(path);
+      setMidias((prev) => prev.map((m) =>
+        m.uid === uidM
+          ? { ...m, url: pub.publicUrl, nome: m.nome || file.name, uploading: false }
+          : m,
+      ));
+      toast.success("Arquivo enviado");
+    } catch (err) {
+      // Falha: NÃO marca como válida — mantém url anterior (ou null) e remove flag
+      setMidias((prev) => prev.map((m) => (m.uid === uidM ? { ...m, uploading: false } : m)));
+      toast.error(`Falha no upload: ${(err as Error).message}`);
+    }
+  };
 
   const handleSave = async () => {
     if (!titulo.trim()) {
@@ -305,6 +359,39 @@ const PopCreateEdit = () => {
                             </SelectContent>
                           </Select>
                         </div>
+                        <div className="space-y-1 md:col-span-2">
+                          <Label>Arquivo</Label>
+                          {m.url ? (
+                            <div className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/30 p-2 text-xs">
+                              {m.tipo === "imagem" && (
+                                <img src={m.url} alt={m.nome} className="h-12 w-12 rounded object-cover" />
+                              )}
+                              <a href={m.url} target="_blank" rel="noreferrer" className="font-medium text-primary underline">
+                                {m.nome || "Abrir arquivo"}
+                              </a>
+                              <label className="ml-auto cursor-pointer text-xs text-muted-foreground underline">
+                                Substituir
+                                <input
+                                  type="file"
+                                  className="hidden"
+                                  accept={acceptByTipo[m.tipo]}
+                                  onChange={(e) => e.target.files?.[0] && uploadMidiaFile(m.uid, e.target.files[0])}
+                                />
+                              </label>
+                            </div>
+                          ) : (
+                            <Input
+                              type="file"
+                              accept={acceptByTipo[m.tipo]}
+                              disabled={m.uploading}
+                              onChange={(e) => e.target.files?.[0] && uploadMidiaFile(m.uid, e.target.files[0])}
+                            />
+                          )}
+                          {m.uploading && <p className="text-xs text-muted-foreground">Enviando…</p>}
+                          {!m.url && !m.uploading && (
+                            <p className="text-xs text-muted-foreground">Sem arquivo enviado. A referência inline aparecerá, mas sem visualização.</p>
+                          )}
+                        </div>
                         <div className="md:col-span-2"><Button variant="destructive" size="sm" onClick={() => removeMidia(m.uid)}>Remover</Button></div>
                       </CardContent>
                     </Card>
@@ -313,24 +400,68 @@ const PopCreateEdit = () => {
               </Card>
             )}
 
-            {activeTab === "revisao" && (
-              <Card>
-                <CardHeader><CardTitle>Revisão Final</CardTitle></CardHeader>
-                <CardContent className="space-y-2 text-sm">
-                  <p><strong>Título:</strong> {titulo}</p>
-                  <p><strong>Departamento:</strong> {departamento}</p>
-                  <p><strong>Responsável:</strong> {responsavel}</p>
-                  <p><strong>Visibilidade:</strong> {visibilidade === "privado" ? "Privado" : "Empresa"}</p>
-                  <p><strong>Etapas:</strong> {steps.length}</p>
-                  <p><strong>Mídias:</strong> {midias.length}</p>
-                  <div className="flex gap-2 pt-2">
-                    <Button onClick={handleSave} disabled={createPop.isPending || updatePop.isPending}>
-                      {isEdit ? "Salvar alterações" : "Criar POP"}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            {activeTab === "revisao" && (() => {
+              // Mesma regex usada no PopDetail (cobre @Sintegra, @midia1, etc.)
+              const refRegex = /@([A-Za-zÀ-ÿ0-9_-]+)/g;
+              const refsNoTexto = new Set<string>();
+              steps.forEach((s) => {
+                for (const m of s.descricao.matchAll(refRegex)) refsNoTexto.add(m[1]);
+              });
+              const refsCadastradas = new Set(midias.map((m) => m.referencia));
+              const refsSemMidia = [...refsNoTexto].filter((r) => !refsCadastradas.has(r));
+              const midiasNaoUsadas = midias.filter((m) => !refsNoTexto.has(m.referencia));
+              const semUpload = midias.filter((m) => !m.url);
+
+              return (
+                <Card>
+                  <CardHeader><CardTitle>Revisão Final</CardTitle></CardHeader>
+                  <CardContent className="space-y-3 text-sm">
+                    <p><strong>Título:</strong> {titulo}</p>
+                    <p><strong>Departamento:</strong> {departamento}</p>
+                    <p><strong>Responsável:</strong> {responsavel}</p>
+                    <p><strong>Visibilidade:</strong> {visibilidade === "privado" ? "Privado" : "Empresa"}</p>
+                    <p><strong>Etapas:</strong> {steps.length}</p>
+                    <p><strong>Mídias:</strong> {midias.length}</p>
+
+                    {refsSemMidia.length === 0 && midiasNaoUsadas.length === 0 && semUpload.length === 0 ? (
+                      <p className="rounded-md border border-emerald-300 bg-emerald-50/50 p-2 text-emerald-800">
+                        Tudo certo: todas as referências têm mídia e todas as mídias estão referenciadas e enviadas.
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        {refsSemMidia.length > 0 && (
+                          <div className="rounded-md border border-amber-300 bg-amber-50/50 p-2 text-amber-900">
+                            <p className="font-medium">Referências sem mídia ({refsSemMidia.length})</p>
+                            <p className="text-xs">Estas referências aparecem no texto mas não têm mídia cadastrada:</p>
+                            <p className="mt-1 text-xs">{refsSemMidia.map((r) => `@${r}`).join(", ")}</p>
+                          </div>
+                        )}
+                        {midiasNaoUsadas.length > 0 && (
+                          <div className="rounded-md border border-amber-300 bg-amber-50/50 p-2 text-amber-900">
+                            <p className="font-medium">Mídias não referenciadas ({midiasNaoUsadas.length})</p>
+                            <p className="text-xs">Estas mídias foram cadastradas mas não aparecem em nenhuma etapa:</p>
+                            <p className="mt-1 text-xs">{midiasNaoUsadas.map((m) => `@${m.referencia}`).join(", ")}</p>
+                          </div>
+                        )}
+                        {semUpload.length > 0 && (
+                          <div className="rounded-md border border-amber-300 bg-amber-50/50 p-2 text-amber-900">
+                            <p className="font-medium">Mídias sem arquivo ({semUpload.length})</p>
+                            <p className="text-xs">Estas mídias não têm arquivo enviado — a referência inline aparecerá sem visualização:</p>
+                            <p className="mt-1 text-xs">{semUpload.map((m) => `@${m.referencia}`).join(", ")}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="flex gap-2 pt-2">
+                      <Button onClick={handleSave} disabled={createPop.isPending || updatePop.isPending}>
+                        {isEdit ? "Salvar alterações" : "Criar POP"}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })()}
           </div>
 
           <aside className="space-y-3">
