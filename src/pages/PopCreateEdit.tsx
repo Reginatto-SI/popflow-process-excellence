@@ -191,6 +191,46 @@ const PopCreateEdit = () => {
     })),
   });
 
+  const { user } = useAuth();
+
+  /**
+   * Upload de arquivo para o bucket `pop-midias`.
+   * Path: {empresa_id}/{pop_id ou _new}/{uid}-{nome}
+   * Bucket é PÚBLICO no MVP. Migrar para signed URLs no futuro (POPs podem conter dados sensíveis).
+   */
+  const uploadMidiaFile = async (uidM: string, file: File) => {
+    if (!user) {
+      toast.error("Sessão expirada. Faça login novamente.");
+      return;
+    }
+    setMidias((prev) => prev.map((m) => (m.uid === uidM ? { ...m, uploading: true } : m)));
+    try {
+      const { data: usuario, error: uerr } = await supabase
+        .from("usuarios").select("empresa_id").eq("id", user.id).maybeSingle();
+      if (uerr) throw uerr;
+      if (!usuario) throw new Error("Empresa do usuário não encontrada");
+
+      const safeName = file.name.replace(/[^A-Za-z0-9._-]/g, "_");
+      const path = `${usuario.empresa_id}/${id ?? "_new"}/${uidM}-${safeName}`;
+      const { error: upErr } = await supabase.storage
+        .from("pop-midias")
+        .upload(path, file, { upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+
+      const { data: pub } = supabase.storage.from("pop-midias").getPublicUrl(path);
+      setMidias((prev) => prev.map((m) =>
+        m.uid === uidM
+          ? { ...m, url: pub.publicUrl, nome: m.nome || file.name, uploading: false }
+          : m,
+      ));
+      toast.success("Arquivo enviado");
+    } catch (err) {
+      // Falha: NÃO marca como válida — mantém url anterior (ou null) e remove flag
+      setMidias((prev) => prev.map((m) => (m.uid === uidM ? { ...m, uploading: false } : m)));
+      toast.error(`Falha no upload: ${(err as Error).message}`);
+    }
+  };
+
   const handleSave = async () => {
     if (!titulo.trim()) {
       toast.error("Informe o título");
