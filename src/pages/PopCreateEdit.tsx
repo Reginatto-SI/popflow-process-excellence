@@ -48,6 +48,7 @@ interface MidiaItem {
   ordem: number;
   url: string | null;
   uploading?: boolean;
+  refTouched?: boolean; // se o usuário editou manualmente a referência
 }
 
 const tabs: { key: TabKey; label: string }[] = [
@@ -64,6 +65,13 @@ const tipoLabel: Record<PopMidiaTipo, string> = {
   documento: "Documento/PDF",
 };
 
+const tipoIcon: Record<PopMidiaTipo, React.ComponentType<{ className?: string }>> = {
+  imagem: Image,
+  audio: Mic,
+  video: Video,
+  documento: FileText,
+};
+
 const acceptByTipo: Record<PopMidiaTipo, string> = {
   imagem: "image/*",
   audio: "audio/*",
@@ -72,6 +80,20 @@ const acceptByTipo: Record<PopMidiaTipo, string> = {
 };
 
 const uid = () => Math.random().toString(36).slice(2, 10);
+
+/**
+ * Gera slug seguro para referência inline de mídia.
+ * Garante que não tenha espaços ou caracteres que quebrem o regex `@([A-Za-zÀ-ÿ0-9_-]+)`.
+ * Ex: "Acesso a Tela" → "acesso-a-tela"
+ */
+const slugifyRef = (s: string): string =>
+  s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^[-_]+|[-_]+$/g, "");
 
 const checklistFromString = (s: string): ChecklistItem[] =>
   s.split(";").map((t) => t.trim()).filter(Boolean).map((texto) => ({ id: crypto.randomUUID(), texto }));
