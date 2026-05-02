@@ -23,6 +23,7 @@ const App = () => (
           <Route path="/pops" element={<PopsList />} />
           <Route path="/pops/novo" element={<PopCreateEdit />} />
           <Route path="/pops/:id" element={<PopDetail />} />
+          <Route path="/pops/:id/editar" element={<PopCreateEdit />} />
           <Route path="/execucao/:id" element={<PopExecution />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
