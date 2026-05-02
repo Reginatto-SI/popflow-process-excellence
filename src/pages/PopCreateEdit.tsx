@@ -63,6 +63,13 @@ const tipoLabel: Record<PopMidiaTipo, string> = {
   documento: "Documento/PDF",
 };
 
+const acceptByTipo: Record<PopMidiaTipo, string> = {
+  imagem: "image/*",
+  audio: "audio/*",
+  video: "video/*",
+  documento: "application/pdf,.pdf,.doc,.docx,.xls,.xlsx,.txt",
+};
+
 const uid = () => Math.random().toString(36).slice(2, 10);
 
 const checklistFromString = (s: string): ChecklistItem[] =>
