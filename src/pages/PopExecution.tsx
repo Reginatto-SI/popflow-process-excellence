@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useParams } from "react-router-dom";
 import { Check, CheckCircle2, Clock3, FileAudio2, FileImage, FileText, Film, Pause, Play } from "lucide-react";
 
@@ -9,59 +9,9 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { usePop, type PopMidiaTipo, type PopMidiaRow } from "@/hooks/usePops";
 
-type MediaType = "imagem" | "audio" | "video" | "documento";
-
-interface StepMedia { id: string; referencia: string; tipo: MediaType; nome: string; }
-interface StepItem { numero: number; titulo: string; tempoEstimado: string; instrucao: string; checklist: string[]; midias: StepMedia[]; }
-
-// MOCK:
-// TODO(Lovable): substituir por dados reais de execução vinculados a pop_versao_id e empresa_id obrigatório.
-const executionMock = {
-  id: "execucao-001",
-  popId: "pop-001",
-  popVersaoId: "pop-versao-2.3",
-  empresaId: "empresa-001",
-  status: "em_andamento" as "em_andamento" | "concluida",
-  popNome: "Execução de Recebimento de Mercadorias",
-  contexto: "Unidade Central de Distribuição • Setor de Suprimentos",
-  etapas: [
-    {
-      numero: 1,
-      titulo: "Receber documentação da carga",
-      tempoEstimado: "03:00",
-      instrucao: "Confirme a integridade da nota fiscal e valide @documento1 antes de iniciar. Se necessário, consulte @imagem1.",
-      checklist: ["Nota fiscal recebida", "Assinatura do transportador validada", "Número do pedido localizado"],
-      midias: [
-        { id: "midia-doc-1", referencia: "documento1", tipo: "documento", nome: "Modelo de conferência NF-e" },
-        { id: "midia-img-1", referencia: "imagem1", tipo: "imagem", nome: "Exemplo de nota fiscal correta" },
-      ],
-    },
-    {
-      numero: 2,
-      titulo: "Conferência de notas de entrada",
-      tempoEstimado: "04:25",
-      instrucao: "Verifique CNPJ e chave de acesso com @imagem2 e @documento2. Em divergência acima de 5%, ouça @audio1 e revise o fluxo com @video1.",
-      checklist: ["CNPJ conferido com pedido", "Chave de acesso validada", "Divergências registradas no sistema"],
-      midias: [
-        { id: "midia-img-2", referencia: "imagem2", tipo: "imagem", nome: "Onde localizar o CNPJ na nota" },
-        { id: "midia-doc-2", referencia: "documento2", tipo: "documento", nome: "Procedimento de validação da chave" },
-        { id: "midia-audio-1", referencia: "audio1", tipo: "audio", nome: "Orientação rápida para divergências" },
-        { id: "midia-video-1", referencia: "video1", tipo: "video", nome: "Exemplo prático de conferência" },
-      ],
-    },
-    {
-      numero: 3,
-      titulo: "Registrar recebimento no ERP",
-      tempoEstimado: "02:40",
-      instrucao: "Finalize o registro no ERP e utilize @video2 para revisar o lançamento final.",
-      checklist: ["Lançamento efetuado", "Quantidade validada", "Comprovante anexado"],
-      midias: [{ id: "midia-video-2", referencia: "video2", tipo: "video", nome: "Tutorial de lançamento final" }],
-    },
-  ] as StepItem[],
-};
-
-const mediaIcons: Record<MediaType, ReactNode> = {
+const mediaIcons: Record<PopMidiaTipo, ReactNode> = {
   imagem: <FileImage className="h-3.5 w-3.5" />,
   audio: <FileAudio2 className="h-3.5 w-3.5" />,
   video: <Film className="h-3.5 w-3.5" />,
@@ -70,90 +20,83 @@ const mediaIcons: Record<MediaType, ReactNode> = {
 
 export default function PopExecution() {
   const { id } = useParams();
+  const { data: pop, isLoading } = usePop(id);
+
+  const etapas = useMemo(() => pop?.versao_ativa?.etapas ?? [], [pop]);
+  const midias = useMemo(() => pop?.versao_ativa?.midias ?? [], [pop]);
+
   const [etapaAtual, setEtapaAtual] = useState(0);
   const [checklistMarcado, setChecklistMarcado] = useState<Record<string, boolean>>({});
-  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const [completedSteps, setCompletedSteps] = useState<string[]>([]);
   const [executionStatus, setExecutionStatus] = useState<"em_andamento" | "concluida">("em_andamento");
   const [erroChecklist, setErroChecklist] = useState(false);
   const [audioAberto, setAudioAberto] = useState<{ nome: string; tocando: boolean } | null>(null);
 
-  const totalEtapas = executionMock.etapas.length;
-  const etapa = executionMock.etapas[etapaAtual];
-  const progressoPercentual = Math.round((completedSteps.length / totalEtapas) * 100);
+  if (isLoading) {
+    return <SidebarProvider defaultOpen={false}><div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">Carregando...</div></SidebarProvider>;
+  }
+  if (!pop || etapas.length === 0) {
+    return (
+      <SidebarProvider defaultOpen={false}>
+        <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
+          {pop ? "Este POP não tem etapas cadastradas." : "POP não encontrado."}
+        </div>
+      </SidebarProvider>
+    );
+  }
 
-  const checklistKey = (item: string) => `${etapa.numero}-${item}`;
-  const etapaConcluida = completedSteps.includes(etapa.numero);
+  const totalEtapas = etapas.length;
+  const etapa = etapas[etapaAtual];
+  const midiasDaEtapa: PopMidiaRow[] = midias.filter((m) => m.etapa_id === etapa.id);
+  const progressoPercentual = Math.round((completedSteps.length / totalEtapas) * 100);
+  const etapaConcluida = completedSteps.includes(etapa.id);
+  const checklistKey = (itemId: string) => `${etapa.id}-${itemId}`;
 
   const concluirEtapa = () => {
     if (executionStatus === "concluida") return;
-
-    const checklistCompleto = etapa.checklist.every((item) => checklistMarcado[checklistKey(item)]);
-    if (!checklistCompleto) {
+    const checklistCompleto = etapa.checklist.every((item) => checklistMarcado[checklistKey(item.id)]);
+    if (etapa.checklist.length > 0 && !checklistCompleto) {
       setErroChecklist(true);
-      // TODO(Lovable): validar checklist no backend antes de concluir etapa.
-      // TODO(Lovable): permitir exceções controladas via permissão (admin/gestor).
       return;
     }
-
     setErroChecklist(false);
-    const numeroEtapaAtual = etapa.numero;
-
-    setCompletedSteps((prev) => (prev.includes(numeroEtapaAtual) ? prev : [...prev, numeroEtapaAtual]));
-    // TODO(Lovable): persistir conclusão da etapa no backend com usuário, data/hora e tempo gasto.
-    // TODO(Lovable): registrar conclusão com usuário, data e evidência.
+    setCompletedSteps((prev) => (prev.includes(etapa.id) ? prev : [...prev, etapa.id]));
 
     if (etapaAtual === totalEtapas - 1) {
       setExecutionStatus("concluida");
-      // TODO(Lovable): atualizar status da execução para concluida ao finalizar.
       return;
     }
-
     setEtapaAtual((prev) => Math.min(totalEtapas - 1, prev + 1));
   };
 
   const renderInstruction = (texto: string) => {
-    const matches = [...texto.matchAll(/@(imagem|audio|video|documento)\d+/g)];
+    const matches = [...texto.matchAll(/@(\w+\d+)/g)];
     if (matches.length === 0) return texto;
-
     const parts: ReactNode[] = [];
     let cursor = 0;
-
-    matches.forEach((match, index) => {
+    matches.forEach((match, idx) => {
       const token = match[0];
-      const inicio = match.index ?? 0;
-      const fim = inicio + token.length;
-      if (inicio > cursor) parts.push(texto.slice(cursor, inicio));
-
-      const midia = etapa.midias.find((item) => `@${item.referencia}` === token);
-      if (!midia) {
-        parts.push(token);
-      } else {
-        parts.push(
-          <button
-            key={`${token}-${index}`}
-            type="button"
-            onClick={() => {
-              if (midia.tipo === "audio") {
-                // MOCK: simulação de player de áudio
-                // TODO(Lovable): integrar com player real.
-                setAudioAberto({ nome: midia.nome, tocando: true });
-              }
-              // TODO(Lovable): abrir mídia em modal ou player contextual.
-            }}
-            className="mx-0.5 inline-flex items-center gap-1 rounded-full border border-primary/25 bg-primary/10 px-2 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
-          >
-            {mediaIcons[midia.tipo]}
-            @{midia.referencia}
-          </button>,
-        );
-      }
-      cursor = fim;
+      const ref = match[1];
+      const start = match.index ?? 0;
+      const end = start + token.length;
+      if (start > cursor) parts.push(texto.slice(cursor, start));
+      const m = midiasDaEtapa.find((x) => x.referencia === ref);
+      if (!m) parts.push(token);
+      else parts.push(
+        <button
+          key={`${ref}-${idx}`}
+          type="button"
+          onClick={() => { if (m.tipo === "audio") setAudioAberto({ nome: m.nome, tocando: true }); }}
+          className="mx-0.5 inline-flex items-center gap-1 rounded-full border border-primary/25 bg-primary/10 px-2 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+        >
+          {mediaIcons[m.tipo]}{token}
+        </button>
+      );
+      cursor = end;
     });
-
     if (cursor < texto.length) parts.push(texto.slice(cursor));
     return parts;
   };
-
 
   return (
     <SidebarProvider defaultOpen={false}>
@@ -163,9 +106,9 @@ export default function PopExecution() {
           <header className="border-b bg-background px-6 py-4">
             <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-4">
               <div>
-                <h1 className="text-xl font-semibold">{executionMock.popNome}</h1>
-                <p className="text-sm text-muted-foreground">{executionMock.contexto}</p>
-                <p className="text-xs text-muted-foreground">Execução {executionMock.id} • POP {id ?? executionMock.popId}</p>
+                <h1 className="text-xl font-semibold">{pop.titulo}</h1>
+                <p className="text-sm text-muted-foreground">{pop.departamento}</p>
+                <p className="text-xs text-muted-foreground">POP {pop.id} • Versão {pop.versao_ativa?.numero ?? "v1.0"}</p>
               </div>
               <div className="w-full max-w-sm space-y-1">
                 <div className="flex justify-between text-sm">
@@ -173,7 +116,6 @@ export default function PopExecution() {
                   <span>{progressoPercentual}% concluído</span>
                 </div>
                 <Progress value={progressoPercentual} />
-                {/* TODO(Lovable): calcular progresso oficial com base nas etapas concluídas persistidas. */}
               </div>
             </div>
           </header>
@@ -189,20 +131,19 @@ export default function PopExecution() {
               <Card>
                 <CardHeader className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">Etapa {etapa.numero} — {etapa.titulo}</CardTitle>
-                    <Badge variant="secondary" className="gap-1"><Clock3 className="h-3.5 w-3.5" />{etapa.tempoEstimado}</Badge>
+                    <CardTitle className="text-lg">Etapa {etapa.ordem} — {etapa.titulo}</CardTitle>
+                    {etapa.tempo_estimado && <Badge variant="secondary" className="gap-1"><Clock3 className="h-3.5 w-3.5" />{etapa.tempo_estimado}</Badge>}
                   </div>
-                  <p className="text-sm leading-relaxed text-muted-foreground">{renderInstruction(etapa.instrucao)}</p>
+                  <p className="text-sm leading-relaxed text-muted-foreground">{renderInstruction(etapa.descricao)}</p>
                 </CardHeader>
                 <CardContent className="space-y-3 border-t pt-4">
                   <p className="text-xs font-semibold uppercase text-muted-foreground">Checklist da etapa</p>
-                  {erroChecklist && (
-                    <p className="text-sm text-destructive">Complete todos os itens do checklist antes de concluir a etapa.</p>
-                  )}
+                  {erroChecklist && <p className="text-sm text-destructive">Complete todos os itens antes de concluir.</p>}
+                  {etapa.checklist.length === 0 && <p className="text-sm text-muted-foreground">Sem checklist nesta etapa.</p>}
                   {etapa.checklist.map((item) => {
-                    const key = checklistKey(item);
+                    const key = checklistKey(item.id);
                     return (
-                      <label key={item} className="flex cursor-pointer items-center gap-2 rounded-md border p-2 hover:bg-muted/40">
+                      <label key={item.id} className="flex cursor-pointer items-center gap-2 rounded-md border p-2 hover:bg-muted/40">
                         <Checkbox
                           checked={checklistMarcado[key] ?? false}
                           disabled={etapaConcluida || executionStatus === "concluida"}
@@ -212,43 +153,35 @@ export default function PopExecution() {
                             setChecklistMarcado((prev) => ({ ...prev, [key]: Boolean(value) }));
                           }}
                         />
-                        <span className="text-sm">{item}</span>
+                        <span className="text-sm">{item.texto}</span>
                       </label>
                     );
                   })}
                 </CardContent>
                 <CardFooter className="justify-between border-t pt-4">
-                  <Button variant="outline" disabled={etapaAtual === 0 || executionStatus === "concluida"} onClick={() => setEtapaAtual((prev) => Math.max(0, prev - 1))}>Voltar</Button>
+                  <Button variant="outline" disabled={etapaAtual === 0 || executionStatus === "concluida"} onClick={() => setEtapaAtual((p) => Math.max(0, p - 1))}>Voltar</Button>
                   <Button onClick={concluirEtapa} disabled={executionStatus === "concluida"}>
-                    <CheckCircle2 className="mr-2 h-4 w-4" />{executionStatus === "concluida" ? "Execução finalizada" : etapaAtual === totalEtapas - 1 ? "Finalizar execução" : "Concluir etapa"}
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    {executionStatus === "concluida" ? "Execução finalizada" : etapaAtual === totalEtapas - 1 ? "Finalizar execução" : "Concluir etapa"}
                   </Button>
                 </CardFooter>
               </Card>
 
               <div className="flex justify-center gap-2">
-                {executionMock.etapas.map((step, index) => {
-                  const status = completedSteps.includes(step.numero)
-                    ? "done"
-                    : index === etapaAtual
-                      ? "current"
-                      : "pending";
+                {etapas.map((step, index) => {
+                  const status = completedSteps.includes(step.id) ? "done" : index === etapaAtual ? "current" : "pending";
                   return (
                     <button
-                      key={step.numero}
+                      key={step.id}
                       type="button"
-                      onClick={() => {
-                        if (executionStatus === "concluida") return;
-                        setEtapaAtual(index);
-                      }}
+                      onClick={() => { if (executionStatus !== "concluida") setEtapaAtual(index); }}
                       className={`flex h-8 w-8 items-center justify-center rounded-full border text-xs font-semibold transition-colors ${
-                        status === "done"
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : status === "current"
-                            ? "border-primary bg-primary/15 text-primary"
-                            : "border-border text-muted-foreground"
+                        status === "done" ? "border-primary bg-primary text-primary-foreground"
+                        : status === "current" ? "border-primary bg-primary/15 text-primary"
+                        : "border-border text-muted-foreground"
                       }`}
                     >
-                      {status === "done" ? <Check className="h-3.5 w-3.5" /> : step.numero}
+                      {status === "done" ? <Check className="h-3.5 w-3.5" /> : step.ordem}
                     </button>
                   );
                 })}
@@ -264,7 +197,7 @@ export default function PopExecution() {
               <Button size="icon" variant="secondary" className="h-7 w-7" onClick={() => setAudioAberto(null)}>×</Button>
             </div>
             <div className="flex items-center gap-3">
-              <Button size="icon" variant="secondary" className="h-9 w-9" onClick={() => setAudioAberto((prev) => (prev ? { ...prev, tocando: !prev.tocando } : prev))}>
+              <Button size="icon" variant="secondary" className="h-9 w-9" onClick={() => setAudioAberto((p) => p ? { ...p, tocando: !p.tocando } : p)}>
                 {audioAberto.tocando ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
               </Button>
               <div className="flex-1">
@@ -275,9 +208,6 @@ export default function PopExecution() {
           </div>
         )}
       </div>
-
-      {/* TODO(Lovable): registrar tracking por etapa (início, conclusão e tempo gasto) ao integrar com backend. */}
-      {/* TODO(Lovable): atualizar status da execução entre em_andamento e concluida no fechamento da última etapa. */}
     </SidebarProvider>
   );
 }
