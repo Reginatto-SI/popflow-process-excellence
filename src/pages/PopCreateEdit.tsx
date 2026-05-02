@@ -118,6 +118,7 @@ const PopCreateEdit = () => {
     { uid: uid(), ordem: 1, titulo: "Nova etapa 1", descricao: "", tempo: "5 min", resultadoEsperado: "", erroComum: "", preRequisito: "", checklist: "" },
   ]);
   const [midias, setMidias] = useState<MidiaItem[]>([]);
+  const [expandedMidiaUid, setExpandedMidiaUid] = useState<string | null>(null);
 
   // Carregar dados em modo edição
   useEffect(() => {
