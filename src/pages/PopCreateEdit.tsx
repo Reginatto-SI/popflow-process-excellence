@@ -142,15 +142,20 @@ const PopCreateEdit = () => {
     })));
     const ms = popData.versao_ativa?.midias ?? [];
     const ordemPorEtapaId = new Map(etapas.map((e) => [e.id, e.ordem]));
-    setMidias(ms.map((m) => ({
-      uid: m.id,
-      tipo: m.tipo,
-      nome: m.nome,
-      referencia: m.referencia,
-      etapaOrdem: m.etapa_id ? ordemPorEtapaId.get(m.etapa_id) ?? null : null,
-      ordem: m.ordem,
-      url: m.url ?? null,
-    })));
+    setMidias(ms.map((m) => {
+      // Normaliza referências antigas que podem conter espaços/caracteres inválidos
+      const safeRef = slugifyRef(m.referencia) || slugifyRef(m.nome) || `midia-${m.ordem}`;
+      return {
+        uid: m.id,
+        tipo: m.tipo,
+        nome: m.nome,
+        referencia: safeRef,
+        etapaOrdem: m.etapa_id ? ordemPorEtapaId.get(m.etapa_id) ?? null : null,
+        ordem: m.ordem,
+        url: m.url ?? null,
+        refTouched: true, // referência veio do banco — não sobrescrever automaticamente
+      };
+    }));
   }, [isEdit, popData]);
 
   const currentTabIndex = tabs.findIndex((t) => t.key === activeTab);
