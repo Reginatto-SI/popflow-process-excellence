@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-bright": "#fbf9fb",
+                        "secondary": "#0058be",
+                        "inverse-on-surface": "#f2f0f2",
+                        "tertiary-fixed-dim": "#d0bcff",
+                        "tertiary-container": "#23005c",
+                        "on-error": "#ffffff",
+                        "secondary-fixed": "#d8e2ff",
+                        "on-primary-fixed": "#0d1c32",
+                        "primary-container": "#0d1c32",
+                        "surface-dim": "#dbd9db",
+                        "secondary-container": "#2170e4",
+                        "primary-fixed-dim": "#b9c7e4",
+                        "tertiary-fixed": "#e9ddff",
+                        "on-tertiary-fixed": "#23005c",
+                        "error": "#ba1a1a",
+                        "surface-container-high": "#eae7ea",
+                        "outline-variant": "#c5c6cd",
+                        "on-background": "#1b1b1d",
+                        "on-secondary-fixed-variant": "#004395",
+                        "on-tertiary-container": "#9466ff",
+                        "on-secondary": "#ffffff",
+                        "surface-tint": "#515f78",
+                        "on-primary-fixed-variant": "#39475f",
+                        "secondary-fixed-dim": "#adc6ff",
+                        "surface": "#fbf9fb",
+                        "on-error-container": "#93000a",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-container": "#fefcff",
+                        "surface-container": "#efedef",
+                        "on-surface-variant": "#44474d",
+                        "surface-variant": "#e4e2e4",
+                        "on-tertiary-fixed-variant": "#5516be",
+                        "tertiary": "#000000",
+                        "on-primary": "#ffffff",
+                        "surface-container-highest": "#e4e2e4",
+                        "surface-container-low": "#f5f3f5",
+                        "background": "#fbf9fb",
+                        "on-secondary-fixed": "#001a42",
+                        "outline": "#75777e",
+                        "primary-fixed": "#d6e3ff",
+                        "primary": "#000000",
+                        "on-surface": "#1b1b1d",
+                        "on-tertiary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "inverse-surface": "#303032"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "unit": "4px",
+                        "xl": "40px",
+                        "gutter": "16px",
+                        "sm": "8px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "margin": "24px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Inter"],
+                        "caption": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "display-xl": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-md": ["12px", {"lineHeight": "16px", "fontWeight": "600"}],
+                        "caption": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "display-xl": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #fbf9fb; color: #1b1b1d; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .chart-bar { transition: height 0.6s ease; }
+    </style>
+</head>
+<body class="bg-surface-bright text-on-surface min-h-screen">
+<!-- SideNavBar -->
+<aside class="h-screen w-64 fixed left-0 top-0 border-r border-slate-200 bg-white z-50 flex flex-col py-6 px-4">
+<div class="mb-10 px-2 flex items-center gap-3">
+<div class="w-8 h-8 bg-primary-container rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-lg">description</span>
+</div>
+<div>
+<h1 class="text-xl font-bold tracking-tight text-[#0A192F]">POPFlow</h1>
+<p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">SOP Management</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 transition-all duration-200 font-inter text-sm antialiased" href="#">
+<span class="material-symbols-outlined">dashboard</span> Dashboard
+            </a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 transition-all duration-200 font-inter text-sm antialiased" href="#">
+<span class="material-symbols-outlined">description</span> POPs
+            </a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 transition-all duration-200 font-inter text-sm antialiased" href="#">
+<span class="material-symbols-outlined">add_circle</span> Create POP
+            </a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 transition-all duration-200 font-inter text-sm antialiased" href="#">
+<span class="material-symbols-outlined">play_circle</span> Executions
+            </a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 transition-all duration-200 font-inter text-sm antialiased" href="#">
+<span class="material-symbols-outlined">rate_review</span> Reviews
+            </a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 transition-all duration-200 font-inter text-sm antialiased" href="#">
+<span class="material-symbols-outlined">copy_all</span> Templates
+            </a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-slate-100 text-[#0A192F] font-semibold border-r-4 border-[#0A192F] transition-all duration-200 font-inter text-sm antialiased translate-x-1" href="#">
+<span class="material-symbols-outlined">analytics</span> Analytics
+            </a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 transition-all duration-200 font-inter text-sm antialiased" href="#">
+<span class="material-symbols-outlined">notifications</span> Notifications
+            </a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 transition-all duration-200 font-inter text-sm antialiased" href="#">
+<span class="material-symbols-outlined">group</span> Users
+            </a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:bg-slate-50 transition-all duration-200 font-inter text-sm antialiased" href="#">
+<span class="material-symbols-outlined">settings</span> Settings
+            </a>
+</nav>
+<div class="mt-auto pt-6 border-t border-slate-100">
+<div class="flex items-center gap-3 px-2">
+<img alt="User profile photo" class="w-10 h-10 rounded-full object-cover" data-alt="A professional headshot of a corporate executive in a crisp navy blue suit, set against a blurred office background with soft morning light. The lighting is high-key and flattering, emphasizing a clean, professional aesthetic consistent with a modern corporate identity. The overall tone is calm, authoritative, and sophisticated, mirroring the brand's commitment to precision and operational excellence." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCs3ZyYVtNazjN-K35ZHLZ0bYKHwFBI8heYy8mNaK49rzQ7tCiAgTCTnQ3QxU3K5xzgQbo29NVYK3liizkWa2uOUM4fCJFu_ce-Da-bgAgB9tu1GrYzuQxLTMsu-pherTwzkYbmVnvsEmaE014UGR0Bn_ban-bqRxASRSGCLxkPpU6GXJokILAd0zffp3XmIMnOcPd-Abm0MbTxKXVPZgnLseYr5iUa0joIIkxO2z6l9rtZpJeipJxhFs8P-P7sHlRNKhusb8lZvclm"/>
+<div class="overflow-hidden">
+<p class="text-sm font-bold text-[#0A192F] truncate">Ricardo Alves</p>
+<p class="text-xs text-slate-400 truncate">Ops Manager</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<div class="ml-64 min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="h-16 border-b border-slate-200 bg-white/80 backdrop-blur-md sticky top-0 z-40 flex items-center justify-between px-8">
+<div class="flex items-center bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 w-96 focus-within:ring-2 focus-within:ring-secondary/20 transition-all">
+<span class="material-symbols-outlined text-slate-400 text-lg mr-2">search</span>
+<input class="bg-transparent border-none p-0 text-sm w-full focus:ring-0 placeholder:text-slate-400" placeholder="Buscar métricas ou relatórios..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-50 transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-50 transition-colors">
+<span class="material-symbols-outlined">business_center</span>
+</button>
+<div class="h-8 w-px bg-slate-200 mx-2"></div>
+<button class="flex items-center gap-2 text-sm font-medium text-slate-700 hover:text-primary transition-colors">
+<span>Profile</span>
+<span class="material-symbols-outlined text-lg">expand_more</span>
+</button>
+</div>
+</header>
+<!-- Page Canvas -->
+<main class="p-8 space-y-8 flex-1">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Analytics Operacional</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Visão holística do desempenho dos processos e gargalos operacionais.</p>
+</div>
+<!-- Filters Row -->
+<div class="flex flex-wrap items-center gap-3">
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-label-md text-on-surface-variant">Período</label>
+<select class="h-10 rounded-lg border-slate-200 text-sm font-medium focus:ring-secondary focus:border-secondary min-w-[140px]">
+<option>Últimos 30 dias</option>
+<option>Últimos 7 dias</option>
+<option>Mês atual</option>
+<option>Personalizado</option>
+</select>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-label-md text-on-surface-variant">Departamento</label>
+<select class="h-10 rounded-lg border-slate-200 text-sm font-medium focus:ring-secondary focus:border-secondary min-w-[160px]">
+<option>Todos os Deptos</option>
+<option>Financeiro</option>
+<option>Recursos Humanos</option>
+<option>Operações</option>
+</select>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-label-md text-on-surface-variant">Usuário</label>
+<select class="h-10 rounded-lg border-slate-200 text-sm font-medium focus:ring-secondary focus:border-secondary min-w-[160px]">
+<option>Todos os Usuários</option>
+<option>Ricardo Alves</option>
+<option>Ana Souza</option>
+<option>Carlos Lima</option>
+</select>
+</div>
+<button class="mt-auto h-10 px-4 bg-secondary text-white font-semibold rounded-lg flex items-center gap-2 hover:bg-secondary-container transition-colors">
+<span class="material-symbols-outlined text-sm">filter_alt</span>
+                        Aplicar
+                    </button>
+</div>
+</div>
+<!-- Bento Grid - Performance Metrics -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+<!-- KPI Card: Tempo Médio -->
+<div class="bg-white border border-slate-200 rounded-xl p-6 flex flex-col justify-between">
+<div>
+<span class="text-slate-400 font-label-md text-label-md uppercase tracking-wider">Tempo Médio de Execução</span>
+<div class="flex items-end gap-2 mt-2">
+<h3 class="text-3xl font-bold text-on-surface">42m</h3>
+<span class="text-error font-medium text-xs mb-1 flex items-center">
+<span class="material-symbols-outlined text-xs">trending_up</span> 12%
+                            </span>
+</div>
+</div>
+<div class="mt-4 pt-4 border-t border-slate-50">
+<p class="text-xs text-on-surface-variant">Meta do SLA: <span class="font-semibold">35m</span></p>
+<div class="w-full bg-slate-100 h-1.5 rounded-full mt-2 overflow-hidden">
+<div class="bg-error h-full rounded-full w-[80%]"></div>
+</div>
+</div>
+</div>
+<!-- KPI Card: Taxa de Conclusão -->
+<div class="bg-white border border-slate-200 rounded-xl p-6 flex flex-col justify-between">
+<div>
+<span class="text-slate-400 font-label-md text-label-md uppercase tracking-wider">Taxa de Conclusão</span>
+<div class="flex items-end gap-2 mt-2">
+<h3 class="text-3xl font-bold text-on-surface">94.2%</h3>
+<span class="text-secondary font-medium text-xs mb-1 flex items-center">
+<span class="material-symbols-outlined text-xs">trending_up</span> 4%
+                            </span>
+</div>
+</div>
+<div class="mt-4 pt-4 border-t border-slate-50">
+<p class="text-xs text-on-surface-variant">Variação vs Mês Anterior</p>
+<div class="flex gap-1 mt-2">
+<div class="flex-1 h-1 rounded-full bg-secondary"></div>
+<div class="flex-1 h-1 rounded-full bg-secondary"></div>
+<div class="flex-1 h-1 rounded-full bg-secondary"></div>
+<div class="flex-1 h-1 rounded-full bg-slate-200"></div>
+</div>
+</div>
+</div>
+<!-- KPI Card: POPs Ativos -->
+<div class="bg-white border border-slate-200 rounded-xl p-6 flex flex-col justify-between">
+<div>
+<span class="text-slate-400 font-label-md text-label-md uppercase tracking-wider">POPs Ativos</span>
+<div class="flex items-end gap-2 mt-2">
+<h3 class="text-3xl font-bold text-on-surface">128</h3>
+</div>
+</div>
+<div class="mt-4 flex items-center gap-2">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full border-2 border-white bg-slate-200"></div>
+<div class="w-6 h-6 rounded-full border-2 border-white bg-slate-300"></div>
+<div class="w-6 h-6 rounded-full border-2 border-white bg-slate-400"></div>
+</div>
+<span class="text-[10px] text-slate-400 font-medium">+12 revisões pendentes</span>
+</div>
+</div>
+<!-- KPI Card: Eficiência Geral -->
+<div class="bg-primary-container text-white border border-primary-container rounded-xl p-6 flex flex-col justify-between">
+<div>
+<span class="text-slate-400 font-label-md text-label-md uppercase tracking-wider">Score de Eficiência</span>
+<div class="flex items-end gap-2 mt-2">
+<h3 class="text-3xl font-bold">8.8<span class="text-lg opacity-50 font-normal">/10</span></h3>
+</div>
+</div>
+<div class="mt-4">
+<div class="flex justify-between text-[10px] mb-1 opacity-70">
+<span>MUITO BOM</span>
+<span>92% PERCENTIL</span>
+</div>
+<div class="w-full bg-white/10 h-2 rounded-full overflow-hidden">
+<div class="bg-secondary h-full rounded-full w-[88%]"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Visualization Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Bar Chart: Etapas com maior gargalo -->
+<div class="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-6">
+<div class="flex items-center justify-between mb-8">
+<div>
+<h4 class="font-headline-md text-headline-md text-on-surface">Etapas com Maior Gargalo</h4>
+<p class="text-xs text-on-surface-variant">Tempo médio excedente por etapa em minutos</p>
+</div>
+<button class="p-2 hover:bg-slate-50 rounded-lg text-slate-400">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="flex items-end justify-between gap-4 h-64 px-4">
+<div class="flex-1 flex flex-col items-center gap-3">
+<div class="w-full bg-error/10 rounded-t-lg relative group h-[90%]">
+<div class="absolute bottom-0 w-full bg-error rounded-t-lg transition-all chart-bar h-full"></div>
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-on-surface text-white text-[10px] py-1 px-2 rounded">42m</div>
+</div>
+<span class="text-[10px] font-bold text-slate-500 uppercase text-center leading-tight">Aprovação<br/>Financeira</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-3">
+<div class="w-full bg-slate-100 rounded-t-lg relative group h-full">
+<div class="absolute bottom-0 w-full bg-secondary rounded-t-lg transition-all chart-bar h-[65%]"></div>
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-on-surface text-white text-[10px] py-1 px-2 rounded">28m</div>
+</div>
+<span class="text-[10px] font-bold text-slate-500 uppercase text-center leading-tight">Coleta de<br/>Dados</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-3">
+<div class="w-full bg-slate-100 rounded-t-lg relative group h-full">
+<div class="absolute bottom-0 w-full bg-secondary rounded-t-lg transition-all chart-bar h-[45%]"></div>
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-on-surface text-white text-[10px] py-1 px-2 rounded">19m</div>
+</div>
+<span class="text-[10px] font-bold text-slate-500 uppercase text-center leading-tight">Revisão de<br/>Contrato</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-3">
+<div class="w-full bg-slate-100 rounded-t-lg relative group h-full">
+<div class="absolute bottom-0 w-full bg-secondary rounded-t-lg transition-all chart-bar h-[80%]"></div>
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-on-surface text-white text-[10px] py-1 px-2 rounded">35m</div>
+</div>
+<span class="text-[10px] font-bold text-slate-500 uppercase text-center leading-tight">Validação<br/>Compliance</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-3">
+<div class="w-full bg-slate-100 rounded-t-lg relative group h-full">
+<div class="absolute bottom-0 w-full bg-secondary rounded-t-lg transition-all chart-bar h-[30%]"></div>
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-on-surface text-white text-[10px] py-1 px-2 rounded">12m</div>
+</div>
+<span class="text-[10px] font-bold text-slate-500 uppercase text-center leading-tight">Envio de<br/>Docs</span>
+</div>
+</div>
+</div>
+<!-- Donut Chart: Status de POPs -->
+<div class="bg-white border border-slate-200 rounded-xl p-6">
+<h4 class="font-headline-md text-headline-md text-on-surface mb-6">Status de POPs</h4>
+<div class="relative flex justify-center items-center py-4">
+<svg class="w-48 h-48 transform -rotate-90">
+<!-- Background Circle -->
+<circle cx="96" cy="96" fill="transparent" r="70" stroke="#f1f5f9" stroke-width="24"></circle>
+<!-- Segment 1: Ativos (60%) -->
+<circle cx="96" cy="96" fill="transparent" r="70" stroke="#0058be" stroke-dasharray="440" stroke-dashoffset="176" stroke-width="24"></circle>
+<!-- Segment 2: Revisão (25%) -->
+<circle class="origin-center rotate-[216deg]" cx="96" cy="96" fill="transparent" r="70" stroke="#0d1c32" stroke-dasharray="440" stroke-dashoffset="330" stroke-width="24"></circle>
+<!-- Segment 3: Rascunho (15%) -->
+<circle class="origin-center rotate-[306deg]" cx="96" cy="96" fill="transparent" r="70" stroke="#e4e2e4" stroke-dasharray="440" stroke-dashoffset="374" stroke-width="24"></circle>
+</svg>
+<div class="absolute text-center">
+<span class="block text-2xl font-bold text-on-surface">128</span>
+<span class="text-[10px] text-slate-400 font-bold uppercase">Total</span>
+</div>
+</div>
+<div class="mt-8 space-y-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-secondary"></div>
+<span class="text-sm text-on-surface-variant">Ativos</span>
+</div>
+<span class="text-sm font-bold">77 (60%)</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-primary-container"></div>
+<span class="text-sm text-on-surface-variant">Em Revisão</span>
+</div>
+<span class="text-sm font-bold">32 (25%)</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-surface-variant"></div>
+<span class="text-sm text-on-surface-variant">Rascunhos</span>
+</div>
+<span class="text-sm font-bold">19 (15%)</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Conclusion by Department Table -->
+<div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
+<div class="p-6 border-b border-slate-100 flex items-center justify-between">
+<h4 class="font-headline-md text-headline-md text-on-surface">Taxa de Conclusão por Depto</h4>
+<button class="text-secondary font-semibold text-sm hover:underline">Ver relatório detalhado</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead class="bg-slate-50 text-slate-500 font-label-md text-label-md uppercase tracking-wider">
+<tr>
+<th class="px-6 py-4">Departamento</th>
+<th class="px-6 py-4">Total Execuções</th>
+<th class="px-6 py-4">Concluídas</th>
+<th class="px-6 py-4">Taxa %</th>
+<th class="px-6 py-4">Performance</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 font-body-md text-body-md">
+<tr class="hover:bg-slate-50 transition-colors">
+<td class="px-6 py-4 font-semibold">Financeiro</td>
+<td class="px-6 py-4">452</td>
+<td class="px-6 py-4">448</td>
+<td class="px-6 py-4">99.1%</td>
+<td class="px-6 py-4">
+<span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold uppercase">Excelente</span>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 transition-colors">
+<td class="px-6 py-4 font-semibold">Operações</td>
+<td class="px-6 py-4">1,240</td>
+<td class="px-6 py-4">1,153</td>
+<td class="px-6 py-4">93.0%</td>
+<td class="px-6 py-4">
+<span class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold uppercase">Meta Batida</span>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 transition-colors">
+<td class="px-6 py-4 font-semibold">Recursos Humanos</td>
+<td class="px-6 py-4">185</td>
+<td class="px-6 py-4">158</td>
+<td class="px-6 py-4">85.4%</td>
+<td class="px-6 py-4">
+<span class="px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-bold uppercase">Em Atenção</span>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 transition-colors">
+<td class="px-6 py-4 font-semibold">Logística</td>
+<td class="px-6 py-4">632</td>
+<td class="px-6 py-4">590</td>
+<td class="px-6 py-4">93.3%</td>
+<td class="px-6 py-4">
+<span class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold uppercase">Meta Batida</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</main>
+</div>
+<!-- FAB (Contextual for Analytics: Download PDF Report) -->
+<button class="fixed bottom-8 right-8 w-14 h-14 bg-secondary text-white rounded-full shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50">
+<span class="material-symbols-outlined">picture_as_pdf</span>
+</button>
+</body></html>

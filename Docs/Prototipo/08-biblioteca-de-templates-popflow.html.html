@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+
+<html class="light" lang="pt-br"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-bright": "#fbf9fb",
+                    "secondary": "#0058be",
+                    "inverse-on-surface": "#f2f0f2",
+                    "tertiary-fixed-dim": "#d0bcff",
+                    "tertiary-container": "#23005c",
+                    "on-error": "#ffffff",
+                    "secondary-fixed": "#d8e2ff",
+                    "on-primary-fixed": "#0d1c32",
+                    "primary-container": "#0d1c32",
+                    "surface-dim": "#dbd9db",
+                    "secondary-container": "#2170e4",
+                    "primary-fixed-dim": "#b9c7e4",
+                    "tertiary-fixed": "#e9ddff",
+                    "on-tertiary-fixed": "#23005c",
+                    "error": "#ba1a1a",
+                    "surface-container-high": "#eae7ea",
+                    "outline-variant": "#c5c6cd",
+                    "on-background": "#1b1b1d",
+                    "on-secondary-fixed-variant": "#004395",
+                    "on-tertiary-container": "#9466ff",
+                    "on-primary-container": "#76849f",
+                    "inverse-primary": "#b9c7e4",
+                    "on-secondary": "#ffffff",
+                    "surface-tint": "#515f78",
+                    "on-primary-fixed-variant": "#39475f",
+                    "secondary-fixed-dim": "#adc6ff",
+                    "surface": "#fbf9fb",
+                    "on-error-container": "#93000a",
+                    "surface-container-lowest": "#ffffff",
+                    "on-secondary-container": "#fefcff",
+                    "surface-container": "#efedef",
+                    "on-surface-variant": "#44474d",
+                    "surface-variant": "#e4e2e4",
+                    "on-tertiary-fixed-variant": "#5516be",
+                    "tertiary": "#000000",
+                    "on-primary": "#ffffff",
+                    "surface-container-highest": "#e4e2e4",
+                    "surface-container-low": "#f5f3f5",
+                    "background": "#fbf9fb",
+                    "on-secondary-fixed": "#001a42",
+                    "outline": "#75777e",
+                    "primary-fixed": "#d6e3ff",
+                    "primary": "#000000",
+                    "on-surface": "#1b1b1d",
+                    "on-tertiary": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "inverse-surface": "#303032"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "unit": "4px",
+                    "xl": "40px",
+                    "gutter": "16px",
+                    "sm": "8px",
+                    "lg": "24px",
+                    "md": "16px",
+                    "margin": "24px"
+            },
+            "fontFamily": {
+                    "label-md": ["Inter"],
+                    "caption": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "display-xl": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "body-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "label-md": ["12px", {"lineHeight": "16px", "fontWeight": "600"}],
+                    "caption": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "display-xl": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body class="bg-surface-bright font-body-md text-on-surface">
+<!-- SideNavBar -->
+<aside class="h-screen w-64 fixed left-0 top-0 border-r border-slate-200 bg-white flex flex-col py-6 px-4 z-50">
+<div class="mb-8 px-2">
+<h1 class="text-xl font-bold tracking-tight text-[#0A192F]">POPFlow</h1>
+<p class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">SOP Management</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="font-label-md">POPs</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">add_circle</span>
+<span class="font-label-md">Create POP</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">play_circle</span>
+<span class="font-label-md">Executions</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">rate_review</span>
+<span class="font-label-md">Reviews</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 bg-slate-100 text-[#0A192F] font-semibold border-r-4 border-[#0A192F] rounded-l-lg transition-all duration-200 translate-x-1" href="#">
+<span class="material-symbols-outlined">copy_all</span>
+<span class="font-label-md">Templates</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-md">Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">notifications</span>
+<span class="font-label-md">Notifications</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label-md">Users</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md">Settings</span>
+</a>
+</nav>
+<div class="mt-auto border-t border-slate-100 pt-4 flex items-center gap-3 px-2">
+<img alt="POPFlow Corporate Logo" class="w-8 h-8 rounded-full border border-slate-200 shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYFpQ7ZgA09mzW0STphAk2NCQCpREsVf9Z5j24w-F8fsOEythQvIoHTohkJyMNHd7Wkdcx7Hpcg3qYtpLwvgjMKmIFCLEBzMWvjKOctpTzv36FC4WkpT2lJhL-kCjULxCmN2tlROm0yLw6Kh64YPK_brMdrA3Y9wDgO1SyDPgJdR1lVkUm8Ad14ktoFEiw0r2Gc3BhA6A4qaPzypNo4Vad5L_A3C9Gqc1zQY2RWkmYS-yAKIs5jlfnDkeyshqWEwirUNCQM_Wtt4gs"/>
+<div class="overflow-hidden">
+<p class="text-sm font-bold truncate text-[#0A192F]">Corporate Admin</p>
+<p class="text-xs text-slate-500 truncate">v2.4.0 Professional</p>
+</div>
+</div>
+</aside>
+<!-- Main Content Shell -->
+<main class="ml-64 min-h-screen">
+<!-- TopAppBar -->
+<header class="fixed top-0 right-0 left-64 h-16 border-b border-slate-200 bg-white/80 backdrop-blur-md z-40 flex items-center justify-between px-8">
+<div class="flex items-center w-1/2">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+<input class="w-full bg-slate-50 border-slate-200 rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none transition-all" placeholder="Buscar templates de processos..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4 text-slate-500">
+<button class="hover:text-[#0A192F] transition-colors"><span class="material-symbols-outlined">notifications</span></button>
+<button class="hover:text-[#0A192F] transition-colors"><span class="material-symbols-outlined">business_center</span></button>
+</div>
+<div class="h-8 w-[1px] bg-slate-200"></div>
+<div class="flex items-center gap-3">
+<span class="font-label-md text-slate-600">Profile</span>
+<img alt="User profile photo" class="w-8 h-8 rounded-full border border-slate-100" src="https://lh3.googleusercontent.com/aida-public/AB6AXuApioRtWxXj_I8Ll9FDClQL_HDTfna-7pMaz4cHc80OeAJsk-lYbNoTCvO61CX6ATc3bN9YLAMvUop4M-bseZNmJvNhCSEmZBgSx0YiYudfVjKbVjzeKAHi5cZN4KW1yNqM-beoXIt9hzk4Pt6kfaigmB-z00Kd6Ssy11cHHJ8PGoXeXxNUCW7pOXmk5mSCYV-tNK9vv5C-yeb1qarXtfSOragz-h-aodZrKNYCdnj5ZHoUaivCFx9kG4FRr44ENRoXg4H1EixIRA5a"/>
+</div>
+</div>
+</header>
+<!-- Canvas -->
+<div class="pt-24 px-8 pb-12">
+<!-- Page Header & Filters -->
+<section class="mb-10">
+<div class="flex justify-between items-end mb-8">
+<div>
+<h2 class="font-display-xl text-primary mb-2">Biblioteca de Templates</h2>
+<p class="text-on-primary-container text-body-lg">Selecione um processo pré-configurado para agilizar sua operação.</p>
+</div>
+<button class="bg-primary text-white px-6 py-2.5 rounded-lg font-label-md flex items-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-sm">add</span>
+                        Criar Novo Template
+                    </button>
+</div>
+<div class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+<button class="px-5 py-2 bg-[#0A192F] text-white rounded-full text-sm font-medium">Todos</button>
+<button class="px-5 py-2 bg-white border border-slate-200 text-slate-600 hover:border-secondary hover:text-secondary rounded-full text-sm font-medium transition-colors">Recursos Humanos</button>
+<button class="px-5 py-2 bg-white border border-slate-200 text-slate-600 hover:border-secondary hover:text-secondary rounded-full text-sm font-medium transition-colors">Financeiro</button>
+<button class="px-5 py-2 bg-white border border-slate-200 text-slate-600 hover:border-secondary hover:text-secondary rounded-full text-sm font-medium transition-colors">Logística</button>
+<button class="px-5 py-2 bg-white border border-slate-200 text-slate-600 hover:border-secondary hover:text-secondary rounded-full text-sm font-medium transition-colors">Vendas</button>
+<button class="px-5 py-2 bg-white border border-slate-200 text-slate-600 hover:border-secondary hover:text-secondary rounded-full text-sm font-medium transition-colors">T.I.</button>
+</div>
+</section>
+<!-- Bento Grid of Templates -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Template Card 1: RH -->
+<article class="bg-white border border-slate-200 rounded-xl overflow-hidden group hover:border-secondary/40 transition-all duration-300 flex flex-col">
+<div class="h-40 bg-slate-50 relative overflow-hidden">
+<img class="w-full h-full object-cover grayscale-[0.5] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500" data-alt="A professional office setting where two colleagues are shaking hands over a clean white desk. The lighting is bright and airy with soft morning sunlight streaming through large windows. The scene captures an atmosphere of successful recruitment and corporate professionalism, using a palette of soft grays, whites, and deep corporate blues." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDWCVGijzoMQymjzJdLlVoVIIcakVzjwgBpqLQRhv_1e1Zx9QuDuRbZc5DeRdlA2NG3YW9-7EhYKN7dR1jo33End3aEHdvA5ctSmUC-Cu5E1AEKoaZHzO_grAQnB05M_OOCwnmb-iPdbrgYMtdFZMhahh7RxG9wRGPdrLnmiuuUzy0I9OBc_E72pNZNH5TTarOH3sNxHnUUsky2Ih7eXXH2Qe51aQqhYZJa_VLwnzbcydhwWploVoNfYRFTomD_5-d2VQ4Ni12KbrHE"/>
+<div class="absolute top-4 left-4">
+<span class="bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-secondary border border-secondary/20">Recursos Humanos</span>
+</div>
+</div>
+<div class="p-6 flex flex-col flex-1">
+<h3 class="text-headline-md text-primary mb-2">Onboarding de RH</h3>
+<p class="text-body-md text-on-surface-variant mb-6 flex-1">Processo completo para integração de novos colaboradores, desde documentação até entrega de equipamentos.</p>
+<div class="flex items-center justify-between pt-6 border-t border-slate-100">
+<div class="flex items-center gap-2 text-slate-500">
+<span class="material-symbols-outlined text-sm">account_tree</span>
+<span class="text-label-md">12 Etapas</span>
+</div>
+<button class="text-secondary font-label-md flex items-center gap-1 hover:underline">
+                                Usar Template
+                                <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Template Card 2: Financeiro -->
+<article class="bg-white border border-slate-200 rounded-xl overflow-hidden group hover:border-secondary/40 transition-all duration-300 flex flex-col">
+<div class="h-40 bg-slate-50 relative overflow-hidden">
+<img class="w-full h-full object-cover grayscale-[0.5] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500" data-alt="A close-up shot of a high-end calculator and neatly stacked financial documents on a minimalist dark wood desk. The lighting is focused and dramatic, highlighting the precision of accounting work. The color palette is dominated by professional charcoal grays, deep navies, and crisp white paper, conveying a mood of fiscal authority and calm control." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMIoKRoBNCN91iSa8DfwfOV-RL8U-nOwWdzihOHqYq_Z4wV0xeKFIQioUFdAPv_nsQVbcme3fLgKRbTu_Qs28dWiPs650VYBimpm5X_ix6rV0Ye0RcOdLl_Q4sy__hO3EV1OYgS4UpHsVEDs1dBmkObCWT5IUdalh6DVbneK50u0n5L_JEdCDLyWhePRPcDB7oCPiA6IndpAVqCZy2zWw-ltxltEaIJZPFGLWarq5t1cpvMaDIWaSzceM-guyUV5vVpb4lzkTXb2OT"/>
+<div class="absolute top-4 left-4">
+<span class="bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-[#006A6A] border border-[#006A6A]/20">Financeiro</span>
+</div>
+</div>
+<div class="p-6 flex flex-col flex-1">
+<h3 class="text-headline-md text-primary mb-2">Fechamento de Caixa</h3>
+<p class="text-body-md text-on-surface-variant mb-6 flex-1">Procedimento diário para conferência de valores, sangrias e conciliação de terminais de venda.</p>
+<div class="flex items-center justify-between pt-6 border-t border-slate-100">
+<div class="flex items-center gap-2 text-slate-500">
+<span class="material-symbols-outlined text-sm">account_tree</span>
+<span class="text-label-md">8 Etapas</span>
+</div>
+<button class="text-secondary font-label-md flex items-center gap-1 hover:underline">
+                                Usar Template
+                                <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Template Card 3: Logística -->
+<article class="bg-white border border-slate-200 rounded-xl overflow-hidden group hover:border-secondary/40 transition-all duration-300 flex flex-col">
+<div class="h-40 bg-slate-50 relative overflow-hidden">
+<img class="w-full h-full object-cover grayscale-[0.5] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500" data-alt="A vast, orderly warehouse interior with tall shelves stretching into the distance under bright industrial LED lighting. The floor is polished concrete reflecting the geometric patterns of the ceiling. The aesthetic is extremely systematic and organized, featuring a palette of cool grays, safety yellows, and technical blues, evoking operational efficiency." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQjxVT6Obxdh0E-irvXS0PxC3CMzzyDW8YOrPScEob8uc4762RWzUTqO2lTHePhkqTgAfc_DZ9Yvq_tmKH-yVqCMAs8VbeVoZ6Sk3be9xyBcGLDQze1IubntxK5r-zOYHCsETA3YAkLDa9HGoj15SoyjT7cRlr6ABHjE5b5tXZpNgJYpSa8UPNXq5ADK41fUT7C2pjIZrt2gowaBuqbuyMbVqSMpqVYuL21TS1bpQz6IJZ6Col21OoC71UcVMNry5YLzQYAtBYbojc"/>
+<div class="absolute top-4 left-4">
+<span class="bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-[#7C4DFF] border border-[#7C4DFF]/20">Logística</span>
+</div>
+</div>
+<div class="p-6 flex flex-col flex-1">
+<h3 class="text-headline-md text-primary mb-2">Inventário de Estoque</h3>
+<p class="text-body-md text-on-surface-variant mb-6 flex-1">Metodologia para contagem cíclica, verificação de avarias e atualização de sistema ERP.</p>
+<div class="flex items-center justify-between pt-6 border-t border-slate-100">
+<div class="flex items-center gap-2 text-slate-500">
+<span class="material-symbols-outlined text-sm">account_tree</span>
+<span class="text-label-md">15 Etapas</span>
+</div>
+<button class="text-secondary font-label-md flex items-center gap-1 hover:underline">
+                                Usar Template
+                                <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Template Card 4: T.I. -->
+<article class="bg-white border border-slate-200 rounded-xl overflow-hidden group hover:border-secondary/40 transition-all duration-300 flex flex-col">
+<div class="h-40 bg-slate-50 relative overflow-hidden">
+<img class="w-full h-full object-cover grayscale-[0.5] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500" data-alt="A high-tech server room with glowing blue status lights blinking on vertical racks. The atmosphere is cool and sterile, with a slight motion blur that suggests constant data flow. The lighting is low-key with vibrant neon blue highlights against deep black surfaces, creating a systematic and highly secure technical environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBhPuJMisBWXcEUHwukSBfPiPAbXlVcjYTfPuqZukskNzG4ty59LQ3rBo-WJZihBqmN8nGZ0TK5yp9qX14q9vVu-5F-Vd_Nk_grheA9owsCNcW1EalJqmB1WohYbikTm5g-7RgNhGH_QO6a-fGtr92B_afzQrMIWM3x0Nz4QwtHDGKVXqOin9Llg4q-TVnFaVuuisbcV48g4IlhRFx73dsK-GmboVwqapoQGeysYeFXJkyRDsZg6SjMAk8TcrqFyb4Hp68jUjT6iPoQ"/>
+<div class="absolute top-4 left-4">
+<span class="bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-[#0058BE] border border-[#0058BE]/20">T.I.</span>
+</div>
+</div>
+<div class="p-6 flex flex-col flex-1">
+<h3 class="text-headline-md text-primary mb-2">Backup de Segurança</h3>
+<p class="text-body-md text-on-surface-variant mb-6 flex-1">Rotina de verificação de integridade de dados e sincronização com nuvem corporativa.</p>
+<div class="flex items-center justify-between pt-6 border-t border-slate-100">
+<div class="flex items-center gap-2 text-slate-500">
+<span class="material-symbols-outlined text-sm">account_tree</span>
+<span class="text-label-md">5 Etapas</span>
+</div>
+<button class="text-secondary font-label-md flex items-center gap-1 hover:underline">
+                                Usar Template
+                                <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Template Card 5: Vendas -->
+<article class="bg-white border border-slate-200 rounded-xl overflow-hidden group hover:border-secondary/40 transition-all duration-300 flex flex-col">
+<div class="h-40 bg-slate-50 relative overflow-hidden">
+<img class="w-full h-full object-cover grayscale-[0.5] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500" data-alt="A high-level corporate meeting room where a group of diverse professionals are intensely brainstorming around a large digital screen showing sales charts. The lighting is sharp and professional. The scene is full of energy and collaboration, utilizing a palette of corporate blues, vibrant accent colors, and bright whites." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwkDae6dmsB7oebTEQuVJ1PduFZ2GLeyk8b5ruf3Px4qEbxlm_dmuAqjHtPoCVKyEiRCl5-HNvjh2-agHuUZACAcI1HOeafxM6v13f9KDaJ34oQX5hNX5IMAfTF-Qqxo0-aIdMxQH6z6kcnINiDk7vsTLyUX-2KrXd2JVtQh6_0l_AywDV12qkfu3NVKg-UHu-_7KGBXD7E-ITZLCU58I0ZdPJ_PoTDqiQSyzg-L2aN0-CNWTTJyNZOXxetXJcOiWVMoBvOtRecu1J"/>
+<div class="absolute top-4 left-4">
+<span class="bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-[#A10000] border border-[#A10000]/20">Vendas</span>
+</div>
+</div>
+<div class="p-6 flex flex-col flex-1">
+<h3 class="text-headline-md text-primary mb-2">Pitch de Vendas</h3>
+<p class="text-body-md text-on-surface-variant mb-6 flex-1">Sequência estratégica para apresentação de produtos e tratamento de objeções padrão.</p>
+<div class="flex items-center justify-between pt-6 border-t border-slate-100">
+<div class="flex items-center gap-2 text-slate-500">
+<span class="material-symbols-outlined text-sm">account_tree</span>
+<span class="text-label-md">7 Etapas</span>
+</div>
+<button class="text-secondary font-label-md flex items-center gap-1 hover:underline">
+                                Usar Template
+                                <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Custom Create Card -->
+<article class="bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center p-8 text-center group hover:bg-white hover:border-secondary transition-all cursor-pointer">
+<div class="w-16 h-16 rounded-full bg-white border border-slate-200 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-3xl text-slate-400 group-hover:text-secondary">add</span>
+</div>
+<h3 class="text-headline-md text-slate-600 mb-2">Customizado</h3>
+<p class="text-body-md text-slate-500">Não encontrou o que precisa? Comece um processo do zero totalmente personalizado.</p>
+</article>
+</div>
+</div>
+<!-- Floating Action Button - Only visible on specific screens as per mandate -->
+<!-- Suppressed for Library/Template screen to prioritize browsing as per Task-Focused check -->
+</main>
+</body></html>

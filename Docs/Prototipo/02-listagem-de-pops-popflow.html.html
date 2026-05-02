@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+
+<html class="light" lang="pt-br"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fbf9fb;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-bright": "#fbf9fb",
+                        "secondary": "#0058be",
+                        "inverse-on-surface": "#f2f0f2",
+                        "tertiary-fixed-dim": "#d0bcff",
+                        "tertiary-container": "#23005c",
+                        "on-error": "#ffffff",
+                        "secondary-fixed": "#d8e2ff",
+                        "on-primary-fixed": "#0d1c32",
+                        "primary-container": "#0d1c32",
+                        "surface-dim": "#dbd9db",
+                        "secondary-container": "#2170e4",
+                        "primary-fixed-dim": "#b9c7e4",
+                        "tertiary-fixed": "#e9ddff",
+                        "on-tertiary-fixed": "#23005c",
+                        "error": "#ba1a1a",
+                        "surface-container-high": "#eae7ea",
+                        "outline-variant": "#c5c6cd",
+                        "on-background": "#1b1b1d",
+                        "on-secondary-fixed-variant": "#004395",
+                        "on-tertiary-container": "#9466ff",
+                        "on-primary-container": "#76849f",
+                        "inverse-primary": "#b9c7e4",
+                        "on-secondary": "#ffffff",
+                        "surface-tint": "#515f78",
+                        "on-primary-fixed-variant": "#39475f",
+                        "secondary-fixed-dim": "#adc6ff",
+                        "surface": "#fbf9fb",
+                        "on-error-container": "#93000a",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-container": "#fefcff",
+                        "surface-container": "#efedef",
+                        "on-surface-variant": "#44474d",
+                        "surface-variant": "#e4e2e4",
+                        "on-tertiary-fixed-variant": "#5516be",
+                        "tertiary": "#000000",
+                        "on-primary": "#ffffff",
+                        "surface-container-highest": "#e4e2e4",
+                        "surface-container-low": "#f5f3f5",
+                        "background": "#fbf9fb",
+                        "on-secondary-fixed": "#001a42",
+                        "outline": "#75777e",
+                        "primary-fixed": "#d6e3ff",
+                        "primary": "#000000",
+                        "on-surface": "#1b1b1d",
+                        "on-tertiary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "inverse-surface": "#303032"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "unit": "4px",
+                        "xl": "40px",
+                        "gutter": "16px",
+                        "sm": "8px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "margin": "24px"
+                    },
+                    "fontSize": {
+                        "label-md": ["12px", {"lineHeight": "16px", "fontWeight": "600"}],
+                        "caption": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "display-xl": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-surface-bright text-on-surface antialiased overflow-x-hidden">
+<!-- SideNavBar Shell -->
+<aside class="h-screen w-64 fixed left-0 top-0 border-r border-slate-200 bg-white dark:bg-slate-900 z-50 flex flex-col py-6 px-4">
+<div class="mb-8 px-2">
+<h1 class="text-xl font-bold tracking-tight text-[#0A192F] dark:text-white">POPFlow</h1>
+<p class="text-xs text-slate-500 font-medium">SOP Management</p>
+</div>
+<nav class="flex-1 space-y-1 overflow-y-auto">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-slate-50 transition-all duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined text-xl">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<!-- ACTIVE TAB: POPs -->
+<a class="flex items-center gap-3 px-3 py-2 bg-slate-100 text-[#0A192F] font-semibold border-r-4 border-[#0A192F] transition-all duration-200 rounded-l-lg translate-x-1" href="#">
+<span class="material-symbols-outlined text-xl">description</span>
+<span class="font-label-md text-label-md">POPs</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-slate-50 transition-all duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined text-xl">add_circle</span>
+<span class="font-label-md text-label-md">Create POP</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-slate-50 transition-all duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined text-xl">play_circle</span>
+<span class="font-label-md text-label-md">Executions</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-slate-50 transition-all duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined text-xl">rate_review</span>
+<span class="font-label-md text-label-md">Reviews</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-slate-50 transition-all duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined text-xl">copy_all</span>
+<span class="font-label-md text-label-md">Templates</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-slate-50 transition-all duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined text-xl">analytics</span>
+<span class="font-label-md text-label-md">Analytics</span>
+</a>
+<div class="pt-4 mt-4 border-t border-slate-100">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-slate-50 transition-all duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined text-xl">notifications</span>
+<span class="font-label-md text-label-md">Notifications</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-slate-50 transition-all duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined text-xl">group</span>
+<span class="font-label-md text-label-md">Users</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-slate-50 transition-all duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined text-xl">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</div>
+</nav>
+</aside>
+<!-- TopAppBar Shell -->
+<header class="fixed top-0 right-0 left-64 h-16 border-b border-slate-200 bg-white/80 backdrop-blur-md z-40 flex items-center justify-between px-8">
+<div class="flex items-center flex-1 max-w-xl">
+<div class="relative w-full group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-secondary">search</span>
+<input class="w-full bg-slate-50 border-none rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-secondary/20 outline-none transition-all" placeholder="Buscar procedimentos..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-slate-500 hover:text-[#0A192F] transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-white"></span>
+</button>
+<button class="p-2 text-slate-500 hover:text-[#0A192F] transition-colors">
+<span class="material-symbols-outlined">business_center</span>
+</button>
+<div class="h-8 w-px bg-slate-200 mx-2"></div>
+<div class="flex items-center gap-3">
+<span class="text-sm font-medium text-[#0A192F]">Profile</span>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-slate-200">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a corporate manager in a bright, modern office setting. The person is wearing a clean white shirt and has a focused, confident expression. The lighting is soft and natural, emphasizing a professional and trustworthy vibe. The background shows blurred architectural elements and a clean, high-key atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA38hTlZAUVijjkS77RYNtTOnphiuqCMrQQ34bHUVfZPw_Z7j0qrUc3y5z3Y02vxOnH3OzuEJI1eVd7VqJePNzU_L3fxGOpm3chwxjygqtgC5bV7DxBKa16sB-Ai67OYcF9jcb_kowDPHUPeXvHc4ef3AtuWAXQHDt2LXFhWadPhvtmNaR_IUGoBYROwruolQrQ7NhmpN4mNF6InnlhJxDt50iTRjfuYaXhUwnDdSYyPmMbJ_cejk7hE513vMSGXMaCjOXxKZ-ZfS1d"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="ml-64 pt-24 pb-12 px-8 min-h-screen">
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+<div>
+<h2 class="text-headline-lg font-headline-lg text-[#0A192F]">POPs</h2>
+<p class="text-body-md text-on-surface-variant">Gerencie e acompanhe os Procedimentos Operacionais Padrão da organização.</p>
+</div>
+<button class="bg-[#0A192F] text-white px-6 py-2.5 rounded-lg flex items-center gap-2 font-medium hover:bg-secondary transition-colors shadow-sm">
+<span class="material-symbols-outlined text-xl">add</span>
+                Criar POP
+            </button>
+</div>
+<!-- Filters Section -->
+<div class="bg-white border border-slate-200 rounded-xl p-4 mb-8 grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+<div class="space-y-1.5">
+<label class="text-label-md font-label-md text-[#0A192F]">Departamento</label>
+<select class="w-full bg-slate-50 border-slate-200 rounded-lg text-sm focus:border-secondary focus:ring-1 focus:ring-secondary outline-none h-10">
+<option>Todos os Departamentos</option>
+<option>Fiscal</option>
+<option>Contábil</option>
+<option>RH</option>
+<option>TI</option>
+</select>
+</div>
+<div class="space-y-1.5">
+<label class="text-label-md font-label-md text-[#0A192F]">Status</label>
+<select class="w-full bg-slate-50 border-slate-200 rounded-lg text-sm focus:border-secondary focus:ring-1 focus:ring-secondary outline-none h-10">
+<option>Todos os Status</option>
+<option>Publicado</option>
+<option>Em revisão</option>
+<option>Rascunho</option>
+</select>
+</div>
+<div class="space-y-1.5">
+<label class="text-label-md font-label-md text-[#0A192F]">Responsável</label>
+<select class="w-full bg-slate-50 border-slate-200 rounded-lg text-sm focus:border-secondary focus:ring-1 focus:ring-secondary outline-none h-10">
+<option>Qualquer pessoa</option>
+<option>João Silva</option>
+<option>Maria Oliveira</option>
+<option>Carlos Souza</option>
+</select>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex-1 bg-slate-50 text-slate-700 border border-slate-200 h-10 rounded-lg text-sm font-medium hover:bg-slate-100 transition-colors">
+                    Limpar Filtros
+                </button>
+<button class="flex-1 bg-secondary/10 text-secondary h-10 rounded-lg text-sm font-semibold hover:bg-secondary/20 transition-colors">
+                    Aplicar
+                </button>
+</div>
+</div>
+<!-- Bento Grid / Cards Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Card 1 -->
+<div class="bg-white border border-slate-200 rounded-xl hover:border-secondary/30 hover:shadow-lg transition-all p-5 flex flex-col group">
+<div class="flex justify-between items-start mb-4">
+<span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Publicado</span>
+<button class="text-slate-400 hover:text-slate-600 transition-colors">
+<span class="material-symbols-outlined">more_horiz</span>
+</button>
+</div>
+<h3 class="text-lg font-bold text-[#0A192F] mb-1 group-hover:text-secondary transition-colors">Fechamento Fiscal Mensal</h3>
+<p class="text-caption text-slate-500 mb-6">Processo detalhado de conciliação e apuração de impostos mensais.</p>
+<div class="mt-auto space-y-4">
+<div class="flex items-center justify-between text-sm">
+<div class="flex items-center gap-2 text-slate-500">
+<span class="material-symbols-outlined text-base">schedule</span>
+<span>4h 30m</span>
+</div>
+<div class="flex items-center gap-2 text-slate-500">
+<span class="material-symbols-outlined text-base">history</span>
+<span>v1.2</span>
+</div>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-slate-100">
+<div class="flex -space-x-2">
+<div class="w-7 h-7 rounded-full border-2 border-white bg-slate-200 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Close up portrait of a professional female analyst working in a bright modern corporate office environment. She is smiling confidently, dressed in professional business attire. The scene is illuminated with clear, cool white light that highlights the systematic and clean aesthetic of the workspace. High-end professional photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1r1Qz5EugDnL6siDjUaLst8va3cnktDcWMBWplMf157hK4YZ1tyTI8843G8w8ObayGFH2VhBwn91HYOpwtk9B2nNmBIxkEzs9wrdTXO5nBr2M1vnHytVN5-wwpv0prdLH44ijLhtbGK6lI_cZ2JNAU-dZ1lQLbciawaB0UNYLCBwJtHGPnx4Py3N6XtORjVqpPuSgekXknw-ye-FYX-7g3_Fn3kc6C1DkFzArDVjYj0QtChV-xFYsJtNBdmTM44AnRii5b4OLuVcJ"/>
+</div>
+<div class="w-7 h-7 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">
+                                +2
+                            </div>
+</div>
+<span class="text-[11px] font-medium text-slate-400">Depto: Fiscal</span>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-white border border-slate-200 rounded-xl hover:border-secondary/30 hover:shadow-lg transition-all p-5 flex flex-col group">
+<div class="flex justify-between items-start mb-4">
+<span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Em revisão</span>
+<button class="text-slate-400 hover:text-slate-600 transition-colors">
+<span class="material-symbols-outlined">more_horiz</span>
+</button>
+</div>
+<h3 class="text-lg font-bold text-[#0A192F] mb-1 group-hover:text-secondary transition-colors">Envio de SPED</h3>
+<p class="text-caption text-slate-500 mb-6">Geração e validação de arquivos digitais para obrigações acessórias federais.</p>
+<div class="mt-auto space-y-4">
+<div class="flex items-center justify-between text-sm">
+<div class="flex items-center gap-2 text-slate-500">
+<span class="material-symbols-outlined text-base">schedule</span>
+<span>2h 15m</span>
+</div>
+<div class="flex items-center gap-2 text-slate-500">
+<span class="material-symbols-outlined text-base">history</span>
+<span>v2.0</span>
+</div>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-slate-100">
+<div class="flex -space-x-2">
+<div class="w-7 h-7 rounded-full border-2 border-white bg-slate-200 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A male finance manager in a sophisticated, minimalist corporate setting. The lighting is crisp and highlights the structured environment with soft shadows. He is wearing a dark navy suit, reflecting an authoritative and unflappable personality. The overall image has a professional and systematic feel with high clarity and operational maturity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDboW7qXAZNqAYLT4_aBq0e9vhPQBoFjkfYLDSbJ_uk0tBW3GeU6rhUXgqAM2lkN3ooc6TrMlefUEF9IHUZC_wqIVZwLD_SFoUQIhcoejZZ2-YNohBSrWSEnnG9GgxcO-qixTsOYMZjApQL467RiFlVT5XSsyi92hBsGyMb-_f5ZpQYYA_zqbVmQPbEDwhAj4YCtyLwetmLFpZLwC11TwN8tIJMTQa6mmMDRY-KdaKECX_Ejn53Vc7muJbIRulrExsh6HlUUH0e61cM"/>
+</div>
+</div>
+<span class="text-[11px] font-medium text-slate-400">Depto: Fiscal</span>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-white border border-slate-200 rounded-xl hover:border-secondary/30 hover:shadow-lg transition-all p-5 flex flex-col group">
+<div class="flex justify-between items-start mb-4">
+<span class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Rascunho</span>
+<button class="text-slate-400 hover:text-slate-600 transition-colors">
+<span class="material-symbols-outlined">more_horiz</span>
+</button>
+</div>
+<h3 class="text-lg font-bold text-[#0A192F] mb-1 group-hover:text-secondary transition-colors">Cadastro de Cliente</h3>
+<p class="text-caption text-slate-500 mb-6">Fluxo de triagem e inserção de novos clientes no sistema ERP corporativo.</p>
+<div class="mt-auto space-y-4">
+<div class="flex items-center justify-between text-sm">
+<div class="flex items-center gap-2 text-slate-500">
+<span class="material-symbols-outlined text-base">schedule</span>
+<span>45m</span>
+</div>
+<div class="flex items-center gap-2 text-slate-500">
+<span class="material-symbols-outlined text-base">history</span>
+<span>v0.8</span>
+</div>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-slate-100">
+<div class="flex -space-x-2">
+<div class="w-7 h-7 rounded-full border-2 border-white bg-slate-200 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Portrait of a young professional in a light-filled modern workspace. The aesthetic is clean and corporate, featuring a palette of whites and grays. The individual has a serious but calm expression, representing precision and reliability. The lighting is diffused and professional, reinforcing a systematic and organized brand atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPHDF-Zv2VEqVeaxAcubxBeITnoDv-I0fkO8nAc3psSV6q0Ipjq7mmx--ZccgxcutN6bFG9Fxs7rTyy3jmeBHGHG47jF7iZu-T-MjgrZVXjVHu0O_AhuwJVgZLWdONeq_RHKQH6GRYFjcCB1V1h-cWb4kNIMKsG-yPsQD0_vwJRrukVa8AttYbBmIRCS3BhSQnX6e1ikPxSVRn4wkMysHN0-ukIr4hhbJALYHhp2-6t8yZR_JmXw6-mon_yLISJjK3Ml5YDTk5j_YL"/>
+</div>
+</div>
+<span class="text-[11px] font-medium text-slate-400">Depto: Comercial</span>
+</div>
+</div>
+</div>
+<!-- Card 4 - Expanded Bento style -->
+<div class="lg:col-span-2 bg-white border border-slate-200 rounded-xl hover:border-secondary/30 transition-all p-5 flex items-center gap-8 group">
+<div class="hidden sm:block w-40 h-40 rounded-lg overflow-hidden shrink-0 bg-slate-100">
+<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" data-alt="A clean, top-down view of a modern desk with a tablet displaying a systematic workflow diagram. The environment is bright and uncluttered, emphasizing precision and operational clarity. The lighting is even and cool, highlighting the mathematical grid of the document. The style is authoritative and calm, perfect for a high-density SOP management platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgGQF8wGiNGXUlczamcw1IJT7k5whmIjUSdnairqlaeSi6YUlBaJapyM2eeqKKJy8Wp6ZXNpQmaaqknAOnZGt1zjJiEEyzDQuDOHUr_FxYDAna7p_nLUPueyfJBZYGHQjvzRh-s0uwwq_VAbLHzZ_RePXu8-7lHMcLbwjsGg-X81BuzZU8mOilbCQMaulblAyDKiP-32droC_wotknoF99unwVkwqPhD0sELYn3bae2FvjLBik0VLYtrcTeadEFrBouI9x4sBgyuTm"/>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-2">
+<span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Publicado</span>
+<div class="flex items-center gap-2">
+<span class="text-[11px] text-slate-400">Atualizado há 2 dias</span>
+<button class="text-slate-400 hover:text-slate-600">
+<span class="material-symbols-outlined">more_horiz</span>
+</button>
+</div>
+</div>
+<h3 class="text-xl font-bold text-[#0A192F] mb-2">Onboarding de Novos Colaboradores</h3>
+<p class="text-body-md text-slate-500 mb-4">Protocolo completo desde a coleta de documentos até o setup técnico da estação de trabalho.</p>
+<div class="flex flex-wrap items-center gap-4">
+<div class="flex items-center gap-2 text-sm text-slate-600">
+<span class="material-symbols-outlined text-base">timer</span>
+<span>8h totais</span>
+</div>
+<div class="flex items-center gap-2 text-sm text-slate-600">
+<span class="material-symbols-outlined text-base">list_alt</span>
+<span>15 etapas</span>
+</div>
+<div class="flex items-center gap-2 text-sm text-slate-600">
+<span class="material-symbols-outlined text-base">corporate_fare</span>
+<span>RH</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 5 - Mini Stats or Quick Action -->
+<div class="bg-[#0A192F] text-white rounded-xl p-6 flex flex-col justify-between relative overflow-hidden">
+<div class="relative z-10">
+<h4 class="text-lg font-bold mb-1">Status Geral</h4>
+<p class="text-xs text-slate-300">Resumo da saúde dos seus POPs</p>
+</div>
+<div class="relative z-10 flex flex-col gap-3 mt-4">
+<div class="flex items-center justify-between text-sm">
+<span>Procedimentos Ativos</span>
+<span class="font-bold">42</span>
+</div>
+<div class="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+<div class="bg-secondary w-3/4 h-full rounded-full"></div>
+</div>
+<div class="flex items-center justify-between text-sm">
+<span>Em Revisão</span>
+<span class="font-bold text-blue-400">08</span>
+</div>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-10">
+<span class="material-symbols-outlined !text-9xl" style="font-variation-settings: 'FILL' 1;">analytics</span>
+</div>
+</div>
+</div>
+<!-- Table View Alternative (High Density) -->
+<div class="mt-12 bg-white border border-slate-200 rounded-xl overflow-hidden">
+<div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+<h3 class="font-bold text-[#0A192F]">Lista Detalhada</h3>
+<div class="flex gap-2">
+<button class="p-1.5 border border-slate-200 rounded hover:bg-slate-50"><span class="material-symbols-outlined text-xl">view_list</span></button>
+<button class="p-1.5 border border-slate-200 rounded hover:bg-slate-50"><span class="material-symbols-outlined text-xl">grid_view</span></button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="bg-slate-50 text-slate-500 text-[11px] font-bold uppercase tracking-wider">
+<th class="px-6 py-3">Nome do POP</th>
+<th class="px-6 py-3">Responsável</th>
+<th class="px-6 py-3 text-center">Versão</th>
+<th class="px-6 py-3 text-center">Tempo</th>
+<th class="px-6 py-3">Status</th>
+<th class="px-6 py-3 text-right">Ações</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100">
+<tr class="hover:bg-slate-50 transition-colors">
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-[#0A192F]">Revisão Contratual Anual</span>
+<span class="text-[11px] text-slate-400">Departamento: Jurídico</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-slate-200 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Close up of a senior manager's profile photo in a professional corporate context. The lighting is balanced and highlights a calm, authoritative presence. The background is a soft-focus office environment with neutral tones of gray and white. High clarity and professional photographic quality." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCumhvwFRnSa6tmvN5kZJr-8Tud-sz99FNRBdhBqinwslrn9nVPAIZyaxkooqw20XHjSFdoUFmPr4eSaavX3EHgJ5Cn3GCKXJlzBKMf9yuHygaVGK-MPbgKHFRe2VEB4asGcSlScf_3DHcqlH5rtqZ1_OUBug_6bv7VdMLGR0wC2fM4Rxem4qAKmCeDMtv73viMANvYFSkGs9qNAsfQxo3GGiB5Rr2USRrz9TYjst-etvJcl2dOPmEuf0ZAJEy0eIHNa0rM46-aZBhl"/>
+</div>
+<span class="text-sm text-slate-600">Carlos Souza</span>
+</div>
+</td>
+<td class="px-6 py-4 text-center text-sm text-slate-500 font-mono">v1.0.4</td>
+<td class="px-6 py-4 text-center text-sm text-slate-500">6h 00m</td>
+<td class="px-6 py-4">
+<span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Publicado</span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="p-1 text-slate-400 hover:text-slate-600"><span class="material-symbols-outlined">more_vert</span></button>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 transition-colors">
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-[#0A192F]">Manutenção de Servidores</span>
+<span class="text-[11px] text-slate-400">Departamento: TI</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-slate-200 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Portrait of a female IT specialist in a clean, professional technology lab environment. The lighting is bright and technical, with soft shadows. The overall mood is systematic and focused. High-key light-mode aesthetic with a professional corporate feel." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcLfdiEq0hnbk9FGPMMNyYd7B3VU6TkrYxzCCJ4aLRIPzKlVwxEdTheMza8PCIEnlKZLQcKAbxOxDvgraBZeSvfTHHm6gXTdpsuKXHbZd2PwILvPzxyxH24t97hcs_RXHAqjU1_iNyiqXmXd2YREj4Cy14Bs_TegjydOTWljuL3poqhROljss5SZAdJO8psuSEpqEqs8Hi3dEFDMa-fdJBCRDOl6GMVb0tNvtmZzDtZ5PdI9JDM_NP7AwvWu5o2vN4ueQWVY8p_pGj"/>
+</div>
+<span class="text-sm text-slate-600">Mariana Lima</span>
+</div>
+</td>
+<td class="px-6 py-4 text-center text-sm text-slate-500 font-mono">v3.2.0</td>
+<td class="px-6 py-4 text-center text-sm text-slate-500">3h 30m</td>
+<td class="px-6 py-4">
+<span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Em revisão</span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="p-1 text-slate-400 hover:text-slate-600"><span class="material-symbols-outlined">more_vert</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+<span class="text-xs text-slate-500">Exibindo 1 a 5 de 42 procedimentos</span>
+<div class="flex gap-1">
+<button class="px-3 py-1 border border-slate-200 rounded bg-white text-xs font-medium text-slate-400 cursor-not-allowed">Anterior</button>
+<button class="px-3 py-1 border border-slate-200 rounded bg-white text-xs font-medium text-[#0A192F] hover:bg-slate-50 transition-colors">Próximo</button>
+</div>
+</div>
+</div>
+</main>
+</body></html>

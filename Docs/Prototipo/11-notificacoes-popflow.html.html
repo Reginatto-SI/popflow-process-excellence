@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+
+<html class="light" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-bright": "#fbf9fb",
+                        "secondary": "#0058be",
+                        "inverse-on-surface": "#f2f0f2",
+                        "tertiary-fixed-dim": "#d0bcff",
+                        "tertiary-container": "#23005c",
+                        "on-error": "#ffffff",
+                        "secondary-fixed": "#d8e2ff",
+                        "on-primary-fixed": "#0d1c32",
+                        "primary-container": "#0d1c32",
+                        "surface-dim": "#dbd9db",
+                        "secondary-container": "#2170e4",
+                        "primary-fixed-dim": "#b9c7e4",
+                        "tertiary-fixed": "#e9ddff",
+                        "on-tertiary-fixed": "#23005c",
+                        "error": "#ba1a1a",
+                        "surface-container-high": "#eae7ea",
+                        "outline-variant": "#c5c6cd",
+                        "on-background": "#1b1b1d",
+                        "on-secondary-fixed-variant": "#004395",
+                        "on-tertiary-container": "#9466ff",
+                        "on-primary-container": "#76849f",
+                        "inverse-primary": "#b9c7e4",
+                        "on-secondary": "#ffffff",
+                        "surface-tint": "#515f78",
+                        "on-primary-fixed-variant": "#39475f",
+                        "secondary-fixed-dim": "#adc6ff",
+                        "surface": "#fbf9fb",
+                        "on-error-container": "#93000a",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-container": "#fefcff",
+                        "surface-container": "#efedef",
+                        "on-surface-variant": "#44474d",
+                        "surface-variant": "#e4e2e4",
+                        "on-tertiary-fixed-variant": "#5516be",
+                        "tertiary": "#000000",
+                        "on-primary": "#ffffff",
+                        "surface-container-highest": "#e4e2e4",
+                        "surface-container-low": "#f5f3f5",
+                        "background": "#fbf9fb",
+                        "on-secondary-fixed": "#001a42",
+                        "outline": "#75777e",
+                        "primary-fixed": "#d6e3ff",
+                        "primary": "#000000",
+                        "on-surface": "#1b1b1d",
+                        "on-tertiary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "inverse-surface": "#303032"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "unit": "4px",
+                        "xl": "40px",
+                        "gutter": "16px",
+                        "sm": "8px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "margin": "24px"
+                    },
+                    "fontSize": {
+                        "label-md": ["12px", {"lineHeight": "16px", "fontWeight": "600"}],
+                        "caption": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "display-xl": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-surface-bright text-on-surface antialiased">
+<!-- SideNavBar Shell -->
+<aside class="h-screen w-64 fixed left-0 top-0 border-r border-slate-200 bg-white flex flex-col py-6 px-4 z-50">
+<div class="mb-10 px-2 flex items-center gap-3">
+<div class="w-8 h-8 bg-primary-container rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-lg">description</span>
+</div>
+<div>
+<h1 class="text-xl font-bold tracking-tight text-[#0A192F]">POPFlow</h1>
+<p class="text-[10px] uppercase tracking-widest text-on-primary-container font-bold">SOP Management</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-slate-50 transition-all duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined text-lg">dashboard</span>
+<span class="font-inter text-sm antialiased">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-slate-50 transition-all duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined text-lg">description</span>
+<span class="font-inter text-sm antialiased">POPs</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-slate-50 transition-all duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined text-lg">add_circle</span>
+<span class="font-inter text-sm antialiased">Create POP</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-slate-50 transition-all duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined text-lg">play_circle</span>
+<span class="font-inter text-sm antialiased">Executions</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-slate-50 transition-all duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined text-lg">rate_review</span>
+<span class="font-inter text-sm antialiased">Reviews</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-slate-50 transition-all duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined text-lg">copy_all</span>
+<span class="font-inter text-sm antialiased">Templates</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-slate-50 transition-all duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined text-lg">analytics</span>
+<span class="font-inter text-sm antialiased">Analytics</span>
+</a>
+<a class="bg-slate-100 text-[#0A192F] font-semibold border-r-4 border-[#0A192F] flex items-center gap-3 px-3 py-2 transition-all duration-200 translate-x-1" href="#">
+<span class="material-symbols-outlined text-lg">notifications</span>
+<span class="font-inter text-sm antialiased">Notifications</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-slate-50 transition-all duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined text-lg">group</span>
+<span class="font-inter text-sm antialiased">Users</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-slate-50 transition-all duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined text-lg">settings</span>
+<span class="font-inter text-sm antialiased">Settings</span>
+</a>
+</nav>
+<div class="mt-auto pt-6 border-t border-slate-100">
+<div class="flex items-center gap-3 px-2">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="A professional headshot of a corporate executive in a crisp white shirt against a neutral office background. The lighting is bright and clean, reflecting a high-end light-mode aesthetic. The composition is centered and modern, conveying professional trust and calm control, aligned with a systematic corporate identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNTgiIIb-fr5d41WWBqCPjfAyJQjEG_XQhmw_L65BWwjwgdL8fRgwNuYd4Gu0_MAXtdygL_y78R2KzORcfHObp1eaSbtnVl5_e7k2cPPlkKEfVI4r46Ezz9ky2b0Ucxk32J4FDXdmc50IJ8srX_6JOx16KsWN1x6Xfg24JdW4vx4qcaIHBA8QEH4BTGaBE06GCYBd4TL2w8TIrr5iXOezqjDsA_5FpZIHmeA0vfDMgKxLmDJsJO_Wmwldg2Fss8k7yk_KnpfiviCVK"/>
+<div class="flex-1 overflow-hidden">
+<p class="text-sm font-bold text-[#0A192F] truncate">Ricardo Silva</p>
+<p class="text-xs text-slate-500 truncate">Gerente de Operações</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- TopAppBar Shell -->
+<header class="fixed top-0 right-0 left-64 h-16 border-b border-slate-200 bg-white/80 backdrop-blur-md z-40 flex items-center justify-between px-8">
+<div class="flex items-center flex-1 max-w-md">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+<input class="w-full bg-slate-50 border-none rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-secondary/20 outline-none transition-all" placeholder="Buscar notificações..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4 text-slate-500">
+<button class="hover:text-[#0A192F] transition-colors flex items-center">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="hover:text-[#0A192F] transition-colors flex items-center">
+<span class="material-symbols-outlined">business_center</span>
+</button>
+</div>
+<div class="h-6 w-px bg-slate-200"></div>
+<button class="text-sm font-medium text-slate-500 hover:text-[#0A192F] transition-colors">Profile</button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="ml-64 pt-16 min-h-screen">
+<div class="p-margin max-w-6xl mx-auto py-xl">
+<!-- Page Header -->
+<div class="flex items-center justify-between mb-lg">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-primary">Central de Notificações</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Acompanhe e gerencie todos os alertas operacionais e processos pendentes.</p>
+</div>
+<div class="flex gap-sm">
+<button class="px-md py-sm bg-white border border-outline-variant text-primary font-label-md text-label-md rounded hover:bg-surface-container transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">done_all</span>
+                        Marcar todas como lidas
+                    </button>
+<button class="px-md py-sm bg-primary text-on-primary font-label-md text-label-md rounded hover:opacity-90 transition-opacity flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+                        Filtros
+                    </button>
+</div>
+</div>
+<!-- Notification Tabs -->
+<div class="flex gap-md border-b border-outline-variant mb-lg overflow-x-auto">
+<button class="pb-md px-xs text-secondary border-b-2 border-secondary font-label-md text-label-md whitespace-nowrap">Todas (24)</button>
+<button class="pb-md px-xs text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md whitespace-nowrap">Urgente (3)</button>
+<button class="pb-md px-xs text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md whitespace-nowrap">Revisão (8)</button>
+<button class="pb-md px-xs text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md whitespace-nowrap">Publicação (5)</button>
+</div>
+<!-- Bento Layout for Notifications -->
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Main List - Column 1-8 -->
+<div class="col-span-12 lg:col-span-8 space-y-sm">
+<!-- Notification Item: Urgent -->
+<div class="bg-white border border-outline-variant rounded-lg p-md flex items-start gap-md hover:bg-surface-container-low transition-colors group relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-error"></div>
+<div class="w-10 h-10 rounded-full bg-error-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1;">warning</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<span class="px-2 py-0.5 rounded-full bg-error/10 text-error text-[10px] font-bold uppercase tracking-wider mb-1 inline-block">Urgente</span>
+<span class="text-caption font-caption text-on-surface-variant">12 min atrás</span>
+</div>
+<h3 class="text-body-lg font-bold text-primary">POP Fechamento Fiscal aguardando sua revisão</h3>
+<p class="text-body-md font-body-md text-on-surface-variant mt-1">O prazo para o fechamento mensal encerra em 24h. Sua aprovação é mandatória para prosseguir.</p>
+<div class="mt-md flex gap-sm">
+<button class="px-md py-1.5 bg-secondary text-white text-label-md font-label-md rounded-lg">Revisar Agora</button>
+<button class="px-md py-1.5 border border-outline-variant text-on-surface-variant text-label-md font-label-md rounded-lg hover:bg-white">Adiar</button>
+</div>
+</div>
+</div>
+<!-- Notification Item: Success -->
+<div class="bg-white border border-outline-variant rounded-lg p-md flex items-start gap-md hover:bg-surface-container-low transition-colors group">
+<div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-emerald-600" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase tracking-wider mb-1 inline-block">Execução</span>
+<span class="text-caption font-caption text-on-surface-variant">2 horas atrás</span>
+</div>
+<h3 class="text-body-lg font-bold text-primary">Execução de SPED concluída com sucesso</h3>
+<p class="text-body-md font-body-md text-on-surface-variant mt-1">O processo automatizado de envio do SPED Fiscal referente ao período 03/24 foi finalizado sem erros.</p>
+<div class="mt-md flex gap-sm">
+<button class="px-md py-1.5 bg-surface-container-highest text-primary text-label-md font-label-md rounded-lg">Ver Relatório</button>
+</div>
+</div>
+</div>
+<!-- Notification Item: Revision -->
+<div class="bg-white border border-outline-variant rounded-lg p-md flex items-start gap-md hover:bg-surface-container-low transition-colors group">
+<div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-amber-600" style="font-variation-settings: 'FILL' 1;">history_edu</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-bold uppercase tracking-wider mb-1 inline-block">Revisão</span>
+<span class="text-caption font-caption text-on-surface-variant">4 horas atrás</span>
+</div>
+<h3 class="text-body-lg font-bold text-primary">Novo rascunho: Protocolo de Onboarding RH</h3>
+<p class="text-body-md font-body-md text-on-surface-variant mt-1">Ana Clara solicitou sua revisão técnica no novo fluxo de integração de talentos.</p>
+<div class="mt-md flex gap-sm">
+<button class="px-md py-1.5 bg-secondary text-white text-label-md font-label-md rounded-lg">Abrir Rascunho</button>
+</div>
+</div>
+</div>
+<!-- Notification Item: Publication -->
+<div class="bg-white border border-outline-variant rounded-lg p-md flex items-start gap-md hover:bg-surface-container-low transition-colors group">
+<div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-blue-600" style="font-variation-settings: 'FILL' 1;">public</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold uppercase tracking-wider mb-1 inline-block">Publicação</span>
+<span class="text-caption font-caption text-on-surface-variant">Ontem</span>
+</div>
+<h3 class="text-body-lg font-bold text-primary">Política de Reembolso Publicada</h3>
+<p class="text-body-md font-body-md text-on-surface-variant mt-1">A versão 4.2 da política de reembolso foi publicada para toda a organização.</p>
+<div class="mt-md flex gap-sm">
+<button class="px-md py-1.5 bg-surface-container-highest text-primary text-label-md font-label-md rounded-lg">Ver Detalhes</button>
+</div>
+</div>
+</div>
+<div class="py-lg text-center">
+<button class="text-secondary font-label-md text-label-md hover:underline">Carregar mais notificações</button>
+</div>
+</div>
+<!-- Sidebar / Summary - Column 9-12 -->
+<div class="col-span-12 lg:col-span-4 space-y-gutter">
+<!-- Stats Card -->
+<div class="bg-white border border-outline-variant rounded-lg p-lg">
+<h4 class="text-label-md font-label-md text-primary mb-md uppercase tracking-wider">Visão Geral</h4>
+<div class="space-y-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-sm">
+<div class="w-2 h-2 rounded-full bg-error"></div>
+<span class="text-body-md text-on-surface-variant">Urgentes</span>
+</div>
+<span class="font-bold text-primary">03</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-sm">
+<div class="w-2 h-2 rounded-full bg-amber-500"></div>
+<span class="text-body-md text-on-surface-variant">Em Revisão</span>
+</div>
+<span class="font-bold text-primary">08</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-sm">
+<div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+<span class="text-body-md text-on-surface-variant">Concluídas</span>
+</div>
+<span class="font-bold text-primary">124</span>
+</div>
+</div>
+<div class="mt-lg pt-lg border-t border-outline-variant">
+<p class="text-caption text-on-surface-variant italic">"Sua eficiência de resposta aumentou 12% esta semana."</p>
+</div>
+</div>
+<!-- Quick Actions Card -->
+<div class="bg-primary-container text-white rounded-lg p-lg overflow-hidden relative">
+<div class="relative z-10">
+<h4 class="text-label-md font-label-md text-on-primary-container mb-md uppercase tracking-wider">Ações Rápidas</h4>
+<div class="grid grid-cols-2 gap-sm">
+<button class="p-sm bg-white/10 hover:bg-white/20 transition-colors rounded flex flex-col items-center gap-xs text-center">
+<span class="material-symbols-outlined text-xl">settings_suggest</span>
+<span class="text-[10px] font-bold">Configurar Alertas</span>
+</button>
+<button class="p-sm bg-white/10 hover:bg-white/20 transition-colors rounded flex flex-col items-center gap-xs text-center">
+<span class="material-symbols-outlined text-xl">archive</span>
+<span class="text-[10px] font-bold">Arquivar Tudo</span>
+</button>
+<button class="p-sm bg-white/10 hover:bg-white/20 transition-colors rounded flex flex-col items-center gap-xs text-center">
+<span class="material-symbols-outlined text-xl">ios_share</span>
+<span class="text-[10px] font-bold">Exportar Log</span>
+</button>
+<button class="p-sm bg-white/10 hover:bg-white/20 transition-colors rounded flex flex-col items-center gap-xs text-center">
+<span class="material-symbols-outlined text-xl">help</span>
+<span class="text-[10px] font-bold">Suporte Central</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Info Image -->
+<div class="rounded-lg border border-outline-variant overflow-hidden h-48 relative">
+<img class="w-full h-full object-cover" data-alt="A sophisticated data visualization dashboard showing sleek financial charts and operation flow diagrams. The image uses a palette of deep navy blues and clean whites, accented with vibrant blue lines. The lighting is low-contrast and architectural, creating a focused, professional atmosphere suitable for a corporate SOP management platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDIrmnZz0ZuGkgAsIAXWvrjwfglWRwibbG7O6xyL01oUeoRftrPDxhlz-K_S9IBes7h1UMOw_tdF_ffxP8jkL-B-_6BBsVVAl0ZTFKuU489DIwZepA6JQnt3kR5lLqBKi4W12gDp-XAQwwISXawPlWOTs4hgmUxBDswznhXrfufW2FC6eurAGVdvVlK3xVkiL2yrDHtUN9HV-_edPD3aiWh5GflotQsgGH2n6rQmhcxvSxLt-3dPbHTmjODSQzLKCl9dTAxb94vb_oo"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-md">
+<p class="text-white text-xs font-medium">Melhore seus processos com análise preditiva de notificações.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

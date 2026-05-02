@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+
+<html class="light" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-bright": "#fbf9fb",
+                    "secondary": "#0058be",
+                    "inverse-on-surface": "#f2f0f2",
+                    "tertiary-fixed-dim": "#d0bcff",
+                    "tertiary-container": "#23005c",
+                    "on-error": "#ffffff",
+                    "secondary-fixed": "#d8e2ff",
+                    "on-primary-fixed": "#0d1c32",
+                    "primary-container": "#0d1c32",
+                    "surface-dim": "#dbd9db",
+                    "secondary-container": "#2170e4",
+                    "primary-fixed-dim": "#b9c7e4",
+                    "tertiary-fixed": "#e9ddff",
+                    "on-tertiary-fixed": "#23005c",
+                    "error": "#ba1a1a",
+                    "surface-container-high": "#eae7ea",
+                    "outline-variant": "#c5c6cd",
+                    "on-background": "#1b1b1d",
+                    "on-secondary-fixed-variant": "#004395",
+                    "on-tertiary-container": "#9466ff",
+                    "on-primary-container": "#76849f",
+                    "inverse-primary": "#b9c7e4",
+                    "on-secondary": "#ffffff",
+                    "surface-tint": "#515f78",
+                    "on-primary-fixed-variant": "#39475f",
+                    "secondary-fixed-dim": "#adc6ff",
+                    "surface": "#fbf9fb",
+                    "on-error-container": "#93000a",
+                    "surface-container-lowest": "#ffffff",
+                    "on-secondary-container": "#fefcff",
+                    "surface-container": "#efedef",
+                    "on-surface-variant": "#44474d",
+                    "surface-variant": "#e4e2e4",
+                    "on-tertiary-fixed-variant": "#5516be",
+                    "tertiary": "#000000",
+                    "on-primary": "#ffffff",
+                    "surface-container-highest": "#e4e2e4",
+                    "surface-container-low": "#f5f3f5",
+                    "background": "#fbf9fb",
+                    "on-secondary-fixed": "#001a42",
+                    "outline": "#75777e",
+                    "primary-fixed": "#d6e3ff",
+                    "primary": "#000000",
+                    "on-surface": "#1b1b1d",
+                    "on-tertiary": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "inverse-surface": "#303032"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "unit": "4px",
+                    "xl": "40px",
+                    "gutter": "16px",
+                    "sm": "8px",
+                    "lg": "24px",
+                    "md": "16px",
+                    "margin": "24px"
+            },
+            "fontFamily": {
+                    "label-md": ["Inter"],
+                    "caption": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "display-xl": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "body-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "label-md": ["12px", {"lineHeight": "16px", "fontWeight": "600"}],
+                    "caption": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "display-xl": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-surface-bright text-on-surface">
+<!-- SideNavBar -->
+<aside class="h-screen w-64 fixed left-0 top-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col py-6 px-4 z-50">
+<div class="mb-10 px-2">
+<h1 class="text-xl font-bold tracking-tight text-[#0A192F] dark:text-white">POPFlow</h1>
+<p class="text-xs text-slate-500 font-medium">SOP Management</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-inter text-sm antialiased">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+<span class="font-inter text-sm antialiased">POPs</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-[#0A192F] dark:text-white font-semibold border-r-4 border-[#0A192F] dark:border-blue-500 translate-x-1 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+<span class="font-inter text-sm antialiased">Create POP</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="play_circle">play_circle</span>
+<span class="font-inter text-sm antialiased">Executions</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="rate_review">rate_review</span>
+<span class="font-inter text-sm antialiased">Reviews</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="copy_all">copy_all</span>
+<span class="font-inter text-sm antialiased">Templates</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-inter text-sm antialiased">Analytics</span>
+</a>
+</nav>
+<div class="mt-auto pt-6 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="font-inter text-sm antialiased">Notifications</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-inter text-sm antialiased">Settings</span>
+</a>
+</div>
+</aside>
+<!-- TopAppBar -->
+<header class="fixed top-0 right-0 left-64 h-16 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex items-center justify-between px-8 z-40">
+<div class="flex items-center gap-4 w-1/2">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+<input class="w-full bg-slate-50 border-none rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-2 ring-blue-500/20 outline-none transition-all" placeholder="Search procedures..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-slate-500 hover:text-[#0A192F] transition-colors relative">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-blue-600 rounded-full border-2 border-white"></span>
+</button>
+<button class="p-2 text-slate-500 hover:text-[#0A192F] transition-colors">
+<span class="material-symbols-outlined" data-icon="business_center">business_center</span>
+</button>
+<div class="h-8 w-[1px] bg-slate-200 mx-2"></div>
+<div class="flex items-center gap-3">
+<div class="text-right">
+<p class="text-sm font-bold text-[#0A192F]">Alex Rivera</p>
+<p class="text-[10px] text-slate-500">Ops Manager</p>
+</div>
+<img alt="User profile photo" class="w-9 h-9 rounded-full border border-slate-200" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCeKL1u4iR5a7ZVPenkVsATEd9iS0zmlyAK6y20AG8I6g2Sb2jr6BIcvjAwNsPvnaTd6qth-znhNgC5iZItE2f_JvtdsbikDVzBCV-gjMEQv-Ph8n_7ezBzgIDVilsJMvc64eB-3OBK-umgmTQgo9J8zJPhf7mnjsxNGS9tQyuswFCk_WEZOmOL8HjrgjScIs-yNu7NWvtNHMY44wpZC_T1aLqdkNPW80luINGOmMK85v2N7O38dvzSPz_3ZUlneHb9_UEP1sOL6vzD"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-16 min-h-screen">
+<div class="p-8 max-w-6xl mx-auto">
+<!-- Page Header -->
+<div class="flex justify-between items-end mb-8">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Criar Novo Procedimento</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Configure as diretrizes operacionais e etapas de execução.</p>
+</div>
+<div class="flex gap-3">
+<button class="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">Descartar</button>
+<button class="px-6 py-2 text-sm font-semibold bg-[#0A192F] text-white rounded-lg hover:bg-slate-800 transition-all shadow-sm">Salvar Rascunho</button>
+</div>
+</div>
+<!-- Tab Navigation (Modern Underline Style) -->
+<div class="border-b border-slate-200 mb-8 flex gap-8">
+<button class="pb-4 text-sm font-bold text-secondary border-b-2 border-secondary relative">
+                    1. Informações Gerais
+                </button>
+<button class="pb-4 text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">
+                    2. Etapas
+                </button>
+<button class="pb-4 text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">
+                    3. Mídias
+                </button>
+<button class="pb-4 text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">
+                    4. Revisão Final
+                </button>
+</div>
+<!-- Bento Layout Content -->
+<div class="grid grid-cols-12 gap-6">
+<!-- Left Column: Primary Form -->
+<div class="col-span-8 space-y-6">
+<div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+<div class="space-y-6">
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface uppercase tracking-wider">Título do POP</label>
+<input class="h-10 px-4 rounded-lg border border-slate-200 focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none transition-all font-body-md text-body-md" placeholder="Ex: Fechamento de Caixa Diário" type="text"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface uppercase tracking-wider">Descrição Detalhada</label>
+<textarea class="p-4 rounded-lg border border-slate-200 focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none transition-all font-body-md text-body-md" placeholder="Descreva o propósito deste procedimento e os resultados esperados..." rows="4"></textarea>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface uppercase tracking-wider">Departamento</label>
+<select class="h-10 px-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none transition-all font-body-md text-body-md">
+<option>Financeiro</option>
+<option>Operações</option>
+<option>Recursos Humanos</option>
+<option>Vendas</option>
+</select>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface uppercase tracking-wider">Responsável</label>
+<div class="relative">
+<input class="h-10 w-full pl-10 pr-4 rounded-lg border border-slate-200 focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none transition-all font-body-md text-body-md" placeholder="Buscar usuário..." type="text"/>
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">person</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Visual Step Preview (Bento Box Mini) -->
+<div class="bg-surface-variant/30 border border-slate-200 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center">
+<div class="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4">
+<span class="material-symbols-outlined text-slate-400 text-3xl" data-icon="list_alt">list_alt</span>
+</div>
+<h4 class="font-headline-md text-headline-md text-on-surface">Próximo: Definir Etapas</h4>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-sm mt-2">Após preencher as informações gerais, você poderá adicionar o passo-a-passo detalhado do procedimento.</p>
+<button class="mt-6 px-6 py-2 bg-white border border-slate-300 rounded-lg text-sm font-bold text-slate-700 hover:bg-slate-50 transition-all">Configurar Etapas</button>
+</div>
+</div>
+<!-- Right Column: Settings & Meta -->
+<div class="col-span-4 space-y-6">
+<!-- Visibility Card -->
+<div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+<h3 class="font-label-md text-label-md text-on-surface uppercase tracking-wider mb-4">Visibilidade</h3>
+<div class="space-y-3">
+<label class="flex items-center gap-3 p-3 rounded-lg border border-secondary bg-secondary/5 cursor-pointer">
+<input checked="" class="text-secondary focus:ring-secondary" name="visibility" type="radio"/>
+<div>
+<p class="text-sm font-bold text-[#0A192F]">Público</p>
+<p class="text-xs text-slate-500">Toda a empresa pode visualizar</p>
+</div>
+</label>
+<label class="flex items-center gap-3 p-3 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer transition-colors">
+<input class="text-secondary focus:ring-secondary" name="visibility" type="radio"/>
+<div>
+<p class="text-sm font-bold text-[#0A192F]">Restrito</p>
+<p class="text-xs text-slate-500">Apenas departamentos selecionados</p>
+</div>
+</label>
+<label class="flex items-center gap-3 p-3 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer transition-colors">
+<input class="text-secondary focus:ring-secondary" name="visibility" type="radio"/>
+<div>
+<p class="text-sm font-bold text-[#0A192F]">Privado</p>
+<p class="text-xs text-slate-500">Apenas você e gestores</p>
+</div>
+</label>
+</div>
+</div>
+<!-- Meta Info Card -->
+<div class="bg-[#0A192F] text-white rounded-xl p-6 overflow-hidden relative">
+<div class="relative z-10">
+<h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Resumo do Procedimento</h3>
+<div class="space-y-4">
+<div class="flex justify-between items-center border-b border-white/10 pb-2">
+<span class="text-xs text-slate-400">Versão</span>
+<span class="text-sm font-bold">1.0 (Rascunho)</span>
+</div>
+<div class="flex justify-between items-center border-b border-white/10 pb-2">
+<span class="text-xs text-slate-400">Tempo Estimado</span>
+<span class="text-sm font-bold">-- min</span>
+</div>
+<div class="flex justify-between items-center border-b border-white/10 pb-2">
+<span class="text-xs text-slate-400">Complexidade</span>
+<span class="px-2 py-0.5 bg-blue-500/20 text-blue-300 rounded text-[10px] font-bold">PENDENTE</span>
+</div>
+</div>
+</div>
+<!-- Abstract Background Decoration -->
+<div class="absolute -bottom-10 -right-10 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl"></div>
+</div>
+<!-- Quick Tips Card -->
+<div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-amber-500 text-lg" style="font-variation-settings: 'FILL' 1;">lightbulb</span>
+<h3 class="font-label-md text-label-md text-on-surface">Dica do Especialista</h3>
+</div>
+<p class="text-xs text-slate-500 leading-relaxed">
+                            Mantenha o título curto e acionável. Comece com um verbo no infinitivo, como "Realizar", "Validar" ou "Organizar".
+                        </p>
+</div>
+</div>
+</div>
+<!-- Fixed Footer Actions -->
+<div class="mt-12 flex items-center justify-between bg-white border border-slate-200 rounded-xl p-4 shadow-lg sticky bottom-8">
+<div class="flex items-center gap-4 px-2">
+<div class="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+<span class="material-symbols-outlined" data-icon="check_circle">check_circle</span>
+</div>
+<div>
+<p class="text-sm font-bold text-on-surface">Configurações Gerais</p>
+<p class="text-xs text-slate-500">Última alteração salva há 2 minutos</p>
+</div>
+</div>
+<div class="flex gap-4">
+<button class="px-8 py-3 bg-secondary text-white rounded-lg font-bold text-sm hover:bg-blue-700 transition-all flex items-center gap-2">
+                        Próxima Etapa
+                        <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+</body></html>
