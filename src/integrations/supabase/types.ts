@@ -153,7 +153,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      current_empresa_id: { Args: never; Returns: string }
     }
     Enums: {
       app_role: "admin" | "gestor" | "criador" | "executor" | "developer"
