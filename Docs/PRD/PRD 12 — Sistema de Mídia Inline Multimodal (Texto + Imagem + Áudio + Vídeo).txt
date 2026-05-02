@@ -268,3 +268,11 @@ Isso transforma seu produto em:
 - PDF/TXT: visualização no modal
 - DOC/DOCX e XLS/XLSX: download/abertura externa
 
+---
+
+## 🎯 Referência de Protótipo
+
+Tela(s) relacionadas:
+
+- [05-execucao-guiada-midia-contextual-popflow.html] — Execução com referências de mídia em contexto
+

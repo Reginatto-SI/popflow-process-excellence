@@ -192,3 +192,12 @@ Isso permite:
 - Auditoria de processos
 - Escalabilidade da operação
 - Redução de dependência de pessoas-chave
+
+---
+
+## 🎯 Referência de Protótipo
+
+Tela(s) relacionadas:
+
+- [05-execucao-guiada-midia-contextual-popflow.html] — Execução guiada com tracking de etapa e mídia contextual
+

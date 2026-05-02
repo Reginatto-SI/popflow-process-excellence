@@ -199,3 +199,12 @@ Isso garante:
 - Confiança dos usuários
 - Redução de erros operacionais
 - Governança interna real
+
+---
+
+## 🎯 Referência de Protótipo
+
+Tela(s) relacionadas:
+
+- [06-revisoes-popflow.html] — Fila e gestão de revisões
+

@@ -197,3 +197,12 @@ Permitindo:
 - Integração com notificações avançadas
 - Sugestões automáticas de melhoria via IA
 - Conversas vinculadas a erros recorrentes
+
+---
+
+## 🎯 Referência de Protótipo
+
+Tela(s) relacionadas:
+
+- [09-comentarios-e-colaboracao-popflow.html] — Comentários por contexto de etapa e colaboração
+

@@ -220,3 +220,12 @@ Permitindo:
 - Escala horizontal (várias empresas)
 - Receita recorrente (modelo assinatura)
 - Expansão futura com planos e features
+
+---
+
+## 🎯 Referência de Protótipo
+
+Tela(s) relacionadas:
+
+- [12-usuarios-e-permissoes-popflow.html] — Gestão de usuários, papéis e permissões
+
