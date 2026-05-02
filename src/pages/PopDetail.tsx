@@ -39,7 +39,9 @@ const REF_REGEX = /@([A-Za-zÀ-ÿ0-9_-]+)/g;
 const PopDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { data: pop, isLoading } = usePop(id);
+  const startExec = useStartExecucao();
   const [viewer, setViewer] = useState<{ open: boolean; midia: PopMidiaRow | null }>({ open: false, midia: null });
 
   if (isLoading) return <AppLayout title="Detalhe do POP"><p className="p-6 text-sm text-muted-foreground">Carregando...</p></AppLayout>;
