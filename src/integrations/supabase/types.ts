@@ -80,6 +80,252 @@ export type Database = {
         }
         Relationships: []
       }
+      pop_etapas: {
+        Row: {
+          checklist: Json
+          created_at: string
+          descricao: string
+          empresa_id: string
+          erro_comum: string
+          id: string
+          ordem: number
+          pop_versao_id: string
+          pre_requisito: string
+          resultado_esperado: string
+          tempo_estimado: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          checklist?: Json
+          created_at?: string
+          descricao?: string
+          empresa_id: string
+          erro_comum?: string
+          id?: string
+          ordem: number
+          pop_versao_id: string
+          pre_requisito?: string
+          resultado_esperado?: string
+          tempo_estimado?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Update: {
+          checklist?: Json
+          created_at?: string
+          descricao?: string
+          empresa_id?: string
+          erro_comum?: string
+          id?: string
+          ordem?: number
+          pop_versao_id?: string
+          pre_requisito?: string
+          resultado_esperado?: string
+          tempo_estimado?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pop_etapas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pop_etapas_pop_versao_id_fkey"
+            columns: ["pop_versao_id"]
+            isOneToOne: false
+            referencedRelation: "pop_versoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pop_midias: {
+        Row: {
+          created_at: string
+          empresa_id: string
+          etapa_id: string | null
+          id: string
+          nome: string
+          ordem: number
+          pop_versao_id: string
+          referencia: string
+          tipo: Database["public"]["Enums"]["pop_midia_tipo"]
+          url: string | null
+        }
+        Insert: {
+          created_at?: string
+          empresa_id: string
+          etapa_id?: string | null
+          id?: string
+          nome?: string
+          ordem?: number
+          pop_versao_id: string
+          referencia: string
+          tipo: Database["public"]["Enums"]["pop_midia_tipo"]
+          url?: string | null
+        }
+        Update: {
+          created_at?: string
+          empresa_id?: string
+          etapa_id?: string | null
+          id?: string
+          nome?: string
+          ordem?: number
+          pop_versao_id?: string
+          referencia?: string
+          tipo?: Database["public"]["Enums"]["pop_midia_tipo"]
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pop_midias_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pop_midias_etapa_id_fkey"
+            columns: ["etapa_id"]
+            isOneToOne: false
+            referencedRelation: "pop_etapas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pop_midias_pop_versao_id_fkey"
+            columns: ["pop_versao_id"]
+            isOneToOne: false
+            referencedRelation: "pop_versoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pop_versoes: {
+        Row: {
+          created_at: string
+          created_by: string
+          descricao_mudanca: string | null
+          empresa_id: string
+          id: string
+          numero: string
+          pop_id: string
+          status: Database["public"]["Enums"]["pop_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          descricao_mudanca?: string | null
+          empresa_id: string
+          id?: string
+          numero?: string
+          pop_id: string
+          status?: Database["public"]["Enums"]["pop_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          descricao_mudanca?: string | null
+          empresa_id?: string
+          id?: string
+          numero?: string
+          pop_id?: string
+          status?: Database["public"]["Enums"]["pop_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pop_versoes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pop_versoes_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pop_versoes_pop_id_fkey"
+            columns: ["pop_id"]
+            isOneToOne: false
+            referencedRelation: "pops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pops: {
+        Row: {
+          created_at: string
+          departamento: string
+          descricao: string
+          empresa_id: string
+          id: string
+          owner_id: string
+          responsavel: string
+          titulo: string
+          updated_at: string
+          versao_ativa_id: string | null
+          visibilidade: Database["public"]["Enums"]["pop_visibilidade"]
+        }
+        Insert: {
+          created_at?: string
+          departamento?: string
+          descricao?: string
+          empresa_id: string
+          id?: string
+          owner_id: string
+          responsavel?: string
+          titulo: string
+          updated_at?: string
+          versao_ativa_id?: string | null
+          visibilidade?: Database["public"]["Enums"]["pop_visibilidade"]
+        }
+        Update: {
+          created_at?: string
+          departamento?: string
+          descricao?: string
+          empresa_id?: string
+          id?: string
+          owner_id?: string
+          responsavel?: string
+          titulo?: string
+          updated_at?: string
+          versao_ativa_id?: string | null
+          visibilidade?: Database["public"]["Enums"]["pop_visibilidade"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pops_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pops_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pops_versao_ativa_fk"
+            columns: ["versao_ativa_id"]
+            isOneToOne: false
+            referencedRelation: "pop_versoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_context: {
         Row: {
           empresa_ativa_id: string
@@ -157,6 +403,9 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "gestor" | "criador" | "executor" | "developer"
+      pop_midia_tipo: "imagem" | "audio" | "video" | "documento"
+      pop_status: "rascunho" | "revisao" | "publicado"
+      pop_visibilidade: "privado" | "empresa"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -285,6 +534,9 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "gestor", "criador", "executor", "developer"],
+      pop_midia_tipo: ["imagem", "audio", "video", "documento"],
+      pop_status: ["rascunho", "revisao", "publicado"],
+      pop_visibilidade: ["privado", "empresa"],
     },
   },
 } as const
