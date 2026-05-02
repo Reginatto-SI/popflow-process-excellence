@@ -89,10 +89,24 @@ const PopDetail = () => {
     return parts;
   };
 
-  const execucaoMotivo =
-    status !== "publicado"
-      ? "Publique o POP para habilitar a execução."
-      : "A execução será habilitada quando o fluxo de execução for implementado.";
+  // MVP: permitimos iniciar execução também em rascunho — comportamento temporário.
+  // Quando o fluxo de revisão/publicação estiver pronto, restringir para 'publicado'.
+  const podeExecutar = !!pop.versao_ativa_id && !!versao;
+  const execucaoMotivo = !podeExecutar
+    ? "Este POP ainda não tem versão ativa para executar."
+    : status !== "publicado"
+      ? "MVP: execução habilitada mesmo em rascunho. Será restrita a POPs publicados quando o fluxo de revisão estiver pronto."
+      : "Iniciar execução guiada deste POP.";
+
+  const iniciarExecucao = async () => {
+    if (!podeExecutar || !versao) return;
+    try {
+      const execId = await startExec.mutateAsync({ popId: pop.id, popVersaoId: versao.id });
+      navigate(`/execucao/${execId}`);
+    } catch (e) {
+      toast({ title: "Erro ao iniciar execução", description: (e as Error).message, variant: "destructive" });
+    }
+  };
 
   return (
     <AppLayout title="Detalhe do POP">
@@ -118,10 +132,10 @@ const PopDetail = () => {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    {/* span para o tooltip funcionar mesmo com botão desabilitado */}
                     <span tabIndex={0}>
-                      <Button disabled>
-                        <PlayCircle className="mr-2 h-4 w-4" />Iniciar Execução
+                      <Button disabled={!podeExecutar || startExec.isPending} onClick={iniciarExecucao}>
+                        {startExec.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlayCircle className="mr-2 h-4 w-4" />}
+                        Iniciar Execução
                       </Button>
                     </span>
                   </TooltipTrigger>
