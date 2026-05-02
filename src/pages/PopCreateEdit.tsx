@@ -161,6 +161,7 @@ const PopCreateEdit = () => {
       referencia: `midia${midias.length + 1}`,
       etapaOrdem: null,
       ordem: midias.length + 1,
+      url: null,
     }]);
 
   const updateMidia = (uidM: string, field: keyof Omit<MidiaItem, "uid" | "ordem">, value: string | number | null) =>
