@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   AlertCircle,
   Building2,
@@ -60,6 +61,7 @@ const statusClass: Record<PopStatus, string> = {
 };
 
 const PopsList = () => {
+  const navigate = useNavigate();
   const [busca, setBusca] = useState("");
   const [statusFiltro, setStatusFiltro] = useState<"todos" | PopStatus>("todos");
   const [departamentoFiltro, setDepartamentoFiltro] = useState("todos");
@@ -116,7 +118,7 @@ const PopsList = () => {
       <div className="mx-auto w-full max-w-7xl space-y-5">
         <header className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-2xl font-semibold tracking-tight">POPs</h1>
-          <Button>
+          <Button onClick={() => navigate("/pops/novo")}>
             <Plus className="mr-2 h-4 w-4" />
             Criar POP
           </Button>
