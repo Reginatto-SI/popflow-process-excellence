@@ -388,11 +388,39 @@ const PopCreateEdit = () => {
                               onChange={(e) => e.target.files?.[0] && uploadMidiaFile(m.uid, e.target.files[0])}
                             />
                           )}
+                          {m.tipo === "imagem" && (
+                            <div
+                              tabIndex={0}
+                              onPaste={(e) => {
+                                const items = e.clipboardData?.items;
+                                if (!items) return;
+                                for (const it of items) {
+                                  if (it.kind === "file" && it.type.startsWith("image/")) {
+                                    const file = it.getAsFile();
+                                    if (file) {
+                                      e.preventDefault();
+                                      const ext = file.type.split("/")[1] || "png";
+                                      const named = file.name && file.name !== "image.png"
+                                        ? file
+                                        : new File([file], `print-${Date.now()}.${ext}`, { type: file.type });
+                                      uploadMidiaFile(m.uid, named);
+                                      return;
+                                    }
+                                  }
+                                }
+                                toast.message("Nenhuma imagem no clipboard. Tire um print e tente Ctrl+V novamente.");
+                              }}
+                              className="mt-2 cursor-text rounded-md border border-dashed bg-muted/20 p-3 text-center text-xs text-muted-foreground outline-none transition-colors focus:border-primary focus:bg-primary/5"
+                            >
+                              Clique aqui e pressione <kbd className="rounded border bg-background px-1">Ctrl</kbd>+<kbd className="rounded border bg-background px-1">V</kbd> para colar uma imagem do clipboard
+                            </div>
+                          )}
                           {m.uploading && <p className="text-xs text-muted-foreground">Enviando…</p>}
                           {!m.url && !m.uploading && (
                             <p className="text-xs text-muted-foreground">Sem arquivo enviado. A referência inline aparecerá, mas sem visualização.</p>
                           )}
                         </div>
+
                         <div className="md:col-span-2"><Button variant="destructive" size="sm" onClick={() => removeMidia(m.uid)}>Remover</Button></div>
                       </CardContent>
                     </Card>
