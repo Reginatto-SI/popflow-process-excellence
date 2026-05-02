@@ -80,6 +80,105 @@ export type Database = {
         }
         Relationships: []
       }
+      execucao_etapas: {
+        Row: {
+          concluido: boolean
+          created_at: string
+          data_fim: string | null
+          data_inicio: string | null
+          empresa_id: string
+          etapa_id: string
+          execucao_id: string
+          id: string
+          tempo_gasto_segundos: number | null
+          updated_at: string
+          usuario_id: string
+        }
+        Insert: {
+          concluido?: boolean
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string | null
+          empresa_id: string
+          etapa_id: string
+          execucao_id: string
+          id?: string
+          tempo_gasto_segundos?: number | null
+          updated_at?: string
+          usuario_id: string
+        }
+        Update: {
+          concluido?: boolean
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string | null
+          empresa_id?: string
+          etapa_id?: string
+          execucao_id?: string
+          id?: string
+          tempo_gasto_segundos?: number | null
+          updated_at?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "execucao_etapas_etapa_id_fkey"
+            columns: ["etapa_id"]
+            isOneToOne: false
+            referencedRelation: "pop_etapas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "execucao_etapas_execucao_id_fkey"
+            columns: ["execucao_id"]
+            isOneToOne: false
+            referencedRelation: "execucoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      execucoes: {
+        Row: {
+          created_at: string
+          data_fim: string | null
+          data_inicio: string
+          empresa_id: string
+          id: string
+          pop_id: string
+          pop_versao_id: string
+          status: string
+          tempo_total_segundos: number | null
+          updated_at: string
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string
+          empresa_id: string
+          id?: string
+          pop_id: string
+          pop_versao_id: string
+          status?: string
+          tempo_total_segundos?: number | null
+          updated_at?: string
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string
+          empresa_id?: string
+          id?: string
+          pop_id?: string
+          pop_versao_id?: string
+          status?: string
+          tempo_total_segundos?: number | null
+          updated_at?: string
+          usuario_id?: string
+        }
+        Relationships: []
+      }
       pop_etapas: {
         Row: {
           checklist: Json
