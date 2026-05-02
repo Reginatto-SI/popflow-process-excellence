@@ -379,103 +379,162 @@ const PopCreateEdit = () => {
             {activeTab === "midias" && (
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between"><CardTitle>Mídias</CardTitle><Button onClick={addMidia}>Adicionar mídia</Button></CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="space-y-2">
                   {midias.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma mídia ainda.</p>}
-                  {midias.map((m) => (
-                    <Card key={m.uid}>
-                      <CardContent className="grid gap-3 p-4 md:grid-cols-2">
-                        <div className="space-y-1"><Label>Nome</Label><Input value={m.nome} onChange={(e) => updateMidia(m.uid, "nome", e.target.value)} /></div>
-                        <div className="space-y-1"><Label>Referência (ex: midia1)</Label><Input value={m.referencia} onChange={(e) => updateMidia(m.uid, "referencia", e.target.value)} /></div>
-                        <div className="space-y-1">
-                          <Label>Tipo</Label>
-                          <Select value={m.tipo} onValueChange={(v) => updateMidia(m.uid, "tipo", v as PopMidiaTipo)}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="imagem">Imagem</SelectItem>
-                              <SelectItem value="audio">Áudio</SelectItem>
-                              <SelectItem value="video">Vídeo</SelectItem>
-                              <SelectItem value="documento">Documento</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-1">
-                          <Label>Etapa vinculada</Label>
-                          <Select
-                            value={m.etapaOrdem != null ? String(m.etapaOrdem) : "none"}
-                            onValueChange={(v) => updateMidia(m.uid, "etapaOrdem", v === "none" ? null : Number(v))}
-                          >
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="none">Sem vínculo</SelectItem>
-                              {steps.map((s) => <SelectItem key={s.uid} value={String(s.ordem)}>Etapa {s.ordem} — {s.titulo}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-1 md:col-span-2">
-                          <Label>Arquivo</Label>
-                          {m.url ? (
-                            <div className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/30 p-2 text-xs">
-                              {m.tipo === "imagem" && (
-                                <img src={m.url} alt={m.nome} className="h-12 w-12 rounded object-cover" />
-                              )}
-                              <a href={m.url} target="_blank" rel="noreferrer" className="font-medium text-primary underline">
-                                {m.nome || "Abrir arquivo"}
-                              </a>
-                              <label className="ml-auto cursor-pointer text-xs text-muted-foreground underline">
-                                Substituir
-                                <input
-                                  type="file"
-                                  className="hidden"
-                                  accept={acceptByTipo[m.tipo]}
-                                  onChange={(e) => e.target.files?.[0] && uploadMidiaFile(m.uid, e.target.files[0])}
-                                />
-                              </label>
-                            </div>
-                          ) : (
-                            <Input
-                              type="file"
-                              accept={acceptByTipo[m.tipo]}
-                              disabled={m.uploading}
-                              onChange={(e) => e.target.files?.[0] && uploadMidiaFile(m.uid, e.target.files[0])}
-                            />
-                          )}
-                          {m.tipo === "imagem" && (
-                            <div
-                              tabIndex={0}
-                              onPaste={(e) => {
-                                const items = e.clipboardData?.items;
-                                if (!items) return;
-                                for (const it of items) {
-                                  if (it.kind === "file" && it.type.startsWith("image/")) {
-                                    const file = it.getAsFile();
-                                    if (file) {
-                                      e.preventDefault();
-                                      const ext = file.type.split("/")[1] || "png";
-                                      const named = file.name && file.name !== "image.png"
-                                        ? file
-                                        : new File([file], `print-${Date.now()}.${ext}`, { type: file.type });
-                                      uploadMidiaFile(m.uid, named);
-                                      return;
-                                    }
-                                  }
-                                }
-                                toast.message("Nenhuma imagem no clipboard. Tire um print e tente Ctrl+V novamente.");
-                              }}
-                              className="mt-2 cursor-text rounded-md border border-dashed bg-muted/20 p-3 text-center text-xs text-muted-foreground outline-none transition-colors focus:border-primary focus:bg-primary/5"
+                  <ul className="divide-y rounded-md border">
+                    {midias.map((m) => {
+                      const Icon = tipoIcon[m.tipo];
+                      const expanded = expandedMidiaUid === m.uid;
+                      const etapa = steps.find((s) => s.ordem === m.etapaOrdem);
+                      return (
+                        <li key={m.uid} className="bg-card">
+                          {/* Linha compacta */}
+                          <div className="flex items-center gap-3 px-3 py-2">
+                            <button
+                              type="button"
+                              onClick={() => setExpandedMidiaUid(expanded ? null : m.uid)}
+                              className="text-muted-foreground hover:text-foreground"
+                              aria-label={expanded ? "Recolher" : "Expandir"}
                             >
-                              Clique aqui e pressione <kbd className="rounded border bg-background px-1">Ctrl</kbd>+<kbd className="rounded border bg-background px-1">V</kbd> para colar uma imagem do clipboard
+                              {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                            </button>
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded border bg-muted">
+                              {m.tipo === "imagem" && m.url ? (
+                                <img src={m.url} alt={m.nome} className="h-full w-full object-cover" />
+                              ) : (
+                                <Icon className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-sm font-medium">{m.nome || "(sem nome)"}</div>
+                              <div className="truncate text-xs text-muted-foreground">@{m.referencia || "—"}</div>
+                            </div>
+                            <Badge variant="outline" className="hidden text-[10px] sm:inline-flex">{tipoLabel[m.tipo]}</Badge>
+                            <Badge variant="secondary" className="hidden text-[10px] md:inline-flex">
+                              {etapa ? `Etapa ${etapa.ordem}` : "Sem vínculo"}
+                            </Badge>
+                            {m.uploading && <span className="text-xs text-muted-foreground">Enviando…</span>}
+                            {!m.url && !m.uploading && (
+                              <span className="hidden text-[10px] text-amber-700 lg:inline">sem arquivo</span>
+                            )}
+                            <Button variant="ghost" size="sm" onClick={() => setExpandedMidiaUid(expanded ? null : m.uid)}>
+                              {expanded ? "Concluir" : "Editar"}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => removeMidia(m.uid)}
+                              aria-label="Remover mídia"
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+
+                          {/* Modo edição */}
+                          {expanded && (
+                            <div className="grid gap-3 border-t bg-muted/20 p-4 md:grid-cols-2">
+                              <div className="space-y-1"><Label>Nome</Label><Input value={m.nome} onChange={(e) => updateMidia(m.uid, "nome", e.target.value)} /></div>
+                              <div className="space-y-1">
+                                <Label>Referência (sem espaços)</Label>
+                                <Input
+                                  value={m.referencia}
+                                  placeholder="ex: acesso-a-tela"
+                                  onChange={(e) => updateMidia(m.uid, "referencia", e.target.value)}
+                                />
+                                <p className="text-[11px] text-muted-foreground">Use no texto como <code>@{m.referencia || "referencia"}</code></p>
+                              </div>
+                              <div className="space-y-1">
+                                <Label>Tipo</Label>
+                                <Select value={m.tipo} onValueChange={(v) => updateMidia(m.uid, "tipo", v as PopMidiaTipo)}>
+                                  <SelectTrigger><SelectValue /></SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="imagem">Imagem</SelectItem>
+                                    <SelectItem value="audio">Áudio</SelectItem>
+                                    <SelectItem value="video">Vídeo</SelectItem>
+                                    <SelectItem value="documento">Documento</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="space-y-1">
+                                <Label>Etapa vinculada</Label>
+                                <Select
+                                  value={m.etapaOrdem != null ? String(m.etapaOrdem) : "none"}
+                                  onValueChange={(v) => updateMidia(m.uid, "etapaOrdem", v === "none" ? null : Number(v))}
+                                >
+                                  <SelectTrigger><SelectValue /></SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="none">Sem vínculo</SelectItem>
+                                    {steps.map((s) => <SelectItem key={s.uid} value={String(s.ordem)}>Etapa {s.ordem} — {s.titulo}</SelectItem>)}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="space-y-1 md:col-span-2">
+                                <Label>Arquivo</Label>
+                                {m.url ? (
+                                  <div className="flex flex-wrap items-center gap-2 rounded-md border bg-background p-2 text-xs">
+                                    {m.tipo === "imagem" && (
+                                      <img src={m.url} alt={m.nome} className="h-12 w-12 rounded object-cover" />
+                                    )}
+                                    <a href={m.url} target="_blank" rel="noreferrer" className="font-medium text-primary underline">
+                                      {m.nome || "Abrir arquivo"}
+                                    </a>
+                                    <label className="ml-auto cursor-pointer text-xs text-muted-foreground underline">
+                                      Substituir
+                                      <input
+                                        type="file"
+                                        className="hidden"
+                                        accept={acceptByTipo[m.tipo]}
+                                        onChange={(e) => e.target.files?.[0] && uploadMidiaFile(m.uid, e.target.files[0])}
+                                      />
+                                    </label>
+                                  </div>
+                                ) : (
+                                  <Input
+                                    type="file"
+                                    accept={acceptByTipo[m.tipo]}
+                                    disabled={m.uploading}
+                                    onChange={(e) => e.target.files?.[0] && uploadMidiaFile(m.uid, e.target.files[0])}
+                                  />
+                                )}
+                                {m.tipo === "imagem" && (
+                                  <div
+                                    tabIndex={0}
+                                    onPaste={(e) => {
+                                      const items = e.clipboardData?.items;
+                                      if (!items) return;
+                                      for (const it of items) {
+                                        if (it.kind === "file" && it.type.startsWith("image/")) {
+                                          const file = it.getAsFile();
+                                          if (file) {
+                                            e.preventDefault();
+                                            const ext = file.type.split("/")[1] || "png";
+                                            const named = file.name && file.name !== "image.png"
+                                              ? file
+                                              : new File([file], `print-${Date.now()}.${ext}`, { type: file.type });
+                                            uploadMidiaFile(m.uid, named);
+                                            return;
+                                          }
+                                        }
+                                      }
+                                      toast.message("Nenhuma imagem no clipboard. Tire um print e tente Ctrl+V novamente.");
+                                    }}
+                                    className="mt-2 cursor-text rounded-md border border-dashed bg-muted/20 p-3 text-center text-xs text-muted-foreground outline-none transition-colors focus:border-primary focus:bg-primary/5"
+                                  >
+                                    Clique aqui e pressione <kbd className="rounded border bg-background px-1">Ctrl</kbd>+<kbd className="rounded border bg-background px-1">V</kbd> para colar uma imagem do clipboard
+                                  </div>
+                                )}
+                                {m.uploading && <p className="text-xs text-muted-foreground">Enviando…</p>}
+                                {!m.url && !m.uploading && (
+                                  <p className="text-xs text-muted-foreground">Sem arquivo enviado. A referência inline aparecerá, mas sem visualização.</p>
+                                )}
+                              </div>
                             </div>
                           )}
-                          {m.uploading && <p className="text-xs text-muted-foreground">Enviando…</p>}
-                          {!m.url && !m.uploading && (
-                            <p className="text-xs text-muted-foreground">Sem arquivo enviado. A referência inline aparecerá, mas sem visualização.</p>
-                          )}
-                        </div>
-
-                        <div className="md:col-span-2"><Button variant="destructive" size="sm" onClick={() => removeMidia(m.uid)}>Remover</Button></div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        </li>
+                      );
+                    })}
+                  </ul>
                 </CardContent>
               </Card>
             )}
