@@ -774,6 +774,16 @@ const PopCreateEdit = () => {
           </div>
         </div>
       </div>
+
+      <InsertMediaDialog
+        open={!!insertDialog}
+        onOpenChange={(v) => { if (!v) setInsertDialog(null); }}
+        initialFile={insertDialog?.file ?? null}
+        existingRefs={midias.map((m) => m.referencia)}
+        uploadFile={uploadFileToBucket}
+        onConfirm={handleInsertMediaConfirm}
+        slugify={slugifyRef}
+      />
     </AppLayout>
   );
 };
