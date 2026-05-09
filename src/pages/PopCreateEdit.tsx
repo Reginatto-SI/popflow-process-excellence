@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Building2, ChevronDown, ChevronRight, FileText, Image, Mic, Shield, Trash2, User, Video } from "lucide-react";
+import { Building2, ChevronDown, ChevronRight, FileText, Image, ImagePlus, Mic, Shield, Trash2, User, Video, X } from "lucide-react";
 
 import { AppLayout } from "@/components/AppLayout";
 import { Badge } from "@/components/ui/badge";
