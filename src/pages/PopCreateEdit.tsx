@@ -143,6 +143,15 @@ const PopCreateEdit = () => {
       preRequisito: e.pre_requisito,
       checklist: checklistToString(e.checklist ?? []),
     })));
+    if (etapas.length > 0) setExpandedStepUid(etapas[0].id);
+      titulo: e.titulo,
+      descricao: e.descricao,
+      tempo: e.tempo_estimado,
+      resultadoEsperado: e.resultado_esperado,
+      erroComum: e.erro_comum,
+      preRequisito: e.pre_requisito,
+      checklist: checklistToString(e.checklist ?? []),
+    })));
     const ms = popData.versao_ativa?.midias ?? [];
     const ordemPorEtapaId = new Map(etapas.map((e) => [e.id, e.ordem]));
     setMidias(ms.map((m) => {
