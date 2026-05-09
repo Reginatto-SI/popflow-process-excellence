@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Building2, ChevronDown, ChevronRight, FileText, Image, ImagePlus, Mic, Shield, Trash2, User, Video, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Building2, CheckCircle2, ChevronDown, ChevronRight, Circle, FileText, Image, ImagePlus, Mic, Plus, Shield, Trash2, User, Video, X } from "lucide-react";
 
 import { AppLayout } from "@/components/AppLayout";
 import { Badge } from "@/components/ui/badge";
@@ -120,6 +120,8 @@ const PopCreateEdit = () => {
   ]);
   const [midias, setMidias] = useState<MidiaItem[]>([]);
   const [expandedMidiaUid, setExpandedMidiaUid] = useState<string | null>(null);
+  const [expandedStepUid, setExpandedStepUid] = useState<string | null>(null);
+  const [allStepsExpanded, setAllStepsExpanded] = useState(false);
 
   // Carregar dados em modo edição
   useEffect(() => {
@@ -141,6 +143,7 @@ const PopCreateEdit = () => {
       preRequisito: e.pre_requisito,
       checklist: checklistToString(e.checklist ?? []),
     })));
+    if (etapas.length > 0) setExpandedStepUid(etapas[0].id);
     const ms = popData.versao_ativa?.midias ?? [];
     const ordemPorEtapaId = new Map(etapas.map((e) => [e.id, e.ordem]));
     setMidias(ms.map((m) => {
@@ -177,18 +180,54 @@ const PopCreateEdit = () => {
     setSteps(next);
   };
 
-  const addStep = () =>
+  const addStep = () => {
+    const newUid = uid();
     setSteps([...steps, {
-      uid: uid(), ordem: steps.length + 1,
+      uid: newUid, ordem: steps.length + 1,
       titulo: `Nova etapa ${steps.length + 1}`, descricao: "", tempo: "5 min",
       resultadoEsperado: "", erroComum: "", preRequisito: "", checklist: "",
     }]);
+    setExpandedStepUid(newUid);
+    setAllStepsExpanded(false);
+  };
+
+  const addStepBelow = (index: number) => {
+    const newUid = uid();
+    const next = [...steps];
+    next.splice(index + 1, 0, {
+      uid: newUid, ordem: 0,
+      titulo: `Nova etapa`, descricao: "", tempo: "5 min",
+      resultadoEsperado: "", erroComum: "", preRequisito: "", checklist: "",
+    });
+    next.forEach((s, i) => (s.ordem = i + 1));
+    setSteps(next);
+    setExpandedStepUid(newUid);
+    setAllStepsExpanded(false);
+  };
 
   const removeStep = (uidStep: string) => {
     const next = steps.filter((s) => s.uid !== uidStep);
     next.forEach((s, i) => (s.ordem = i + 1));
     setSteps(next);
+    if (expandedStepUid === uidStep) setExpandedStepUid(null);
   };
+
+  const toggleStep = (uidStep: string) => {
+    if (allStepsExpanded) {
+      setAllStepsExpanded(false);
+      setExpandedStepUid(uidStep);
+      return;
+    }
+    setExpandedStepUid((cur) => (cur === uidStep ? null : uidStep));
+  };
+
+  const isStepComplete = (s: StepItem) =>
+    s.titulo.trim().length > 0 && s.descricao.trim().length > 0 && s.resultadoEsperado.trim().length > 0;
+
+  const checklistCount = (s: StepItem) =>
+    s.checklist.split(";").map((t) => t.trim()).filter(Boolean).length;
+
+  const stepsIncompletas = useMemo(() => steps.filter((s) => !isStepComplete(s)).length, [steps]);
 
   const addMidia = () => {
     const newUid = uid();
@@ -430,88 +469,162 @@ const PopCreateEdit = () => {
 
             {activeTab === "etapas" && (
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between"><CardTitle>Etapas</CardTitle><Button onClick={addStep}>Adicionar etapa</Button></CardHeader>
-                <CardContent className="space-y-3">
-                  {steps.map((step, index) => (
-                    <Card key={step.uid}>
-                      <CardContent className="grid gap-3 p-4 md:grid-cols-2">
-                        <div className="space-y-1"><Label>Título da etapa</Label><Input value={step.titulo} onChange={(e) => updateStep(step.uid, "titulo", e.target.value)} /></div>
-                        <div className="space-y-1"><Label>Tempo estimado</Label><Input value={step.tempo} onChange={(e) => updateStep(step.uid, "tempo", e.target.value)} /></div>
-                        <div className="space-y-2 md:col-span-2">
-                          <div className="flex items-center justify-between gap-2">
-                            <Label>Descrição (digite @ para inserir uma mídia cadastrada)</Label>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => openInsertDialog(step.uid)}
-                              className="gap-1"
-                            >
-                              <ImagePlus className="h-3.5 w-3.5" />
-                              Inserir mídia
-                            </Button>
+                <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
+                  <CardTitle>Etapas</CardTitle>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => { setAllStepsExpanded(true); setExpandedStepUid(null); }}
+                    >
+                      Expandir todas
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => { setAllStepsExpanded(false); setExpandedStepUid(null); }}
+                    >
+                      Recolher todas
+                    </Button>
+                    <Button onClick={addStep} size="sm" className="gap-1">
+                      <Plus className="h-4 w-4" /> Adicionar etapa
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {steps.map((step, index) => {
+                    const isOpen = allStepsExpanded || expandedStepUid === step.uid;
+                    const linked = midiasDaEtapa(step);
+                    const cl = checklistCount(step);
+                    const complete = isStepComplete(step);
+                    return (
+                      <Card key={step.uid} className="overflow-hidden">
+                        {/* Header (sempre visível, clicável) */}
+                        <button
+                          type="button"
+                          onClick={() => toggleStep(step.uid)}
+                          className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-muted/40"
+                        >
+                          {isOpen ? (
+                            <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-semibold">Etapa {step.ordem}</span>
+                              <span className="truncate text-sm text-foreground">— {step.titulo || "(sem título)"}</span>
+                            </div>
+                            <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
+                              <span>{step.tempo || "—"}</span>
+                              <span>·</span>
+                              <span>{linked.length} {linked.length === 1 ? "mídia" : "mídias"}</span>
+                              {cl > 0 && (<><span>·</span><span>{cl} {cl === 1 ? "item de checklist" : "itens de checklist"}</span></>)}
+                            </div>
                           </div>
-                          <MediaMentionTextarea
-                            ref={(el) => {
-                              if (el) textareaRefs.current.set(step.uid, el);
-                              else textareaRefs.current.delete(step.uid);
-                            }}
-                            value={step.descricao}
-                            onChange={(v) => updateStep(step.uid, "descricao", v)}
-                            midias={midias.map((m) => ({ referencia: m.referencia, nome: m.nome, tipo: m.tipo }))}
-                            rows={5}
-                            onRequestInsertMedia={(file) => openInsertDialog(step.uid, file)}
-                          />
-                          {(() => {
-                            const linked = midiasDaEtapa(step);
-                            if (linked.length === 0) return null;
-                            return (
-                              <div className="rounded-md border bg-muted/20 p-2">
-                                <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                                  Mídias vinculadas nesta etapa
-                                </p>
-                                <div className="flex flex-wrap gap-1.5">
-                                  {linked.map((m) => {
-                                    const Icon = tipoIcon[m.tipo];
-                                    const inText = new RegExp(`@${m.referencia}(?![A-Za-zÀ-ÿ0-9_-])`).test(step.descricao);
-                                    return (
-                                      <span
-                                        key={m.uid}
-                                        className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-xs text-primary"
-                                      >
-                                        <Icon className="h-3 w-3" />
-                                        @{m.referencia}
-                                        <span className="text-[10px] text-primary/70">— {tipoLabel[m.tipo]}</span>
-                                        {inText && (
-                                          <button
-                                            type="button"
-                                            onClick={() => removeRefFromStep(step, m.referencia)}
-                                            aria-label={`Remover referência @${m.referencia} do texto`}
-                                            className="ml-0.5 rounded-full p-0.5 hover:bg-primary/20"
+                          <span
+                            className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] ${
+                              complete
+                                ? "border border-emerald-300 bg-emerald-50 text-emerald-800"
+                                : "border border-amber-300 bg-amber-50 text-amber-800"
+                            }`}
+                          >
+                            {complete ? <CheckCircle2 className="h-3 w-3" /> : <Circle className="h-3 w-3" />}
+                            {complete ? "Completa" : "Incompleta"}
+                          </span>
+                        </button>
+
+                        {/* Corpo expandido */}
+                        {isOpen && (
+                          <div className="border-t">
+                            <div className="grid gap-3 p-4 md:grid-cols-2">
+                              <div className="space-y-1"><Label>Título da etapa</Label><Input value={step.titulo} onChange={(e) => updateStep(step.uid, "titulo", e.target.value)} /></div>
+                              <div className="space-y-1"><Label>Tempo estimado</Label><Input value={step.tempo} onChange={(e) => updateStep(step.uid, "tempo", e.target.value)} /></div>
+                              <div className="space-y-2 md:col-span-2">
+                                <div className="flex items-center justify-between gap-2">
+                                  <Label>Descrição (digite @ para inserir uma mídia cadastrada)</Label>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => openInsertDialog(step.uid)}
+                                    className="gap-1"
+                                  >
+                                    <ImagePlus className="h-3.5 w-3.5" />
+                                    Inserir mídia
+                                  </Button>
+                                </div>
+                                <MediaMentionTextarea
+                                  ref={(el) => {
+                                    if (el) textareaRefs.current.set(step.uid, el);
+                                    else textareaRefs.current.delete(step.uid);
+                                  }}
+                                  value={step.descricao}
+                                  onChange={(v) => updateStep(step.uid, "descricao", v)}
+                                  midias={midias.map((m) => ({ referencia: m.referencia, nome: m.nome, tipo: m.tipo }))}
+                                  rows={5}
+                                  onRequestInsertMedia={(file) => openInsertDialog(step.uid, file)}
+                                />
+                                {linked.length > 0 && (
+                                  <div className="rounded-md border bg-muted/20 p-2">
+                                    <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                      Mídias vinculadas nesta etapa
+                                    </p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {linked.map((m) => {
+                                        const Icon = tipoIcon[m.tipo];
+                                        const inText = new RegExp(`@${m.referencia}(?![A-Za-zÀ-ÿ0-9_-])`).test(step.descricao);
+                                        return (
+                                          <span
+                                            key={m.uid}
+                                            className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-xs text-primary"
                                           >
-                                            <X className="h-3 w-3" />
-                                          </button>
-                                        )}
-                                      </span>
-                                    );
-                                  })}
+                                            <Icon className="h-3 w-3" />
+                                            @{m.referencia}
+                                            <span className="text-[10px] text-primary/70">— {tipoLabel[m.tipo]}</span>
+                                            {inText && (
+                                              <button
+                                                type="button"
+                                                onClick={() => removeRefFromStep(step, m.referencia)}
+                                                aria-label={`Remover referência @${m.referencia} do texto`}
+                                                className="ml-0.5 rounded-full p-0.5 hover:bg-primary/20"
+                                              >
+                                                <X className="h-3 w-3" />
+                                              </button>
+                                            )}
+                                          </span>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="space-y-1"><Label>Resultado esperado</Label><Input value={step.resultadoEsperado} onChange={(e) => updateStep(step.uid, "resultadoEsperado", e.target.value)} /></div>
+                              <div className="space-y-1"><Label>Erro comum</Label><Input value={step.erroComum} onChange={(e) => updateStep(step.uid, "erroComum", e.target.value)} /></div>
+                              <div className="space-y-1"><Label>Pré-requisito</Label><Input value={step.preRequisito} onChange={(e) => updateStep(step.uid, "preRequisito", e.target.value)} /></div>
+                              <div className="space-y-1"><Label>Checklist (separe por ;)</Label><Input value={step.checklist} onChange={(e) => updateStep(step.uid, "checklist", e.target.value)} /></div>
+                              <div className="md:col-span-2 flex flex-wrap items-center gap-2 border-t pt-3">
+                                <Button variant="outline" size="sm" onClick={() => moveStep(index, "up")} disabled={index === 0} className="gap-1">
+                                  <ArrowUp className="h-3.5 w-3.5" /> Mover para cima
+                                </Button>
+                                <Button variant="outline" size="sm" onClick={() => moveStep(index, "down")} disabled={index === steps.length - 1} className="gap-1">
+                                  <ArrowDown className="h-3.5 w-3.5" /> Mover para baixo
+                                </Button>
+                                <Button variant="outline" size="sm" onClick={() => addStepBelow(index)} className="gap-1">
+                                  <Plus className="h-3.5 w-3.5" /> Adicionar etapa abaixo
+                                </Button>
+                                <div className="ml-auto">
+                                  <Button variant="ghost" size="sm" onClick={() => removeStep(step.uid)} className="gap-1 text-destructive hover:text-destructive">
+                                    <Trash2 className="h-3.5 w-3.5" /> Remover
+                                  </Button>
                                 </div>
                               </div>
-                            );
-                          })()}
-                        </div>
-                        <div className="space-y-1"><Label>Resultado esperado</Label><Input value={step.resultadoEsperado} onChange={(e) => updateStep(step.uid, "resultadoEsperado", e.target.value)} /></div>
-                        <div className="space-y-1"><Label>Erro comum</Label><Input value={step.erroComum} onChange={(e) => updateStep(step.uid, "erroComum", e.target.value)} /></div>
-                        <div className="space-y-1"><Label>Pré-requisito</Label><Input value={step.preRequisito} onChange={(e) => updateStep(step.uid, "preRequisito", e.target.value)} /></div>
-                        <div className="space-y-1"><Label>Checklist (separe por ;)</Label><Input value={step.checklist} onChange={(e) => updateStep(step.uid, "checklist", e.target.value)} /></div>
-                        <div className="md:col-span-2 flex flex-wrap gap-2">
-                          <Button variant="outline" size="sm" onClick={() => moveStep(index, "up")}>Mover para cima</Button>
-                          <Button variant="outline" size="sm" onClick={() => moveStep(index, "down")}>Mover para baixo</Button>
-                          <Button variant="destructive" size="sm" onClick={() => removeStep(step.uid)}>Remover</Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                            </div>
+                          </div>
+                        )}
+                      </Card>
+                    );
+                  })}
                 </CardContent>
               </Card>
             )}
@@ -746,9 +859,12 @@ const PopCreateEdit = () => {
           <aside className="space-y-3">
             <Card><CardHeader><CardTitle>Resumo do POP</CardTitle></CardHeader><CardContent className="space-y-2 text-sm">
               <p><strong>Versão:</strong> {popData?.versao_ativa?.numero ?? "v1.0"} ({popData?.versao_ativa?.status ?? "rascunho"})</p>
-              <p><strong>Tempo estimado:</strong> {tempoEstimado}</p>
-              <p><strong>Etapas:</strong> {steps.length}</p>
-              <p><strong>Mídias:</strong> {midias.length}</p>
+              <p><strong>Total de etapas:</strong> {steps.length}</p>
+              <p><strong>Tempo estimado total:</strong> {tempoEstimado}</p>
+              <p><strong>Total de mídias:</strong> {midias.length}</p>
+              <p className={stepsIncompletas > 0 ? "text-amber-700" : "text-emerald-700"}>
+                <strong>Etapas incompletas:</strong> {stepsIncompletas}
+              </p>
             </CardContent></Card>
             <Card><CardHeader><CardTitle>Dica</CardTitle></CardHeader><CardContent className="text-sm text-muted-foreground">Descreva resultados esperados e erros comuns em cada etapa para reduzir retrabalho.</CardContent></Card>
             <Card><CardContent className="grid grid-cols-2 gap-2 p-4 text-xs text-muted-foreground">
