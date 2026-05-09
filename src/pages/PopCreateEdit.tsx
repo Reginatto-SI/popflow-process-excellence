@@ -180,18 +180,54 @@ const PopCreateEdit = () => {
     setSteps(next);
   };
 
-  const addStep = () =>
+  const addStep = () => {
+    const newUid = uid();
     setSteps([...steps, {
-      uid: uid(), ordem: steps.length + 1,
+      uid: newUid, ordem: steps.length + 1,
       titulo: `Nova etapa ${steps.length + 1}`, descricao: "", tempo: "5 min",
       resultadoEsperado: "", erroComum: "", preRequisito: "", checklist: "",
     }]);
+    setExpandedStepUid(newUid);
+    setAllStepsExpanded(false);
+  };
+
+  const addStepBelow = (index: number) => {
+    const newUid = uid();
+    const next = [...steps];
+    next.splice(index + 1, 0, {
+      uid: newUid, ordem: 0,
+      titulo: `Nova etapa`, descricao: "", tempo: "5 min",
+      resultadoEsperado: "", erroComum: "", preRequisito: "", checklist: "",
+    });
+    next.forEach((s, i) => (s.ordem = i + 1));
+    setSteps(next);
+    setExpandedStepUid(newUid);
+    setAllStepsExpanded(false);
+  };
 
   const removeStep = (uidStep: string) => {
     const next = steps.filter((s) => s.uid !== uidStep);
     next.forEach((s, i) => (s.ordem = i + 1));
     setSteps(next);
+    if (expandedStepUid === uidStep) setExpandedStepUid(null);
   };
+
+  const toggleStep = (uidStep: string) => {
+    if (allStepsExpanded) {
+      setAllStepsExpanded(false);
+      setExpandedStepUid(uidStep);
+      return;
+    }
+    setExpandedStepUid((cur) => (cur === uidStep ? null : uidStep));
+  };
+
+  const isStepComplete = (s: StepItem) =>
+    s.titulo.trim().length > 0 && s.descricao.trim().length > 0 && s.resultadoEsperado.trim().length > 0;
+
+  const checklistCount = (s: StepItem) =>
+    s.checklist.split(";").map((t) => t.trim()).filter(Boolean).length;
+
+  const stepsIncompletas = useMemo(() => steps.filter((s) => !isStepComplete(s)).length, [steps]);
 
   const addMidia = () => {
     const newUid = uid();
