@@ -437,7 +437,69 @@ const PopCreateEdit = () => {
                       <CardContent className="grid gap-3 p-4 md:grid-cols-2">
                         <div className="space-y-1"><Label>Título da etapa</Label><Input value={step.titulo} onChange={(e) => updateStep(step.uid, "titulo", e.target.value)} /></div>
                         <div className="space-y-1"><Label>Tempo estimado</Label><Input value={step.tempo} onChange={(e) => updateStep(step.uid, "tempo", e.target.value)} /></div>
-                        <div className="space-y-1 md:col-span-2"><Label>Descrição (digite @ para inserir uma mídia cadastrada)</Label><MediaMentionTextarea value={step.descricao} onChange={(v) => updateStep(step.uid, "descricao", v)} midias={midias.map((m) => ({ referencia: m.referencia, nome: m.nome, tipo: m.tipo }))} rows={5} /></div>
+                        <div className="space-y-2 md:col-span-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <Label>Descrição (digite @ para inserir uma mídia cadastrada)</Label>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openInsertDialog(step.uid)}
+                              className="gap-1"
+                            >
+                              <ImagePlus className="h-3.5 w-3.5" />
+                              Inserir mídia
+                            </Button>
+                          </div>
+                          <MediaMentionTextarea
+                            ref={(el) => {
+                              if (el) textareaRefs.current.set(step.uid, el);
+                              else textareaRefs.current.delete(step.uid);
+                            }}
+                            value={step.descricao}
+                            onChange={(v) => updateStep(step.uid, "descricao", v)}
+                            midias={midias.map((m) => ({ referencia: m.referencia, nome: m.nome, tipo: m.tipo }))}
+                            rows={5}
+                            onRequestInsertMedia={(file) => openInsertDialog(step.uid, file)}
+                          />
+                          {(() => {
+                            const linked = midiasDaEtapa(step);
+                            if (linked.length === 0) return null;
+                            return (
+                              <div className="rounded-md border bg-muted/20 p-2">
+                                <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                  Mídias vinculadas nesta etapa
+                                </p>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {linked.map((m) => {
+                                    const Icon = tipoIcon[m.tipo];
+                                    const inText = new RegExp(`@${m.referencia}(?![A-Za-zÀ-ÿ0-9_-])`).test(step.descricao);
+                                    return (
+                                      <span
+                                        key={m.uid}
+                                        className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-xs text-primary"
+                                      >
+                                        <Icon className="h-3 w-3" />
+                                        @{m.referencia}
+                                        <span className="text-[10px] text-primary/70">— {tipoLabel[m.tipo]}</span>
+                                        {inText && (
+                                          <button
+                                            type="button"
+                                            onClick={() => removeRefFromStep(step, m.referencia)}
+                                            aria-label={`Remover referência @${m.referencia} do texto`}
+                                            className="ml-0.5 rounded-full p-0.5 hover:bg-primary/20"
+                                          >
+                                            <X className="h-3 w-3" />
+                                          </button>
+                                        )}
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        </div>
                         <div className="space-y-1"><Label>Resultado esperado</Label><Input value={step.resultadoEsperado} onChange={(e) => updateStep(step.uid, "resultadoEsperado", e.target.value)} /></div>
                         <div className="space-y-1"><Label>Erro comum</Label><Input value={step.erroComum} onChange={(e) => updateStep(step.uid, "erroComum", e.target.value)} /></div>
                         <div className="space-y-1"><Label>Pré-requisito</Label><Input value={step.preRequisito} onChange={(e) => updateStep(step.uid, "preRequisito", e.target.value)} /></div>
