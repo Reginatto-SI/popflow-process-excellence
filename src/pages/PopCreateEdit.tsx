@@ -227,7 +227,84 @@ const PopCreateEdit = () => {
       return { ...m, [field]: value } as MidiaItem;
     }));
 
-  const removeMidia = (uidM: string) => setMidias((prev) => prev.filter((m) => m.uid !== uidM));
+  const removeMidia = (uidM: string) => {
+    const m = midias.find((x) => x.uid === uidM);
+    if (m) {
+      const refRegex = new RegExp(`@${m.referencia}(?![A-Za-zÀ-ÿ0-9_-])`);
+      const usadaEm = steps.filter((s) => refRegex.test(s.descricao)).map((s) => `Etapa ${s.ordem}`);
+      if (usadaEm.length > 0) {
+        const ok = window.confirm(
+          `A mídia @${m.referencia} ainda está referenciada em: ${usadaEm.join(", ")}.\n\nRemover mesmo assim? As referências no texto ficarão órfãs.`,
+        );
+        if (!ok) return;
+      }
+    }
+    setMidias((prev) => prev.filter((x) => x.uid !== uidM));
+  };
+
+  // ===== Inserção inline de mídia (a partir da aba Etapas) =====
+  const textareaRefs = useRef<Map<string, MediaMentionTextareaHandle | null>>(new Map());
+  const [insertDialog, setInsertDialog] = useState<{ stepUid: string; file: File | null } | null>(null);
+
+  /** Upload genérico (não vinculado a um MidiaItem prévio). Usado pelo diálogo "Inserir mídia". */
+  const uploadFileToBucket = async (file: File): Promise<string> => {
+    if (!user) throw new Error("Sessão expirada. Faça login novamente.");
+    const { data: usuario, error: uerr } = await supabase
+      .from("usuarios").select("empresa_id").eq("id", user.id).maybeSingle();
+    if (uerr) throw uerr;
+    if (!usuario) throw new Error("Empresa do usuário não encontrada");
+    const safeName = file.name.replace(/[^A-Za-z0-9._-]/g, "_");
+    const path = `${usuario.empresa_id}/${id ?? "_new"}/${uid()}-${safeName}`;
+    const { error: upErr } = await supabase.storage
+      .from("pop-midias")
+      .upload(path, file, { upsert: true, contentType: file.type });
+    if (upErr) throw upErr;
+    const { data: pub } = supabase.storage.from("pop-midias").getPublicUrl(path);
+    return pub.publicUrl;
+  };
+
+  const openInsertDialog = (stepUid: string, file: File | null = null) => {
+    setInsertDialog({ stepUid, file });
+  };
+
+  const handleInsertMediaConfirm = (m: InsertedMedia) => {
+    if (!insertDialog) return;
+    const step = steps.find((s) => s.uid === insertDialog.stepUid);
+    if (!step) return;
+    const newUid = uid();
+    const ordemNova = midias.length + 1;
+    setMidias((prev) => [
+      ...prev,
+      {
+        uid: newUid,
+        tipo: m.tipo,
+        nome: m.nome,
+        referencia: m.referencia,
+        etapaOrdem: step.ordem,
+        ordem: ordemNova,
+        url: m.url,
+        refTouched: true,
+      },
+    ]);
+    // Insere @ref na posição atual do cursor do textarea da etapa
+    requestAnimationFrame(() => {
+      textareaRefs.current.get(insertDialog.stepUid)?.insertReferenceAtCursor(m.referencia);
+    });
+  };
+
+  /** Mídias usadas em uma etapa (referenciadas no texto OU vinculadas pela ordem). */
+  const midiasDaEtapa = (step: StepItem) => {
+    const refRegex = /@([A-Za-zÀ-ÿ0-9_-]+)/g;
+    const usadas = new Set<string>();
+    for (const m of step.descricao.matchAll(refRegex)) usadas.add(m[1]);
+    return midias.filter((m) => usadas.has(m.referencia) || m.etapaOrdem === step.ordem);
+  };
+
+  const removeRefFromStep = (step: StepItem, ref: string) => {
+    const re = new RegExp(`\\s?@${ref}(?![A-Za-zÀ-ÿ0-9_-])`, "g");
+    updateStep(step.uid, "descricao", step.descricao.replace(re, ""));
+  };
+
 
   const buildPayload = (): CreatePopInput => ({
     titulo, descricao, departamento, responsavel, visibilidade,
