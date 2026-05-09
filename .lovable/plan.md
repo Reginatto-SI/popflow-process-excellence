@@ -1,64 +1,53 @@
 ## Objetivo
 
-Permitir inserir mídias diretamente da aba **Etapas** (sem precisar pré-cadastrar em Mídias), via botão "Inserir mídia", colar do clipboard ou drag-and-drop. A descrição continua sendo texto puro com referências `@slug` — mídias são registradas como entidades separadas e vinculadas à etapa.
+Transformar a aba "Etapas" em uma lista de cards colapsáveis, mantendo todos os campos e comportamentos atuais. Apenas uma etapa fica aberta por padrão; etapas fechadas mostram um resumo compacto. Adicionar ações de massa e melhorar o painel "Resumo do POP".
 
-## Mudanças
+## Alterações (apenas em `src/pages/PopCreateEdit.tsx`)
 
-### 1. Novo componente: `src/components/InsertMediaDialog.tsx`
-Modal compacto reutilizável com:
-- Tipo da mídia (imagem / áudio / vídeo / documento) — auto-detectado quando vier de paste/drop
-- Campo "Nome" + campo "Referência" (slug auto-gerado, editável)
-- Área de upload: arquivo do computador OU área de paste (Ctrl+V) OU preview do arquivo já recebido (quando aberto via paste/drop)
-- Validação de unicidade da referência: se já existir, sufixar `-2`, `-3`... automaticamente; mostrar a referência final
-- Ao confirmar: faz upload no bucket `pop-midias` (mesma rotina já existente em `uploadMidiaFile`) e devolve `{ tipo, nome, referencia, url }` via callback
-- Estados: idle / uploading / erro com toast
+### 1. Estado de expansão
+- Novo estado `expandedStepUid: string | null` (uma aberta por vez).
+- Helpers: `toggleStep(uid)`, `expandAll()` (modo "todas abertas" via flag `allExpanded`), `collapseAll()`.
+- Ao criar etapa via `addStep` ou "Adicionar etapa abaixo", definir `expandedStepUid` para o `uid` recém-criado.
+- Ao carregar POP existente: abrir a primeira etapa por padrão.
 
-### 2. Refatorar `MediaMentionTextarea` (`src/components/MediaMentionTextarea.tsx`)
-- **Remover o card "Prévia"** abaixo do textarea (o bloco `hasRefs && (<div>…Prévia…)`).
-- Adicionar nova prop `onRequestInsertMedia?: (file?: File) => void`.
-- Capturar `onPaste`: se houver `clipboardData.files` ou `items` com `kind: "file"` e `type` começando com `image/` (ou outros tipos suportados), chamar `onRequestInsertMedia(file)` e prevenir o paste padrão.
-- Capturar `onDragOver` / `onDrop` no textarea: se vier arquivo, chamar `onRequestInsertMedia(file)` e prevenir comportamento padrão.
-- Expor método imperativo (via `useImperativeHandle` + `forwardRef`) `insertReferenceAtCursor(ref: string)` para inserir `@slug` na posição atual do cursor — reaproveitar a lógica existente de `insertReference`.
+### 2. Header da seção Etapas
+Substituir o `CardHeader` atual por uma barra com:
+- Título "Etapas".
+- Botões: "Expandir todas", "Recolher todas", "Adicionar etapa".
 
-### 3. Atualizar `src/pages/PopCreateEdit.tsx` (aba Etapas)
-Para cada etapa:
-- Adicionar `ref` ao `MediaMentionTextarea` correspondente (Map por `step.uid`).
-- Adicionar **botão "Inserir mídia"** ao lado do label "Descrição".
-- Estado local `mediaDialog: { stepUid, file?, tipo? } | null` controlando o modal.
-- Handler `handleInsertMedia(stepUid, file?)`: abre `InsertMediaDialog` pré-preenchido com o arquivo (se vier de paste/drop) e tipo detectado.
-- `onConfirm` do diálogo:
-  1. Cria novo `MidiaItem` no estado `midias` com `etapaOrdem = step.ordem`, `url`, `referencia` única;
-  2. Chama `textareaRef.insertReferenceAtCursor(referencia)` para inserir `@ref` na posição do cursor;
-  3. Foca de volta no textarea.
+### 3. Card de etapa (modo fechado)
+Resumo em uma linha:
+```
+Etapa N — {titulo}
+{tempo} · {X} mídias · {Y} itens de checklist · {Completa|Incompleta}
+```
+- "Mídias" = `getStepMidias(step).length` (já existe).
+- "Checklist" = quantos itens não vazios em `step.checklist` (split por linha).
+- "Completa" = título preenchido + descrição preenchida + resultado esperado preenchido (regra simples, ajustável).
+- Ícone chevron para expandir; clique no header alterna.
 
-Helper novo `ensureUniqueRef(base, midias)` para garantir slug único.
+### 4. Card de etapa (modo aberto)
+Mantém **exatamente** os campos atuais (título, tempo, descrição com `MediaMentionTextarea`, botão "Inserir mídia", chips de mídias vinculadas, resultado esperado, erro comum, pré-requisitos, checklist).
+- Adicionar no rodapé do card: botão discreto "Adicionar etapa abaixo" (cria nova etapa com `ordem = step.ordem + 1`, reordena demais e abre a nova).
+- Manter ações já existentes de mover/remover (se existirem) ou adicionar mover ↑/↓ e remover no header do card.
 
-#### Substituir o card "Prévia" por "Mídias vinculadas nesta etapa"
-Abaixo do textarea, lista compacta (chips) das mídias usadas:
-- Critério: mídias cujo `referencia` aparece em `step.descricao` via regex `@([A-Za-zÀ-ÿ0-9_-]+)`, **ou** mídias com `etapaOrdem === step.ordem`.
-- Cada chip: ícone do tipo + `@referencia` + `— Tipo` + botão "x" para remover a referência do texto (não apaga a mídia da biblioteca).
-- Sem renderização do texto inteiro.
+### 5. Painel lateral "Resumo do POP"
+Enriquecer o card existente com:
+- Total de etapas.
+- Tempo estimado total (soma simples de minutos extraídos via regex do campo `tempo`, ex: "5 min" → 5).
+- Total de mídias (`midias.length`).
+- Etapas incompletas (contagem pela mesma regra de "Completa").
 
-### 4. Aba "Mídias" — proteção ao remover
-Em `removeMidia`, antes de apagar:
-- Verificar se `@referencia` aparece em qualquer `step.descricao`.
-- Se sim, pedir confirmação (`window.confirm` simples) listando as etapas afetadas. Se confirmado, remove apenas a mídia (deixa o `@ref` órfão, que continua sendo tratado como aviso amarelo na visualização).
+### 6. Comportamento "uma aberta por vez"
+- Ao expandir uma etapa, fechar a anterior (a menos que esteja em modo "Expandir todas").
+- "Recolher todas" volta para `expandedStepUid = null` e desativa o modo "todas".
 
-### 5. Visualização (PopDetail / PopExecution)
-Sem mudanças — já renderizam chips a partir de `@ref`. A prévia rica permanece nessas telas, conforme pedido.
+## Fora do escopo
+- Não alterar dados, persistência, mídia inline, aba Mídias, fluxo de execução nem layout geral da página.
+- Não criar componentes em arquivos novos (mudança incremental no arquivo existente). Se o JSX do card crescer demais, posso extrair `StepCard` em arquivo próprio — confirmar se preferir isso.
 
-## Regras técnicas mantidas
-
-- Descrição da etapa continua sendo texto plano com `@slug`. Nada de HTML/imagem embutida.
-- Slug usa o `slugifyRef` já existente.
-- Upload reusa o bucket público `pop-midias` e a rotina atual.
-- Paste/drop só dispara o modal quando o item for **arquivo**; texto colado segue o comportamento normal.
-- Drawer lateral fixo continua não existindo; comportamento de mídia em modal/mini-player segue inalterado nas telas de leitura.
-
-## Arquivos
-
-- **Novo**: `src/components/InsertMediaDialog.tsx`
-- **Editar**: `src/components/MediaMentionTextarea.tsx` (remove prévia; adiciona paste/drop/ref imperativo)
-- **Editar**: `src/pages/PopCreateEdit.tsx` (botão Inserir mídia, integração com diálogo, lista "Mídias vinculadas nesta etapa", confirmação ao remover)
-
-Sem migrações de banco, sem mudança de fluxo de execução, sem editor rico.
+## Detalhes técnicos
+- Usar `Collapsible` do shadcn (`@/components/ui/collapsible`) para animação simples, ou apenas condicional `expandedStepUid === step.uid`.
+- Ícones: `ChevronDown`, `ChevronUp`, `CheckCircle2`, `Circle`, `Plus`, `ArrowUp`, `ArrowDown`, `Trash2` do `lucide-react`.
+- Cores: tokens semânticos existentes (`text-muted-foreground`, `text-primary`, etc.).
+- Persistência do estado de expansão: apenas em memória (não salvar).
