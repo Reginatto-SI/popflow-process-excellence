@@ -859,9 +859,12 @@ const PopCreateEdit = () => {
           <aside className="space-y-3">
             <Card><CardHeader><CardTitle>Resumo do POP</CardTitle></CardHeader><CardContent className="space-y-2 text-sm">
               <p><strong>Versão:</strong> {popData?.versao_ativa?.numero ?? "v1.0"} ({popData?.versao_ativa?.status ?? "rascunho"})</p>
-              <p><strong>Tempo estimado:</strong> {tempoEstimado}</p>
-              <p><strong>Etapas:</strong> {steps.length}</p>
-              <p><strong>Mídias:</strong> {midias.length}</p>
+              <p><strong>Total de etapas:</strong> {steps.length}</p>
+              <p><strong>Tempo estimado total:</strong> {tempoEstimado}</p>
+              <p><strong>Total de mídias:</strong> {midias.length}</p>
+              <p className={stepsIncompletas > 0 ? "text-amber-700" : "text-emerald-700"}>
+                <strong>Etapas incompletas:</strong> {stepsIncompletas}
+              </p>
             </CardContent></Card>
             <Card><CardHeader><CardTitle>Dica</CardTitle></CardHeader><CardContent className="text-sm text-muted-foreground">Descreva resultados esperados e erros comuns em cada etapa para reduzir retrabalho.</CardContent></Card>
             <Card><CardContent className="grid grid-cols-2 gap-2 p-4 text-xs text-muted-foreground">
