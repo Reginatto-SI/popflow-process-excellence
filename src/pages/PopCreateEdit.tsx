@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowDown, ArrowUp, Building2, CheckCircle2, ChevronDown, ChevronRight, Circle, FileText, Image, ImagePlus, Mic, Plus, Shield, Trash2, User, Video, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Building2, CheckCircle2, ChevronDown, ChevronRight, Circle, FileText, Image, ImagePlus, ListChecks, Mic, Plus, Shield, Trash2, User, Video, X } from "lucide-react";
 
 import { AppLayout } from "@/components/AppLayout";
 import { Badge } from "@/components/ui/badge";
@@ -52,11 +52,11 @@ interface MidiaItem {
   refTouched?: boolean; // se o usuário editou manualmente a referência
 }
 
-const tabs: { key: TabKey; label: string }[] = [
-  { key: "informacoes", label: "Informações Gerais" },
-  { key: "etapas", label: "Etapas" },
-  { key: "midias", label: "Mídias" },
-  { key: "revisao", label: "Revisão Final" },
+const tabs: { key: TabKey; label: string; icon: typeof FileText }[] = [
+  { key: "informacoes", label: "Informações Gerais", icon: FileText },
+  { key: "etapas", label: "Etapas", icon: ListChecks },
+  { key: "midias", label: "Mídias", icon: Image },
+  { key: "revisao", label: "Revisão Final", icon: CheckCircle2 },
 ];
 
 const tipoLabel: Record<PopMidiaTipo, string> = {
@@ -163,6 +163,8 @@ const PopCreateEdit = () => {
   }, [isEdit, popData]);
 
   const currentTabIndex = tabs.findIndex((t) => t.key === activeTab);
+  const versaoNumero = popData?.versao_ativa?.numero ?? "v1.0";
+  const versaoStatus = popData?.versao_ativa?.status ?? "rascunho";
   const tempoEstimado = useMemo(
     () => `${steps.reduce((acc, s) => acc + Number(s.tempo.replace(/\D/g, "") || 0), 0)} min`,
     [steps],
@@ -447,18 +449,44 @@ const PopCreateEdit = () => {
           </div>
         </header>
 
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-card px-4 py-3 text-sm text-muted-foreground shadow-sm">
+          <Badge variant="outline" className="bg-background text-foreground">{versaoNumero}</Badge>
+          <span className="capitalize">{versaoStatus}</span>
+          <span className="text-border">·</span>
+          <span>{steps.length} {steps.length === 1 ? "etapa" : "etapas"}</span>
+          <span className="text-border">·</span>
+          <span>{tempoEstimado}</span>
+          <span className="text-border">·</span>
+          <span>{midias.length} {midias.length === 1 ? "mídia" : "mídias"}</span>
+          <span className="text-border">·</span>
+          <span className={stepsIncompletas > 0 ? "font-medium text-amber-700" : "font-medium text-emerald-700"}>
+            {stepsIncompletas} {stepsIncompletas === 1 ? "pendência" : "pendências"}
+          </span>
+        </div>
+
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabKey)}>
-          <TabsList className="h-auto w-full justify-start rounded-none border-b bg-transparent p-0">
-            {tabs.map((tab) => (
-              <TabsTrigger key={tab.key} value={tab.key} className="rounded-none border-b-2 border-transparent px-2 py-2 text-muted-foreground data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground">{tab.label}</TabsTrigger>
-            ))}
-          </TabsList>
+          <div className="overflow-x-auto pb-1">
+            <TabsList className="h-auto min-w-max justify-start gap-1 rounded-lg border bg-muted/40 p-1">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <TabsTrigger
+                    key={tab.key}
+                    value={tab.key}
+                    className="gap-2 rounded-md border border-transparent px-3 py-2 text-muted-foreground data-[state=active]:border-border data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+                  >
+                    <Icon className="h-4 w-4" />
+                    {tab.label}
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+          </div>
         </Tabs>
 
-        <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
-          <div className="space-y-4">
+        <div className="mx-auto w-full max-w-6xl space-y-4">
             {activeTab === "informacoes" && (
-              <Card><CardContent className="grid gap-4 p-5 md:grid-cols-2">
+              <Card><CardContent className="grid gap-5 p-6 md:grid-cols-2">
                 <div className="space-y-2 md:col-span-2"><Label>Título do POP</Label><Input value={titulo} onChange={(e) => setTitulo(e.target.value)} /></div>
                 <div className="space-y-2 md:col-span-2"><Label>Descrição detalhada</Label><Textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} rows={4} /></div>
                 <div className="space-y-2"><Label>Departamento</Label><Input value={departamento} onChange={(e) => setDepartamento(e.target.value)} /></div>
@@ -491,7 +519,7 @@ const PopCreateEdit = () => {
                     </Button>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-2">
+                <CardContent className="space-y-3">
                   {steps.map((step, index) => {
                     const isOpen = allStepsExpanded || expandedStepUid === step.uid;
                     const linked = midiasDaEtapa(step);
@@ -537,7 +565,7 @@ const PopCreateEdit = () => {
                         {/* Corpo expandido */}
                         {isOpen && (
                           <div className="border-t">
-                            <div className="grid gap-3 p-4 md:grid-cols-2">
+                            <div className="grid gap-4 p-5 md:grid-cols-2">
                               <div className="space-y-1"><Label>Título da etapa</Label><Input value={step.titulo} onChange={(e) => updateStep(step.uid, "titulo", e.target.value)} /></div>
                               <div className="space-y-1"><Label>Tempo estimado</Label><Input value={step.tempo} onChange={(e) => updateStep(step.uid, "tempo", e.target.value)} /></div>
                               <div className="space-y-2 md:col-span-2">
@@ -854,28 +882,22 @@ const PopCreateEdit = () => {
                 </Card>
               );
             })()}
-          </div>
-
-          <aside className="space-y-3">
-            <Card><CardHeader><CardTitle>Resumo do POP</CardTitle></CardHeader><CardContent className="space-y-2 text-sm">
-              <p><strong>Versão:</strong> {popData?.versao_ativa?.numero ?? "v1.0"} ({popData?.versao_ativa?.status ?? "rascunho"})</p>
-              <p><strong>Total de etapas:</strong> {steps.length}</p>
-              <p><strong>Tempo estimado total:</strong> {tempoEstimado}</p>
-              <p><strong>Total de mídias:</strong> {midias.length}</p>
-              <p className={stepsIncompletas > 0 ? "text-amber-700" : "text-emerald-700"}>
-                <strong>Etapas incompletas:</strong> {stepsIncompletas}
-              </p>
-            </CardContent></Card>
-            <Card><CardHeader><CardTitle>Dica</CardTitle></CardHeader><CardContent className="text-sm text-muted-foreground">Descreva resultados esperados e erros comuns em cada etapa para reduzir retrabalho.</CardContent></Card>
-            <Card><CardContent className="grid grid-cols-2 gap-2 p-4 text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-1"><Image className="h-3 w-3" />Imagem</span>
-              <span className="inline-flex items-center gap-1"><Mic className="h-3 w-3" />Áudio</span>
-              <span className="inline-flex items-center gap-1"><Video className="h-3 w-3" />Vídeo</span>
-              <span className="inline-flex items-center gap-1"><FileText className="h-3 w-3" />Documento</span>
-              <span className="inline-flex items-center gap-1"><Building2 className="h-3 w-3" />Empresa</span>
-              <span className="inline-flex items-center gap-1"><Shield className="h-3 w-3" />Privado</span>
-            </CardContent></Card>
-          </aside>
+          <Card className="bg-muted/20">
+            <CardContent className="grid gap-4 p-4 text-sm text-muted-foreground md:grid-cols-[1.5fr_1fr]">
+              <div>
+                <p className="font-medium text-foreground">Ajuda rápida</p>
+                <p className="mt-1">Descreva resultados esperados e erros comuns em cada etapa para reduzir retrabalho.</p>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-3">
+                <span className="inline-flex items-center gap-1"><Image className="h-3 w-3" />Imagem</span>
+                <span className="inline-flex items-center gap-1"><Mic className="h-3 w-3" />Áudio</span>
+                <span className="inline-flex items-center gap-1"><Video className="h-3 w-3" />Vídeo</span>
+                <span className="inline-flex items-center gap-1"><FileText className="h-3 w-3" />Documento</span>
+                <span className="inline-flex items-center gap-1"><Building2 className="h-3 w-3" />Empresa</span>
+                <span className="inline-flex items-center gap-1"><Shield className="h-3 w-3" />Privado</span>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
