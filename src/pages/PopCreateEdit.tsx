@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowDown, ArrowUp, Building2, CheckCircle2, ChevronDown, ChevronRight, Circle, FileText, Image, ImagePlus, ListChecks, Mic, Plus, Shield, Trash2, User, Video, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Building2, CheckCircle2, ChevronDown, ChevronRight, Circle, Eye, FileText, Image, ImagePlus, ListChecks, Mic, Plus, Shield, Trash2, User, Video, X } from "lucide-react";
 
 import { AppLayout } from "@/components/AppLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -465,16 +465,18 @@ const PopCreateEdit = () => {
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabKey)}>
           <div className="overflow-x-auto pb-1">
-            <TabsList className="h-auto min-w-max justify-start gap-1 rounded-lg border bg-muted/40 p-1">
+            {/* Ajuste visual: container com tokens do tema para separar as abas sem pesar no modo claro/escuro. */}
+            <TabsList className="h-auto min-w-max justify-start gap-1.5 rounded-xl border bg-muted/50 p-1.5 shadow-inner shadow-background/30">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
+                // Ajuste visual: aba ativa ganha aparência de item selecionado com borda, fundo, sombra e ícone em destaque.
                 return (
                   <TabsTrigger
                     key={tab.key}
                     value={tab.key}
-                    className="gap-2 rounded-md border border-transparent px-3 py-2 text-muted-foreground data-[state=active]:border-border data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+                    className="gap-2 rounded-lg border border-transparent px-3.5 py-2 text-muted-foreground transition-colors hover:bg-background/60 hover:text-foreground data-[state=active]:border-border data-[state=active]:bg-background data-[state=active]:font-semibold data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:shadow-foreground/10 data-[state=active]:[&>svg]:text-primary"
                   >
-                    <Icon className="h-4 w-4" />
+                    <Icon className="h-4 w-4 transition-colors" />
                     {tab.label}
                   </TabsTrigger>
                 );
@@ -485,13 +487,35 @@ const PopCreateEdit = () => {
 
         <div className="mx-auto w-full max-w-6xl space-y-4">
             {activeTab === "informacoes" && (
-              <Card><CardContent className="grid gap-5 p-6 md:grid-cols-2">
-                <div className="space-y-2 md:col-span-2"><Label>Título do POP</Label><Input value={titulo} onChange={(e) => setTitulo(e.target.value)} /></div>
-                <div className="space-y-2 md:col-span-2"><Label>Descrição detalhada</Label><Textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} rows={4} /></div>
-                <div className="space-y-2"><Label>Departamento</Label><Input value={departamento} onChange={(e) => setDepartamento(e.target.value)} /></div>
-                <div className="space-y-2"><Label>Responsável</Label><div className="relative"><User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input className="pl-9" value={responsavel} onChange={(e) => setResponsavel(e.target.value)} /></div></div>
-                <div className="space-y-2"><Label>Visibilidade</Label><Select value={visibilidade} onValueChange={(v) => setVisibilidade(v as PopVisibilidade)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="privado">Privado</SelectItem><SelectItem value="empresa">Empresa</SelectItem></SelectContent></Select></div>
-              </CardContent></Card>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">Dados principais do POP</CardTitle>
+                  <CardDescription>Defina as informações básicas antes de estruturar as etapas.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-5 p-6 pt-0 md:grid-cols-2">
+                  <div className="space-y-2 md:col-span-2">
+                    {/* Ajuste visual: labels com ícones pequenos melhoram escaneabilidade sem alterar campos ou validações. */}
+                    <Label className="flex items-center gap-2 font-semibold text-foreground"><FileText className="h-4 w-4 text-muted-foreground" />Título do POP</Label>
+                    <Input value={titulo} onChange={(e) => setTitulo(e.target.value)} />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label className="flex items-center gap-2 font-semibold text-foreground"><ListChecks className="h-4 w-4 text-muted-foreground" />Descrição detalhada</Label>
+                    <Textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} rows={4} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2 font-semibold text-foreground"><Building2 className="h-4 w-4 text-muted-foreground" />Departamento</Label>
+                    <Input value={departamento} onChange={(e) => setDepartamento(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2 font-semibold text-foreground"><User className="h-4 w-4 text-muted-foreground" />Responsável</Label>
+                    <Input value={responsavel} onChange={(e) => setResponsavel(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2 font-semibold text-foreground"><Eye className="h-4 w-4 text-muted-foreground" />Visibilidade</Label>
+                    <Select value={visibilidade} onValueChange={(v) => setVisibilidade(v as PopVisibilidade)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="privado">Privado</SelectItem><SelectItem value="empresa">Empresa</SelectItem></SelectContent></Select>
+                  </div>
+                </CardContent>
+              </Card>
             )}
 
             {activeTab === "etapas" && (
