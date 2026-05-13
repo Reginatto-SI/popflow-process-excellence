@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 
 interface AppHeaderProps {
   title: string;
@@ -39,17 +40,18 @@ export function AppHeader({ title }: AppHeaderProps) {
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur md:px-6">
       <SidebarTrigger />
-      <div className="flex items-center gap-2 text-sm">
+      <div className="flex min-w-0 items-center gap-2 text-sm">
         <span className="text-muted-foreground">POPFlow</span>
         <span className="text-muted-foreground">/</span>
-        <span className="font-medium text-foreground">{title}</span>
+        <span className="truncate font-medium text-foreground">{title}</span>
       </div>
 
-      <div className="ml-auto flex items-center gap-2 md:gap-3">
+      <div className="ml-auto flex shrink-0 items-center gap-1.5 md:gap-3">
         <div className="relative hidden md:block">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input placeholder="Buscar POPs..." className="h-9 w-64 pl-8" />
         </div>
+        <ThemeSwitcher />
         <Button variant="ghost" size="icon" aria-label="Notificações">
           <Bell className="h-4 w-4" />
         </Button>

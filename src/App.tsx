@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
+import { ThemeProvider } from "@/hooks/useTheme";
 import { RequireAuth } from "@/components/RequireAuth";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
@@ -18,23 +19,25 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/" element={<RequireAuth><Index /></RequireAuth>} />
-            <Route path="/pops" element={<RequireAuth><PopsList /></RequireAuth>} />
-            <Route path="/pops/novo" element={<RequireAuth><PopCreateEdit /></RequireAuth>} />
-            <Route path="/pops/:id" element={<RequireAuth><PopDetail /></RequireAuth>} />
-            <Route path="/pops/:id/editar" element={<RequireAuth><PopCreateEdit /></RequireAuth>} />
-            <Route path="/execucao/:id" element={<RequireAuth><PopExecution /></RequireAuth>} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
+      <ThemeProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/" element={<RequireAuth><Index /></RequireAuth>} />
+              <Route path="/pops" element={<RequireAuth><PopsList /></RequireAuth>} />
+              <Route path="/pops/novo" element={<RequireAuth><PopCreateEdit /></RequireAuth>} />
+              <Route path="/pops/:id" element={<RequireAuth><PopDetail /></RequireAuth>} />
+              <Route path="/pops/:id/editar" element={<RequireAuth><PopCreateEdit /></RequireAuth>} />
+              <Route path="/execucao/:id" element={<RequireAuth><PopExecution /></RequireAuth>} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+      </ThemeProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
