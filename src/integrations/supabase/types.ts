@@ -363,6 +363,7 @@ export type Database = {
       }
       pops: {
         Row: {
+          arquivado: boolean
           created_at: string
           departamento: string
           descricao: string
@@ -376,6 +377,7 @@ export type Database = {
           visibilidade: Database["public"]["Enums"]["pop_visibilidade"]
         }
         Insert: {
+          arquivado?: boolean
           created_at?: string
           departamento?: string
           descricao?: string
@@ -389,6 +391,7 @@ export type Database = {
           visibilidade?: Database["public"]["Enums"]["pop_visibilidade"]
         }
         Update: {
+          arquivado?: boolean
           created_at?: string
           departamento?: string
           descricao?: string
@@ -499,6 +502,7 @@ export type Database = {
     }
     Functions: {
       current_empresa_id: { Args: never; Returns: string }
+      current_user_can_manage_pops: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "gestor" | "criador" | "executor" | "developer"

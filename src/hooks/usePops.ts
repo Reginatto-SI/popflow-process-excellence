@@ -47,6 +47,7 @@ export interface PopVersaoRow {
 export interface PopRow {
   id: string;
   empresa_id: string;
+  arquivado: boolean;
   titulo: string;
   descricao: string;
   departamento: string;
@@ -77,6 +78,7 @@ export function usePops() {
       const { data, error } = await supabase
         .from("pops")
         .select("*, versao_ativa:pop_versoes!pops_versao_ativa_fk(id, pop_id, numero, status, created_at)")
+        .eq("arquivado", false)
         .order("updated_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as unknown as PopWithVersion[];
@@ -338,15 +340,150 @@ export function useUpdatePop() {
   });
 }
 
-// ===== Excluir =====
+// ===== Excluir / arquivar com segurança =====
+export interface PopDeleteImpact {
+  hasExecutions: boolean;
+}
+
+const canManagePops = (role?: string | null) => role === "admin" || role === "gestor" || role === "criador" || role === "developer";
+
+async function getPopDeleteImpact(popId: string, empresaId?: string): Promise<PopDeleteImpact> {
+  const execucoesQuery = supabase
+    .from("execucoes")
+    .select("id", { count: "exact", head: true })
+    .eq("pop_id", popId);
+  const { count: execucoesCount, error: execucoesError } = await (empresaId
+    ? execucoesQuery.eq("empresa_id", empresaId)
+    : execucoesQuery);
+  if (execucoesError) throw execucoesError;
+  if ((execucoesCount ?? 0) > 0) return { hasExecutions: true };
+
+  const versoesQuery = supabase.from("pop_versoes").select("id").eq("pop_id", popId);
+  const { data: versoes, error: versoesError } = await (empresaId
+    ? versoesQuery.eq("empresa_id", empresaId)
+    : versoesQuery);
+  if (versoesError) throw versoesError;
+
+  const versaoIds = (versoes ?? []).map((v) => v.id);
+  if (versaoIds.length === 0) return { hasExecutions: false };
+
+  const etapasQuery = supabase.from("pop_etapas").select("id").in("pop_versao_id", versaoIds);
+  const { data: etapas, error: etapasError } = await (empresaId
+    ? etapasQuery.eq("empresa_id", empresaId)
+    : etapasQuery);
+  if (etapasError) throw etapasError;
+
+  const etapaIds = (etapas ?? []).map((e) => e.id);
+  if (etapaIds.length === 0) return { hasExecutions: false };
+
+  const execucaoEtapasQuery = supabase
+    .from("execucao_etapas")
+    .select("id", { count: "exact", head: true })
+    .in("etapa_id", etapaIds);
+  const { count: execucaoEtapasCount, error: execucaoEtapasError } = await (empresaId
+    ? execucaoEtapasQuery.eq("empresa_id", empresaId)
+    : execucaoEtapasQuery);
+  if (execucaoEtapasError) throw execucaoEtapasError;
+
+  return { hasExecutions: (execucaoEtapasCount ?? 0) > 0 };
+}
+
+export function usePopDeleteImpact(popId: string | null) {
+  return useQuery({
+    enabled: !!popId,
+    queryKey: ["pop-delete-impact", popId],
+    queryFn: async () => {
+      if (!popId) return { hasExecutions: false };
+      return getPopDeleteImpact(popId);
+    },
+  });
+}
+
 export function useDeletePop() {
   const qc = useQueryClient();
+  const { user } = useAuth();
+
   return useMutation({
-    mutationFn: async (popId: string) => {
-      const { error } = await supabase.from("pops").delete().eq("id", popId);
-      if (error) throw error;
+    mutationFn: async (popId: string): Promise<"deleted" | "archived"> => {
+      if (!user) throw new Error("Não autenticado");
+
+      const [{ data: usuario, error: usuarioError }, { data: pop, error: popError }] = await Promise.all([
+        supabase.from("usuarios").select("role, empresa_id").eq("id", user.id).maybeSingle(),
+        supabase.from("pops").select("id, empresa_id").eq("id", popId).maybeSingle(),
+      ]);
+      if (usuarioError) throw usuarioError;
+      if (popError) throw popError;
+      if (!usuario) throw new Error("Usuário sem perfil cadastrado");
+      if (!canManagePops(usuario.role)) throw new Error("Você não tem permissão para excluir ou arquivar POPs.");
+      if (!pop) throw new Error("POP não encontrado");
+      if (pop.empresa_id !== usuario.empresa_id) throw new Error("POP não pertence à empresa ativa.");
+
+      const impact = await getPopDeleteImpact(popId, pop.empresa_id);
+      if (impact.hasExecutions) {
+        const { error } = await supabase
+          .from("pops")
+          .update({ arquivado: true })
+          .eq("id", popId)
+          .eq("empresa_id", pop.empresa_id);
+        if (error) throw error;
+        return "archived";
+      }
+
+      const { data: versoes, error: versoesError } = await supabase
+        .from("pop_versoes")
+        .select("id")
+        .eq("pop_id", popId)
+        .eq("empresa_id", pop.empresa_id);
+      if (versoesError) throw versoesError;
+      const versaoIds = (versoes ?? []).map((v) => v.id);
+
+      // Sem histórico operacional: remove dependências versionadas antes do POP raiz para evitar órfãos e respeitar FKs.
+      if (versaoIds.length > 0) {
+        const { error: midiasError } = await supabase
+          .from("pop_midias")
+          .delete()
+          .eq("empresa_id", pop.empresa_id)
+          .in("pop_versao_id", versaoIds);
+        if (midiasError) throw midiasError;
+
+        const { error: etapasError } = await supabase
+          .from("pop_etapas")
+          .delete()
+          .eq("empresa_id", pop.empresa_id)
+          .in("pop_versao_id", versaoIds);
+        if (etapasError) throw etapasError;
+      }
+
+      const { error: clearActiveError } = await supabase
+        .from("pops")
+        .update({ versao_ativa_id: null })
+        .eq("id", popId)
+        .eq("empresa_id", pop.empresa_id);
+      if (clearActiveError) throw clearActiveError;
+
+      if (versaoIds.length > 0) {
+        const { error: versoesDeleteError } = await supabase
+          .from("pop_versoes")
+          .delete()
+          .eq("empresa_id", pop.empresa_id)
+          .eq("pop_id", popId);
+        if (versoesDeleteError) throw versoesDeleteError;
+      }
+
+      const { error: popDeleteError } = await supabase
+        .from("pops")
+        .delete()
+        .eq("id", popId)
+        .eq("empresa_id", pop.empresa_id);
+      if (popDeleteError) throw popDeleteError;
+
+      return "deleted";
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["pops"] }),
+    onSuccess: (_result, popId) => {
+      qc.invalidateQueries({ queryKey: ["pops"] });
+      qc.invalidateQueries({ queryKey: ["pop", popId] });
+      qc.invalidateQueries({ queryKey: ["pop-delete-impact", popId] });
+    },
   });
 }
 

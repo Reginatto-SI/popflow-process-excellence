@@ -14,6 +14,16 @@ import {
 } from "lucide-react";
 
 import { AppLayout } from "@/components/AppLayout";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,7 +38,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { usePops, useDeletePop, type PopStatus, type PopVisibilidade } from "@/hooks/usePops";
+import { usePops, useDeletePop, usePopDeleteImpact, type PopStatus, type PopVisibilidade } from "@/hooks/usePops";
 
 const statusLabel: Record<PopStatus, string> = {
   rascunho: "Rascunho",
@@ -42,6 +52,14 @@ const statusClass: Record<PopStatus, string> = {
   publicado: "bg-emerald-600 text-white border-transparent",
 };
 
+const friendlyDeleteError = (error: unknown) => {
+  const message = error instanceof Error ? error.message : String(error);
+  if (message.includes("violates foreign key constraint") || message.includes("execucao_etapas_etapa_id_fkey")) {
+    return "Não foi possível concluir a ação porque este POP possui histórico operacional. Tente novamente para arquivá-lo com segurança.";
+  }
+  return message || "Não foi possível excluir ou arquivar o POP.";
+};
+
 const PopsList = () => {
   const navigate = useNavigate();
   const { data: pops = [], isLoading, isError } = usePops();
@@ -53,6 +71,10 @@ const PopsList = () => {
   const [visibilidadeFiltro, setVisibilidadeFiltro] = useState<"todas" | PopVisibilidade>("todas");
   const [page] = useState(1);
   const [pageSize] = useState(20);
+  const [popToDeleteId, setPopToDeleteId] = useState<string | null>(null);
+
+  const popToDelete = useMemo(() => pops.find((pop) => pop.id === popToDeleteId) ?? null, [pops, popToDeleteId]);
+  const deleteImpact = usePopDeleteImpact(popToDeleteId);
 
   const departamentos = useMemo(
     () => ["todos", ...Array.from(new Set(pops.map((p) => p.departamento).filter(Boolean)))],
@@ -82,13 +104,18 @@ const PopsList = () => {
     setVisibilidadeFiltro("todas");
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Excluir este POP?")) return;
+  const confirmDelete = async () => {
+    if (!popToDeleteId) return;
     try {
-      await deletePop.mutateAsync(id);
-      toast.success("POP excluído");
+      const result = await deletePop.mutateAsync(popToDeleteId);
+      if (result === "archived") {
+        toast.success("Este POP possui histórico de execução e não pode ser excluído definitivamente. Ele foi arquivado para preservar a rastreabilidade.");
+      } else {
+        toast.success("POP excluído definitivamente.");
+      }
+      setPopToDeleteId(null);
     } catch (err) {
-      toast.error((err as Error).message);
+      toast.error(friendlyDeleteError(err));
     }
   };
 
@@ -204,7 +231,7 @@ const PopsList = () => {
                         <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                           <DropdownMenuItem onClick={() => navigate(`/pops/${pop.id}`)}>Visualizar</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => navigate(`/pops/${pop.id}/editar`)}>Editar</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => handleDelete(pop.id)}>Excluir</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setPopToDeleteId(pop.id)}>Excluir</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
@@ -228,6 +255,37 @@ const PopsList = () => {
           )}
         </section>
       </div>
+
+      {/* Confirmação explícita: exclui definitivamente POPs sem histórico e arquiva POPs já executados. */}
+      <AlertDialog open={!!popToDeleteId} onOpenChange={(open) => !open && setPopToDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {deleteImpact.isLoading ? "Verificando histórico do POP..." : deleteImpact.data?.hasExecutions ? "Arquivar POP?" : "Excluir POP definitivamente?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteImpact.isLoading
+                ? "Verificando se este POP possui histórico de execução antes de confirmar a ação."
+                : deleteImpact.data?.hasExecutions
+                  ? `O POP “${popToDelete?.titulo ?? "selecionado"}” possui histórico de execução. Ele será arquivado e removido da listagem principal, preservando versões, etapas e execuções para auditoria.`
+                  : `O POP “${popToDelete?.titulo ?? "selecionado"}” ainda não possui execuções vinculadas. Esta ação excluirá definitivamente o POP e suas dependências versionadas.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletePop.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className={deleteImpact.data?.hasExecutions ? undefined : "bg-destructive text-destructive-foreground hover:bg-destructive/90"}
+              disabled={deleteImpact.isLoading || deletePop.isPending}
+              onClick={(event) => {
+                event.preventDefault();
+                void confirmDelete();
+              }}
+            >
+              {deletePop.isPending ? "Processando..." : deleteImpact.data?.hasExecutions ? "Arquivar POP" : "Excluir definitivamente"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppLayout>
   );
 };
