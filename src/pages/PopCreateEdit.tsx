@@ -162,7 +162,6 @@ const PopCreateEdit = () => {
     }));
   }, [isEdit, popData]);
 
-  const currentTabIndex = tabs.findIndex((t) => t.key === activeTab);
   const versaoNumero = popData?.versao_ativa?.numero ?? "v1.0";
   const versaoStatus = popData?.versao_ativa?.status ?? "rascunho";
   const tempoEstimado = useMemo(
@@ -437,7 +436,7 @@ const PopCreateEdit = () => {
 
   return (
     <AppLayout title={isEdit ? "Editar POP" : "Criar Novo POP"}>
-      <div className="mx-auto w-full max-w-7xl space-y-5 pb-24">
+      <div className="mx-auto w-full max-w-7xl space-y-5">
         <header className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">{isEdit ? "Editar POP" : "Criar Novo POP"}</h1>
@@ -898,18 +897,6 @@ const PopCreateEdit = () => {
               </div>
             </CardContent>
           </Card>
-        </div>
-      </div>
-
-      <div className="fixed bottom-0 left-0 right-0 border-t bg-background/95 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3">
-          <Badge variant="outline">Etapa atual: {tabs[currentTabIndex].label}</Badge>
-          <div className="flex gap-2">
-            <Button variant="outline" disabled={currentTabIndex === 0} onClick={() => setActiveTab(tabs[currentTabIndex - 1].key)}>Voltar</Button>
-            <Button onClick={() => currentTabIndex === tabs.length - 1 ? handleSave() : setActiveTab(tabs[currentTabIndex + 1].key)}>
-              {currentTabIndex === tabs.length - 1 ? (isEdit ? "Salvar" : "Criar POP") : "Próxima etapa"}
-            </Button>
-          </div>
         </div>
       </div>
 
