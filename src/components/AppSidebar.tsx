@@ -40,9 +40,14 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">
-        <div className="flex items-center gap-2 px-2 py-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Workflow className="h-5 w-5" />
+        {/* No estado colapsado, remove o padding lateral do cabeçalho para alinhar o logo aos ícones do menu. */}
+        <div className={`flex items-center gap-2 py-3 ${collapsed ? "justify-center px-0" : "px-2"}`}>
+          <div
+            className={`flex shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground ${
+              collapsed ? "h-8 w-8" : "h-9 w-9"
+            }`}
+          >
+            <Workflow className={collapsed ? "h-4 w-4" : "h-5 w-5"} />
           </div>
           {!collapsed && (
             <div className="flex flex-col leading-tight">
