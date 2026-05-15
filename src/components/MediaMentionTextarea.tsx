@@ -1,6 +1,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { FileText, Image as ImageIcon, Mic, Video } from "lucide-react";
+import { Bold, FileText, Heading2, Image as ImageIcon, ImagePlus, Italic, Link, List, ListOrdered, Mic, Quote, Video } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { PopMidiaTipo } from "@/hooks/usePops";
@@ -28,6 +29,11 @@ interface Props {
    * Recebe o arquivo capturado para abrir o fluxo de inserção de mídia.
    */
   onRequestInsertMedia?: (file: File) => void;
+  /**
+   * Abre o fluxo de upload/cadastro já existente para inserir @midia no cursor.
+   * Mantém a mídia fora do editor Markdown para não criar um novo fluxo de anexos.
+   */
+  onOpenInsertMedia?: () => void;
 }
 
 const tipoIcon: Record<PopMidiaTipo, React.ComponentType<{ className?: string }>> = {
@@ -45,7 +51,7 @@ const tipoLabel: Record<PopMidiaTipo, string> = {
 };
 
 export const MediaMentionTextarea = forwardRef<MediaMentionTextareaHandle, Props>(
-  ({ value, onChange, midias, rows = 2, placeholder, className, onRequestInsertMedia }, ref) => {
+  ({ value, onChange, midias, rows = 2, placeholder, className, onRequestInsertMedia, onOpenInsertMedia }, ref) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState("");
@@ -170,8 +176,104 @@ export const MediaMentionTextarea = forwardRef<MediaMentionTextareaHandle, Props
       }
     };
 
+    // Lógica central de inserção Markdown: altera somente a string controlada e reposiciona o cursor.
+    // Assim, referências inline como @midia1 permanecem como texto e não são convertidas/removidas.
+    const replaceSelection = (next: string, selectionStart: number, selectionEnd: number) => {
+      onChange(next);
+      requestAnimationFrame(() => {
+        const el = textareaRef.current;
+        el?.focus();
+        el?.setSelectionRange(selectionStart, selectionEnd);
+      });
+    };
+
+    const getSelection = () => {
+      const el = textareaRef.current;
+      const start = el?.selectionStart ?? value.length;
+      const end = el?.selectionEnd ?? start;
+      return { start, end, selected: value.slice(start, end) };
+    };
+
+    const wrapSelection = (prefix: string, suffix: string, fallback: string) => {
+      const { start, end, selected } = getSelection();
+      const text = selected || fallback;
+      const inserted = `${prefix}${text}${suffix}`;
+      const next = value.slice(0, start) + inserted + value.slice(end);
+      const innerStart = start + prefix.length;
+      replaceSelection(next, innerStart, innerStart + text.length);
+    };
+
+    const insertBlock = (template: string, fallbackSelection?: string) => {
+      const { start, end, selected } = getSelection();
+      const previous = value.slice(0, start);
+      const nextText = value.slice(end);
+      const base = selected || fallbackSelection || template;
+      const block = template.replace("{{text}}", base);
+      const needsLeadingBreak = previous.length > 0 && !previous.endsWith("\n");
+      const needsTrailingBreak = nextText.length > 0 && !nextText.startsWith("\n");
+      const inserted = `${needsLeadingBreak ? "\n" : ""}${block}${needsTrailingBreak ? "\n" : ""}`;
+      const next = previous + inserted + nextText;
+      const contentStart = previous.length + (needsLeadingBreak ? 1 : 0);
+      replaceSelection(next, contentStart, contentStart + block.length);
+    };
+
+    const insertLinePrefix = (prefix: string, fallback: string) => {
+      const { start, end, selected } = getSelection();
+      if (!selected) {
+        insertBlock(`${prefix}${fallback}`);
+        return;
+      }
+      const transformed = selected
+        .split("\n")
+        .map((line) => (line.trim() ? `${prefix}${line}` : line))
+        .join("\n");
+      const next = value.slice(0, start) + transformed + value.slice(end);
+      replaceSelection(next, start, start + transformed.length);
+    };
+
+    const insertLink = () => {
+      const { start, end, selected } = getSelection();
+      const label = selected || "texto do link";
+      const inserted = `[${label}](https://exemplo.com)`;
+      const next = value.slice(0, start) + inserted + value.slice(end);
+      replaceSelection(next, start + 1, start + 1 + label.length);
+    };
+
     return (
-      <div className={cn("relative", className)}>
+      <div className={cn("relative rounded-md border border-input bg-background", className)}>
+        {/* Toolbar Markdown-first: adiciona apenas sintaxe Markdown ao texto salvo, sem HTML bruto. */}
+        <div className="flex flex-wrap items-center gap-1 border-b bg-muted/30 p-2">
+          <Button type="button" variant="ghost" size="sm" className="h-8 px-2" onMouseDown={(e) => e.preventDefault()} onClick={() => wrapSelection("**", "**", "texto importante")} aria-label="Negrito">
+            <Bold className="h-4 w-4" />
+          </Button>
+          <Button type="button" variant="ghost" size="sm" className="h-8 px-2" onMouseDown={(e) => e.preventDefault()} onClick={() => wrapSelection("*", "*", "texto em itálico")} aria-label="Itálico">
+            <Italic className="h-4 w-4" />
+          </Button>
+          <Button type="button" variant="ghost" size="sm" className="h-8 gap-1 px-2" onMouseDown={(e) => e.preventDefault()} onClick={() => insertLinePrefix("## ", "Título")} aria-label="Título">
+            <Heading2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Título</span>
+          </Button>
+          <Button type="button" variant="ghost" size="sm" className="h-8 px-2" onMouseDown={(e) => e.preventDefault()} onClick={() => insertLinePrefix("- ", "item")} aria-label="Lista com marcadores">
+            <List className="h-4 w-4" />
+          </Button>
+          <Button type="button" variant="ghost" size="sm" className="h-8 px-2" onMouseDown={(e) => e.preventDefault()} onClick={() => insertLinePrefix("1. ", "item")} aria-label="Lista numerada">
+            <ListOrdered className="h-4 w-4" />
+          </Button>
+          <Button type="button" variant="ghost" size="sm" className="h-8 gap-1 px-2" onMouseDown={(e) => e.preventDefault()} onClick={() => insertBlock("> Atenção: {{text}}", "descreva aqui o ponto importante.")} aria-label="Atenção ou dica">
+            <Quote className="h-4 w-4" />
+            <span className="hidden sm:inline">Atenção</span>
+          </Button>
+          <Button type="button" variant="ghost" size="sm" className="h-8 px-2" onMouseDown={(e) => e.preventDefault()} onClick={insertLink} aria-label="Link">
+            <Link className="h-4 w-4" />
+          </Button>
+          {onOpenInsertMedia && (
+            <Button type="button" variant="ghost" size="sm" className="h-8 gap-1 px-2 sm:ml-auto" onMouseDown={(e) => e.preventDefault()} onClick={onOpenInsertMedia}>
+              <ImagePlus className="h-4 w-4" />
+              Inserir mídia
+            </Button>
+          )}
+        </div>
+
         <Textarea
           ref={textareaRef}
           value={value}
@@ -190,6 +292,7 @@ export const MediaMentionTextarea = forwardRef<MediaMentionTextareaHandle, Props
           }
           rows={rows}
           placeholder={placeholder}
+          className="rounded-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
         />
 
         {open && (
