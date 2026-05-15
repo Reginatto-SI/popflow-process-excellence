@@ -143,10 +143,12 @@ export type Database = {
           id: string
           mime_type: string
           nome_arquivo: string
+          referencia: string | null
           storage_path: string
           tamanho: number | null
           tipo_arquivo: string
           url: string
+          uso: string
         }
         Insert: {
           base_conhecimento_id: string
@@ -156,10 +158,12 @@ export type Database = {
           id?: string
           mime_type?: string
           nome_arquivo: string
+          referencia?: string | null
           storage_path: string
           tamanho?: number | null
           tipo_arquivo?: string
           url: string
+          uso?: string
         }
         Update: {
           base_conhecimento_id?: string
@@ -169,10 +173,12 @@ export type Database = {
           id?: string
           mime_type?: string
           nome_arquivo?: string
+          referencia?: string | null
           storage_path?: string
           tamanho?: number | null
           tipo_arquivo?: string
           url?: string
+          uso?: string
         }
         Relationships: [
           {

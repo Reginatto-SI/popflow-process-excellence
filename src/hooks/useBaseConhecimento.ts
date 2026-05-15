@@ -27,6 +27,8 @@ export interface KnowledgeAttachment {
   tamanho: number | null;
   storage_path: string;
   url: string;
+  referencia: string | null;
+  uso: "anexo" | "inline";
   criado_por: string;
   created_at: string;
 }

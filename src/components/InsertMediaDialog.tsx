@@ -38,9 +38,11 @@ interface Props {
   existingRefs: string[];
   /** Faz upload do arquivo e devolve a URL pública. */
   uploadFile: (file: File) => Promise<string>;
-  onConfirm: (m: InsertedMedia) => void;
+  onConfirm: (m: InsertedMedia) => void | Promise<void>;
   /** Slugify reaproveitado da página. */
   slugify: (s: string) => string;
+  /** Contexto textual para reaproveitar o mesmo modal em POPs e Base de Conhecimento. */
+  contextLabel?: string;
 }
 
 const acceptByTipo: Record<PopMidiaTipo, string> = {
@@ -73,6 +75,7 @@ export function InsertMediaDialog({
   uploadFile,
   onConfirm,
   slugify,
+  contextLabel = "etapa",
 }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [tipo, setTipo] = useState<PopMidiaTipo>("imagem");
@@ -161,7 +164,7 @@ export function InsertMediaDialog({
     setUploading(true);
     try {
       const url = await uploadFile(file);
-      onConfirm({ tipo, nome: nome.trim(), referencia: finalRef, url });
+      await onConfirm({ tipo, nome: nome.trim(), referencia: finalRef, url });
       onOpenChange(false);
     } catch (err) {
       toast.error(`Falha no upload: ${(err as Error).message}`);
@@ -177,10 +180,10 @@ export function InsertMediaDialog({
     <Dialog open={open} onOpenChange={(v) => !uploading && onOpenChange(v)}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Inserir mídia na etapa</DialogTitle>
+          <DialogTitle>Inserir mídia no {contextLabel}</DialogTitle>
           <DialogDescription>
             Faça upload, cole do clipboard ou arraste um arquivo. Uma referência <code>@slug</code>{" "}
-            será inserida no texto da etapa.
+            será inserida no texto do {contextLabel}.
           </DialogDescription>
         </DialogHeader>
 
