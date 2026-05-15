@@ -17,6 +17,20 @@ export interface KnowledgePopLink {
   titulo: string;
 }
 
+export interface KnowledgeAttachment {
+  id: string;
+  empresa_id: string;
+  base_conhecimento_id: string;
+  nome_arquivo: string;
+  tipo_arquivo: string;
+  mime_type: string;
+  tamanho: number | null;
+  storage_path: string;
+  url: string;
+  criado_por: string;
+  created_at: string;
+}
+
 export interface KnowledgeContent {
   id: string;
   empresa_id: string;
@@ -46,6 +60,7 @@ export interface KnowledgeContent {
   autor: KnowledgeUser | null;
   responsavel: KnowledgeUser | null;
   pop: KnowledgePopLink | null;
+  anexos?: KnowledgeAttachment[];
 }
 
 export interface KnowledgeContentInput {
@@ -78,7 +93,7 @@ export function useKnowledgeContents() {
       const { data, error } = await supabase
         .from("base_conhecimento")
         .select(
-          "*, autor:usuarios!base_conhecimento_autor_id_fkey(id,nome,email), responsavel:usuarios!base_conhecimento_responsavel_id_fkey(id,nome,email), pop:pops(id,titulo)",
+          "*, autor:usuarios!base_conhecimento_autor_id_fkey(id,nome,email), responsavel:usuarios!base_conhecimento_responsavel_id_fkey(id,nome,email), pop:pops(id,titulo), anexos:base_conhecimento_anexos(*)",
         )
         .order("updated_at", { ascending: false });
       if (error) throw error;
@@ -96,6 +111,103 @@ async function currentUserEmpresaId(userId: string) {
   if (error) throw error;
   if (!usuario) throw new Error("Usuário sem empresa");
   return usuario.empresa_id;
+}
+
+export function useKnowledgeAttachments(contentId?: string | null) {
+  return useQuery({
+    enabled: !!contentId,
+    queryKey: ["base-conhecimento-anexos", contentId],
+    queryFn: async (): Promise<KnowledgeAttachment[]> => {
+      // A RLS da tabela de anexos replica a autorização do conteúdo pai e bloqueia acesso cross-tenant.
+      const { data, error } = await supabase
+        .from("base_conhecimento_anexos")
+        .select("*")
+        .eq("base_conhecimento_id", contentId!)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as KnowledgeAttachment[];
+    },
+  });
+}
+
+const attachmentKind = (mimeType: string, fileName: string) => {
+  const extension = fileName.split(".").pop()?.toLowerCase() ?? "";
+  if (mimeType.startsWith("image/")) return "imagem";
+  if (mimeType === "application/pdf" || extension === "pdf") return "pdf";
+  if (["doc", "docx"].includes(extension)) return "documento";
+  if (["xls", "xlsx"].includes(extension)) return "planilha";
+  if (mimeType.startsWith("text/") || extension === "txt") return "texto";
+  return extension || "arquivo";
+};
+
+const safeFileName = (fileName: string) => fileName.replace(/[^A-Za-z0-9._-]/g, "_");
+
+export function useUploadKnowledgeAttachment() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ contentId, file }: { contentId: string; file: File }) => {
+      if (!user) throw new Error("Não autenticado");
+      const empresa_id = await currentUserEmpresaId(user.id);
+      const safeName = safeFileName(file.name);
+      const storage_path = `${empresa_id}/base-conhecimento/${contentId}/${crypto.randomUUID()}-${safeName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("pop-midias")
+        .upload(storage_path, file, { contentType: file.type || "application/octet-stream", upsert: false });
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrl } = supabase.storage.from("pop-midias").getPublicUrl(storage_path);
+      const { data, error } = await supabase
+        .from("base_conhecimento_anexos")
+        .insert({
+          empresa_id,
+          base_conhecimento_id: contentId,
+          nome_arquivo: file.name,
+          tipo_arquivo: attachmentKind(file.type, file.name),
+          mime_type: file.type || "application/octet-stream",
+          tamanho: file.size,
+          storage_path,
+          url: publicUrl.publicUrl,
+          criado_por: user.id,
+        })
+        .select("*")
+        .single();
+      if (error) {
+        await supabase.storage.from("pop-midias").remove([storage_path]);
+        throw error;
+      }
+      return data as KnowledgeAttachment;
+    },
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ["base-conhecimento"] });
+      qc.invalidateQueries({ queryKey: ["base-conhecimento-anexos", variables.contentId] });
+    },
+  });
+}
+
+export function useDeleteKnowledgeAttachment() {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (attachment: KnowledgeAttachment) => {
+      if (attachment.storage_path) {
+        // Remove primeiro do storage para não informar sucesso quando o arquivo público continua acessível.
+        const { error: storageError } = await supabase.storage.from("pop-midias").remove([attachment.storage_path]);
+        if (storageError) {
+          throw new Error(`Não foi possível remover o arquivo do storage: ${storageError.message}`);
+        }
+      }
+
+      const { error } = await supabase.from("base_conhecimento_anexos").delete().eq("id", attachment.id);
+      if (error) throw error;
+    },
+    onSuccess: (_data, attachment) => {
+      qc.invalidateQueries({ queryKey: ["base-conhecimento"] });
+      qc.invalidateQueries({ queryKey: ["base-conhecimento-anexos", attachment.base_conhecimento_id] });
+    },
+  });
 }
 
 export function useCreateKnowledgeContent() {

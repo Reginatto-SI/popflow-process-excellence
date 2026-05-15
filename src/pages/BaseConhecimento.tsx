@@ -1,20 +1,26 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   AlertCircle,
   BookOpen,
   Building2,
   CalendarClock,
+  Download,
   Edit,
+  ExternalLink,
   Eye,
   FileQuestion,
+  FileSpreadsheet,
   FileText,
+  Image,
   Lock,
+  Paperclip,
   Plus,
   Search,
   StickyNote,
   Tag,
   Trash2,
+  Upload,
   UserRound,
   Wrench,
 } from "lucide-react";
@@ -52,13 +58,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import {
   useCreateKnowledgeContent,
+  useDeleteKnowledgeAttachment,
   useDeleteKnowledgeContent,
+  useKnowledgeAttachments,
   useKnowledgeContents,
   useUpdateKnowledgeContent,
+  useUploadKnowledgeAttachment,
+  type KnowledgeAttachment,
   type KnowledgeContent,
   type KnowledgeContentInput,
   type KnowledgeStatus,
@@ -67,6 +78,8 @@ import {
 } from "@/hooks/useBaseConhecimento";
 import { usePops } from "@/hooks/usePops";
 import { supabase } from "@/integrations/supabase/client";
+import { MediaViewer } from "@/components/MediaViewer";
+import type { PopMidiaTipo } from "@/hooks/usePops";
 
 const typeLabel: Record<KnowledgeType, string> = {
   artigo: "Artigo",
@@ -168,160 +181,340 @@ const normalize = (value?: string | null) => (value ?? "").toLowerCase().trim();
 const tagText = (tags: string[]) => tags.join(", ");
 const parseTags = (value: string) => value.split(",").map((tag) => tag.trim()).filter(Boolean);
 
+const MAX_ATTACHMENT_SIZE = 25 * 1024 * 1024;
+const attachmentAccept = "image/*,application/pdf,text/plain,.txt,.doc,.docx,.xls,.xlsx";
+const allowedAttachmentExtensions = ["pdf", "txt", "doc", "docx", "xls", "xlsx"];
+
+const formatFileSize = (size?: number | null) => {
+  if (!size) return "Tamanho não informado";
+  if (size < 1024) return `${size} B`;
+  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+const attachmentIcon = (attachment: Pick<KnowledgeAttachment, "tipo_arquivo" | "mime_type">) => {
+  if (attachment.mime_type.startsWith("image/")) return Image;
+  if (attachment.tipo_arquivo === "planilha") return FileSpreadsheet;
+  return FileText;
+};
+
+const attachmentViewerType = (attachment: KnowledgeAttachment): PopMidiaTipo => (
+  attachment.mime_type.startsWith("image/") ? "imagem" : "documento"
+);
+
 const FormFields = ({
   form,
   onChange,
   pops,
   usuarios,
+  editingId,
+  attachments,
+  attachmentsLoading,
+  attachmentsError,
+  canManageAttachments,
+  onAddAttachment,
+  onRemoveAttachment,
+  attachmentActionPending,
 }: {
   form: KnowledgeContentInput;
   onChange: (patch: Partial<KnowledgeContentInput>) => void;
   pops: { id: string; titulo: string }[];
   usuarios: { id: string; nome: string; email: string }[];
+  editingId?: string | null;
+  attachments: KnowledgeAttachment[];
+  attachmentsLoading: boolean;
+  attachmentsError: boolean;
+  canManageAttachments: boolean;
+  onAddAttachment: (file: File) => void;
+  onRemoveAttachment: (attachment: KnowledgeAttachment) => void;
+  attachmentActionPending: boolean;
 }) => {
   const compatibleStatuses = statusByType[form.tipo];
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [previewAttachment, setPreviewAttachment] = useState<KnowledgeAttachment | null>(null);
+
+  const pickAttachment = (file?: File) => {
+    if (!file) return;
+    const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
+    const accepted = file.type.startsWith("image/") || file.type === "application/pdf" || file.type.startsWith("text/") || allowedAttachmentExtensions.includes(extension);
+    if (!accepted) {
+      toast.error("Tipo de arquivo não aceito para anexos da Base de Conhecimento.");
+      return;
+    }
+    if (file.size > MAX_ATTACHMENT_SIZE) {
+      toast.error("O anexo deve ter até 25 MB.");
+      return;
+    }
+    onAddAttachment(file);
+    if (inputRef.current) inputRef.current.value = "";
+  };
+
+  const openAttachment = (attachment: KnowledgeAttachment) => {
+    // Imagens e PDFs usam o visualizador já existente; documentos de escritório/TXT abrem em nova aba/download externo.
+    if (attachment.mime_type.startsWith("image/") || attachment.mime_type === "application/pdf") {
+      setPreviewAttachment(attachment);
+      return;
+    }
+    window.open(attachment.url, "_blank", "noopener,noreferrer");
+  };
 
   return (
-    <div className="grid max-h-[70vh] gap-4 overflow-y-auto pr-2 md:grid-cols-2">
-    <div className="space-y-2 md:col-span-2">
-      <Label>Título</Label>
-      <Input value={form.titulo} onChange={(e) => onChange({ titulo: e.target.value })} placeholder="Ex.: Como registrar reembolso" />
-    </div>
+    <>
+      <Tabs defaultValue="geral" className="space-y-4">
+        <TabsList className="grid h-auto w-full grid-cols-2 md:grid-cols-4">
+          <TabsTrigger value="geral">Geral</TabsTrigger>
+          <TabsTrigger value="conteudo">Conteúdo</TabsTrigger>
+          <TabsTrigger value="anexos">Anexos</TabsTrigger>
+          <TabsTrigger value="vinculos">Vínculos</TabsTrigger>
+        </TabsList>
 
-    <div className="space-y-2">
-      <Label>Tipo</Label>
-      <Select
-        value={form.tipo}
-        onValueChange={(value) => {
-          const nextType = value as KnowledgeType;
-          // Mantém apenas status compatíveis com o tipo selecionado; se incompatível, volta ao padrão do tipo.
-          onChange({
-            tipo: nextType,
-            status: statusByType[nextType].includes(form.status) ? form.status : defaultStatusByType[nextType],
-          });
-        }}
-      >
-        <SelectTrigger><SelectValue /></SelectTrigger>
-        <SelectContent>
-          <SelectItem value="artigo">Artigo</SelectItem>
-          <SelectItem value="duvida">Dúvida</SelectItem>
-          <SelectItem value="solucao_erro">Solução de erro</SelectItem>
-          <SelectItem value="anotacao">Anotação</SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
+        <div className="max-h-[62vh] overflow-y-auto pr-2">
+          <TabsContent value="geral" className="mt-0 grid gap-4 md:grid-cols-2">
+            <div className="space-y-2 md:col-span-2">
+              <Label>Título</Label>
+              <Input value={form.titulo} onChange={(e) => onChange({ titulo: e.target.value })} placeholder="Ex.: Como registrar reembolso" />
+            </div>
 
-    <div className="space-y-2">
-      <Label>Status</Label>
-      <Select value={form.status} onValueChange={(value) => onChange({ status: value as KnowledgeStatus })}>
-        <SelectTrigger><SelectValue /></SelectTrigger>
-        <SelectContent>
-          {compatibleStatuses.map((status) => (
-            <SelectItem key={status} value={status}>{statusLabel[status]}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+            <div className="space-y-2">
+              <Label>Tipo</Label>
+              <Select
+                value={form.tipo}
+                onValueChange={(value) => {
+                  const nextType = value as KnowledgeType;
+                  // Mantém apenas status compatíveis com o tipo selecionado; se incompatível, volta ao padrão do tipo.
+                  onChange({
+                    tipo: nextType,
+                    status: statusByType[nextType].includes(form.status) ? form.status : defaultStatusByType[nextType],
+                  });
+                }}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="artigo">Artigo</SelectItem>
+                  <SelectItem value="duvida">Dúvida</SelectItem>
+                  <SelectItem value="solucao_erro">Solução de erro</SelectItem>
+                  <SelectItem value="anotacao">Anotação</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-    <div className="space-y-2">
-      <Label>Visibilidade</Label>
-      <Select value={form.visibilidade} onValueChange={(value) => onChange({ visibilidade: value as KnowledgeVisibility })}>
-        <SelectTrigger><SelectValue /></SelectTrigger>
-        <SelectContent>
-          <SelectItem value="empresa">Empresa</SelectItem>
-          <SelectItem value="privado">Privado</SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
+            <div className="space-y-2">
+              <Label>Status</Label>
+              <Select value={form.status} onValueChange={(value) => onChange({ status: value as KnowledgeStatus })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {compatibleStatuses.map((status) => (
+                    <SelectItem key={status} value={status}>{statusLabel[status]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-    <div className="space-y-2">
-      <Label>Responsável</Label>
-      <Select value={form.responsavel_id ?? "sem_responsavel"} onValueChange={(value) => onChange({ responsavel_id: value === "sem_responsavel" ? null : value })}>
-        <SelectTrigger><SelectValue placeholder="Responsável" /></SelectTrigger>
-        <SelectContent>
-          <SelectItem value="sem_responsavel">Sem responsável</SelectItem>
-          {usuarios.map((usuario) => (
-            <SelectItem key={usuario.id} value={usuario.id}>{usuario.nome || usuario.email}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+            <div className="space-y-2">
+              <Label>Visibilidade</Label>
+              <Select value={form.visibilidade} onValueChange={(value) => onChange({ visibilidade: value as KnowledgeVisibility })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="empresa">Empresa</SelectItem>
+                  <SelectItem value="privado">Privado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-    <div className="space-y-2">
-      <Label>Categoria</Label>
-      <Input value={form.categoria} onChange={(e) => onChange({ categoria: e.target.value })} placeholder="Ex.: Operações" />
-    </div>
+            <div className="space-y-2">
+              <Label>Responsável</Label>
+              <Select value={form.responsavel_id ?? "sem_responsavel"} onValueChange={(value) => onChange({ responsavel_id: value === "sem_responsavel" ? null : value })}>
+                <SelectTrigger><SelectValue placeholder="Responsável" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sem_responsavel">Sem responsável</SelectItem>
+                  {usuarios.map((usuario) => (
+                    <SelectItem key={usuario.id} value={usuario.id}>{usuario.nome || usuario.email}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-    <div className="space-y-2">
-      <Label>Departamento</Label>
-      <Input value={form.departamento} onChange={(e) => onChange({ departamento: e.target.value })} placeholder="Ex.: Suporte" />
-    </div>
+            <div className="space-y-2">
+              <Label>Categoria</Label>
+              <Input value={form.categoria} onChange={(e) => onChange({ categoria: e.target.value })} placeholder="Ex.: Operações" />
+            </div>
 
-    <div className="space-y-2 md:col-span-2">
-      <Label>Tags</Label>
-      <Input value={tagText(form.tags)} onChange={(e) => onChange({ tags: parseTags(e.target.value) })} placeholder="crm, chamado, reembolso" />
-    </div>
+            <div className="space-y-2">
+              <Label>Departamento</Label>
+              <Input value={form.departamento} onChange={(e) => onChange({ departamento: e.target.value })} placeholder="Ex.: Suporte" />
+            </div>
 
-    <div className="space-y-2 md:col-span-2">
-      <Label>Descrição / resumo</Label>
-      <Textarea value={form.resumo} onChange={(e) => onChange({ resumo: e.target.value })} placeholder="Resumo curto para a listagem" />
-    </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>Tags</Label>
+              <Input value={tagText(form.tags)} onChange={(e) => onChange({ tags: parseTags(e.target.value) })} placeholder="crm, chamado, reembolso" />
+            </div>
+          </TabsContent>
 
-    <div className="space-y-2 md:col-span-2">
-      <Label>{form.tipo === "anotacao" ? "Conteúdo da anotação" : "Conteúdo principal"}</Label>
-      <Textarea className="min-h-28" value={form.conteudo} onChange={(e) => onChange({ conteudo: e.target.value })} placeholder="Registre o conteúdo consultivo ou operacional" />
-      {form.tipo === "anotacao" && <p className="text-xs text-muted-foreground">Anotações privadas aparecem apenas para o autor; compartilhadas usam visibilidade Empresa.</p>}
-    </div>
+          <TabsContent value="conteudo" className="mt-0 grid gap-4 md:grid-cols-2">
+            {form.tipo === "artigo" && (
+              <>
+                <div className="space-y-2 md:col-span-2">
+                  <Label>Descrição / resumo</Label>
+                  <Textarea value={form.resumo} onChange={(e) => onChange({ resumo: e.target.value })} placeholder="Resumo curto para a listagem" />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label>Conteúdo principal</Label>
+                  <Textarea className="min-h-40" value={form.conteudo} onChange={(e) => onChange({ conteudo: e.target.value })} placeholder="Registre o conteúdo consultivo ou operacional" />
+                </div>
+              </>
+            )}
 
-    {form.tipo === "duvida" && (
-      <>
-        <div className="space-y-2 md:col-span-2">
-          <Label>Pergunta</Label>
-          <Textarea value={form.pergunta} onChange={(e) => onChange({ pergunta: e.target.value })} placeholder="Qual é a dúvida recorrente?" />
+            {form.tipo === "duvida" && (
+              <>
+                <div className="space-y-2 md:col-span-2">
+                  <Label>Pergunta</Label>
+                  <Textarea value={form.pergunta} onChange={(e) => onChange({ pergunta: e.target.value })} placeholder="Qual é a dúvida recorrente?" />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label>Resposta</Label>
+                  <Textarea className="min-h-32" value={form.resposta} onChange={(e) => onChange({ resposta: e.target.value })} placeholder="Resposta ou orientação validada" />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label>Observações</Label>
+                  <Textarea value={form.observacoes} onChange={(e) => onChange({ observacoes: e.target.value })} />
+                </div>
+              </>
+            )}
+
+            {form.tipo === "solucao_erro" && (
+              <>
+                <div className="space-y-2">
+                  <Label>Sistema relacionado</Label>
+                  <Input value={form.sistema_relacionado} onChange={(e) => onChange({ sistema_relacionado: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Erro relacionado</Label>
+                  <Input value={form.erro_relacionado} onChange={(e) => onChange({ erro_relacionado: e.target.value })} />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label>Causa</Label>
+                  <Textarea value={form.causa} onChange={(e) => onChange({ causa: e.target.value })} />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label>Solução</Label>
+                  <Textarea className="min-h-32" value={form.solucao} onChange={(e) => onChange({ solucao: e.target.value })} />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label>Observações</Label>
+                  <Textarea value={form.observacoes} onChange={(e) => onChange({ observacoes: e.target.value })} />
+                </div>
+              </>
+            )}
+
+            {form.tipo === "anotacao" && (
+              <>
+                <div className="space-y-2 md:col-span-2">
+                  <Label>Conteúdo da anotação</Label>
+                  <Textarea className="min-h-40" value={form.conteudo} onChange={(e) => onChange({ conteudo: e.target.value })} placeholder="Registre a anotação operacional" />
+                  <p className="text-xs text-muted-foreground">Anotações privadas aparecem apenas para o autor; compartilhadas usam visibilidade Empresa.</p>
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label>Observações</Label>
+                  <Textarea value={form.observacoes} onChange={(e) => onChange({ observacoes: e.target.value })} />
+                </div>
+              </>
+            )}
+          </TabsContent>
+
+          <TabsContent value="anexos" className="mt-0 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-muted/20 p-3">
+              <div>
+                <p className="text-sm font-medium">Anexos do conteúdo</p>
+                <p className="text-xs text-muted-foreground">Arquivos compactos vinculados ao registro, sem mídia inline no texto.</p>
+                <p className="text-xs text-muted-foreground">Evite anexar documentos sensíveis nesta versão. Os anexos usam o bucket atual de mídia do sistema.</p>
+              </div>
+              {canManageAttachments && editingId && (
+                <>
+                  <input
+                    ref={inputRef}
+                    type="file"
+                    className="hidden"
+                    accept={attachmentAccept}
+                    onChange={(e) => pickAttachment(e.target.files?.[0])}
+                  />
+                  <Button type="button" size="sm" variant="outline" onClick={() => inputRef.current?.click()} disabled={attachmentActionPending}>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Adicionar anexo
+                  </Button>
+                </>
+              )}
+            </div>
+
+            {!editingId && (
+              <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+                Salve o conteúdo para habilitar anexos. Após salvar, esta aba ficará disponível para upload de arquivos.
+              </div>
+            )}
+
+            {editingId && attachmentsLoading && <div className="rounded-lg border p-4 text-sm text-muted-foreground">Carregando anexos...</div>}
+            {editingId && attachmentsError && <div className="rounded-lg border border-destructive/40 p-4 text-sm text-destructive">Não foi possível carregar os anexos.</div>}
+            {editingId && !attachmentsLoading && !attachmentsError && attachments.length === 0 && (
+              <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">Nenhum anexo adicionado ainda.</div>
+            )}
+            {editingId && !attachmentsLoading && !attachmentsError && attachments.length > 0 && (
+              <div className="grid gap-2">
+                {attachments.map((attachment) => {
+                  const Icon = attachmentIcon(attachment);
+                  return (
+                    <div key={attachment.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-background p-3">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground"><Icon className="h-4 w-4" /></div>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium">{attachment.nome_arquivo}</p>
+                          <p className="text-xs text-muted-foreground">{attachment.tipo_arquivo.toUpperCase()} • {formatFileSize(attachment.tamanho)}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button type="button" variant="ghost" size="sm" onClick={() => openAttachment(attachment)}>
+                          <ExternalLink className="mr-2 h-4 w-4" />Abrir
+                        </Button>
+                        <Button type="button" variant="ghost" size="icon" asChild>
+                          <a href={attachment.url} target="_blank" rel="noreferrer" download aria-label="Baixar anexo"><Download className="h-4 w-4" /></a>
+                        </Button>
+                        {canManageAttachments && (
+                          <Button type="button" variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => onRemoveAttachment(attachment)} disabled={attachmentActionPending} aria-label="Remover anexo">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="vinculos" className="mt-0 space-y-4">
+            <div className="space-y-2">
+              <Label>POP relacionado</Label>
+              <Select value={form.pop_id ?? "sem_pop"} onValueChange={(value) => onChange({ pop_id: value === "sem_pop" ? null : value, etapa_id: null })}>
+                <SelectTrigger><SelectValue placeholder="POP relacionado" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sem_pop">Sem POP vinculado</SelectItem>
+                  {pops.map((pop) => <SelectItem key={pop.id} value={pop.id}>{pop.titulo}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+              O vínculo com etapa específica foi mantido fora da UI nesta etapa para evitar selecionar etapas sem carregar a versão correta do POP.
+            </div>
+          </TabsContent>
         </div>
-        <div className="space-y-2 md:col-span-2">
-          <Label>Resposta</Label>
-          <Textarea value={form.resposta} onChange={(e) => onChange({ resposta: e.target.value })} placeholder="Resposta ou orientação validada" />
-        </div>
-      </>
-    )}
+      </Tabs>
 
-    {form.tipo === "solucao_erro" && (
-      <>
-        <div className="space-y-2">
-          <Label>Sistema relacionado</Label>
-          <Input value={form.sistema_relacionado} onChange={(e) => onChange({ sistema_relacionado: e.target.value })} />
-        </div>
-        <div className="space-y-2">
-          <Label>Erro relacionado</Label>
-          <Input value={form.erro_relacionado} onChange={(e) => onChange({ erro_relacionado: e.target.value })} />
-        </div>
-        <div className="space-y-2 md:col-span-2">
-          <Label>Causa</Label>
-          <Textarea value={form.causa} onChange={(e) => onChange({ causa: e.target.value })} />
-        </div>
-        <div className="space-y-2 md:col-span-2">
-          <Label>Solução</Label>
-          <Textarea value={form.solucao} onChange={(e) => onChange({ solucao: e.target.value })} />
-        </div>
-        <div className="space-y-2 md:col-span-2">
-          <Label>Observações</Label>
-          <Textarea value={form.observacoes} onChange={(e) => onChange({ observacoes: e.target.value })} />
-        </div>
-      </>
-    )}
-
-    <div className="space-y-2 md:col-span-2">
-      <Label>Vínculo opcional com POP</Label>
-      <Select value={form.pop_id ?? "sem_pop"} onValueChange={(value) => onChange({ pop_id: value === "sem_pop" ? null : value })}>
-        <SelectTrigger><SelectValue placeholder="POP relacionado" /></SelectTrigger>
-        <SelectContent>
-          <SelectItem value="sem_pop">Sem POP vinculado</SelectItem>
-          {pops.map((pop) => <SelectItem key={pop.id} value={pop.id}>{pop.titulo}</SelectItem>)}
-        </SelectContent>
-      </Select>
-    </div>
-  </div>
+      <MediaViewer
+        open={!!previewAttachment}
+        onOpenChange={(open) => !open && setPreviewAttachment(null)}
+        tipo={previewAttachment ? attachmentViewerType(previewAttachment) : null}
+        url={previewAttachment?.url ?? null}
+        nome={previewAttachment?.nome_arquivo ?? "Anexo"}
+      />
+    </>
   );
 };
 
@@ -354,6 +547,8 @@ const BaseConhecimento = () => {
   const createContent = useCreateKnowledgeContent();
   const updateContent = useUpdateKnowledgeContent();
   const deleteContent = useDeleteKnowledgeContent();
+  const uploadAttachment = useUploadKnowledgeAttachment();
+  const deleteAttachment = useDeleteKnowledgeAttachment();
 
   const { data: usuarios = [] } = useQuery({
     queryKey: ["usuarios-base-conhecimento"],
@@ -386,6 +581,10 @@ const BaseConhecimento = () => {
   const [viewing, setViewing] = useState<KnowledgeContent | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<KnowledgeContent | null>(null);
   const [form, setForm] = useState<KnowledgeContentInput>(emptyForm);
+
+  const canManageKnowledge = ["admin", "gestor", "criador", "developer"].includes(perfilAtual?.role ?? "");
+  const canEditCurrentContent = !!editing && (editing.autor_id === user?.id || canManageKnowledge);
+  const { data: editingAttachments = [], isLoading: attachmentsLoading, isError: attachmentsError } = useKnowledgeAttachments(editing?.id);
 
   const categorias = useMemo(() => ["todas", ...Array.from(new Set(contents.map((item) => item.categoria).filter(Boolean)))], [contents]);
   const departamentos = useMemo(() => ["todos", ...Array.from(new Set(contents.map((item) => item.departamento).filter(Boolean)))], [contents]);
@@ -454,6 +653,26 @@ const BaseConhecimento = () => {
     setFormOpen(true);
   };
 
+  const addAttachment = async (file: File) => {
+    if (!editing) return;
+    try {
+      // A permissão visual acompanha autor/perfis de gestão; a RLS mantém a autorização efetiva no banco.
+      await uploadAttachment.mutateAsync({ contentId: editing.id, file });
+      toast.success("Anexo adicionado.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível adicionar o anexo.");
+    }
+  };
+
+  const removeAttachment = async (attachment: KnowledgeAttachment) => {
+    try {
+      await deleteAttachment.mutateAsync(attachment);
+      toast.success("Anexo removido.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível remover o anexo.");
+    }
+  };
+
   const saveForm = async () => {
     if (!form.titulo.trim()) {
       toast.error("Informe o título do conteúdo.");
@@ -466,11 +685,25 @@ const BaseConhecimento = () => {
       if (editing) {
         await updateContent.mutateAsync({ id: editing.id, input });
         toast.success("Conteúdo atualizado.");
+        setFormOpen(false);
       } else {
-        await createContent.mutateAsync(input);
-        toast.success("Conteúdo criado.");
+        const createdId = await createContent.mutateAsync(input);
+        // Mantém o modal aberto já em modo edição para permitir anexar arquivos ao conteúdo recém-criado.
+        setEditing({
+          ...input,
+          id: createdId,
+          empresa_id: "",
+          autor_id: user?.id ?? "",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          published_at: input.status === "publicado" ? new Date().toISOString() : null,
+          autor: null,
+          responsavel: null,
+          pop: null,
+          anexos: [],
+        });
+        toast.success("Conteúdo criado. Você já pode adicionar anexos.");
       }
-      setFormOpen(false);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Não foi possível salvar o conteúdo.");
     }
@@ -607,8 +840,7 @@ const BaseConhecimento = () => {
 
           {!isLoading && !isError && filtered.map((item) => {
             const Icon = typeIcon[item.tipo];
-            const canManage = ["admin", "gestor", "criador", "developer"].includes(perfilAtual?.role ?? "");
-            const canEdit = item.autor_id === user?.id || canManage;
+            const canEdit = item.autor_id === user?.id || canManageKnowledge;
             const canDelete = canEdit;
             const preview = item.resumo || item.conteudo || item.pergunta || item.solucao || "Sem resumo informado.";
             return (
@@ -627,6 +859,7 @@ const BaseConhecimento = () => {
                         <span className="inline-flex items-center gap-1.5"><UserRound className="h-3.5 w-3.5" />{item.responsavel?.nome || item.autor?.nome || "Sem responsável"}</span>
                         <span className="inline-flex items-center gap-1.5"><CalendarClock className="h-3.5 w-3.5" />Atualizado em {formatDate(item.updated_at)}</span>
                         {item.pop && <span className="inline-flex items-center gap-1.5"><BookOpen className="h-3.5 w-3.5" />Vinculado ao POP: {item.pop.titulo}</span>}
+                        {(item.anexos?.length ?? 0) > 0 && <span className="inline-flex items-center gap-1.5"><Paperclip className="h-3.5 w-3.5" />{item.anexos?.length} anexos</span>}
                       </div>
                       {item.tags.length > 0 && <div className="flex flex-wrap gap-1.5">{item.tags.map((tag) => <Badge key={tag} variant="secondary" className="text-[11px]">#{tag}</Badge>)}</div>}
                     </div>
@@ -652,7 +885,20 @@ const BaseConhecimento = () => {
             <DialogTitle>{editing ? "Editar conteúdo" : "Novo conteúdo"}</DialogTitle>
             <DialogDescription>Cadastro compacto da Base de Conhecimento, mantendo todos os tipos em um único módulo.</DialogDescription>
           </DialogHeader>
-          <FormFields form={form} onChange={(patch) => setForm((current) => ({ ...current, ...patch }))} pops={pops.map((pop) => ({ id: pop.id, titulo: pop.titulo }))} usuarios={usuarios} />
+          <FormFields
+            form={form}
+            onChange={(patch) => setForm((current) => ({ ...current, ...patch }))}
+            pops={pops.map((pop) => ({ id: pop.id, titulo: pop.titulo }))}
+            usuarios={usuarios}
+            editingId={editing?.id}
+            attachments={editingAttachments}
+            attachmentsLoading={attachmentsLoading}
+            attachmentsError={attachmentsError}
+            canManageAttachments={canEditCurrentContent}
+            onAddAttachment={addAttachment}
+            onRemoveAttachment={removeAttachment}
+            attachmentActionPending={uploadAttachment.isPending || deleteAttachment.isPending}
+          />
           <DialogFooter>
             <Button variant="outline" onClick={() => setFormOpen(false)}>Cancelar</Button>
             <Button onClick={saveForm} disabled={createContent.isPending || updateContent.isPending}>Salvar</Button>
@@ -678,6 +924,21 @@ const BaseConhecimento = () => {
                 {viewing.causa && <p><strong>Causa:</strong> {viewing.causa}</p>}
                 {viewing.solucao && <p><strong>Solução:</strong> {viewing.solucao}</p>}
                 {viewing.observacoes && <p><strong>Observações:</strong> {viewing.observacoes}</p>}
+                {(viewing.anexos?.length ?? 0) > 0 && (
+                  <div className="space-y-2 rounded-lg border bg-muted/20 p-3">
+                    <p className="font-medium">Anexos</p>
+                    <div className="flex flex-wrap gap-2">
+                      {viewing.anexos?.map((attachment) => (
+                        <Button key={attachment.id} asChild variant="outline" size="sm" className="h-auto gap-2 py-2">
+                          <a href={attachment.url} target="_blank" rel="noreferrer">
+                            <Paperclip className="h-4 w-4" />
+                            <span className="max-w-44 truncate">{attachment.nome_arquivo}</span>
+                          </a>
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </>
           )}
