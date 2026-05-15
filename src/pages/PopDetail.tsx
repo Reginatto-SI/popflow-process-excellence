@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { MediaViewer } from "@/components/MediaViewer";
+import { renderMarkdownPreview } from "@/lib/markdownPreview";
 import { useToast } from "@/hooks/use-toast";
 import { usePop, type PopMidiaTipo, type PopStatus, type PopMidiaRow, type PopEtapaRow } from "@/hooks/usePops";
 import { useStartExecucao } from "@/hooks/useExecucoes";
@@ -33,9 +34,6 @@ const mediaIconByType: Record<PopMidiaTipo, ReactNode> = {
   documento: <FileText className="h-3 w-3" />,
 };
 
-// Regex permite letras (incl. acentos), dígitos, _ e -. Cobre @Sintegra, @midia1, @imagem1.
-const REF_REGEX = /@([A-Za-zÀ-ÿ0-9_-]+)/g;
-
 const PopDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -54,40 +52,6 @@ const PopDetail = () => {
   const totalMin = etapas.reduce((acc, e) => acc + Number(e.tempo_estimado.replace(/\D/g, "") || 0), 0);
 
   const openMidia = (m: PopMidiaRow) => setViewer({ open: true, midia: m });
-
-  const renderInline = (descricao: string, midiasDaEtapa: PopMidiaRow[]) => {
-    if (!descricao) return null;
-    const matches = [...descricao.matchAll(REF_REGEX)];
-    if (matches.length === 0) return descricao;
-    const parts: ReactNode[] = [];
-    let cursor = 0;
-    matches.forEach((match, idx) => {
-      const token = match[0]; // ex: "@Sintegra"
-      const ref = match[1];   // ex: "Sintegra" — preservado (case-sensitive, sem mexer)
-      const start = match.index ?? 0;
-      const end = start + token.length;
-      if (start > cursor) parts.push(descricao.slice(cursor, start));
-      // Lookup: primeiro na etapa, depois fallback em todas as mídias do POP
-      const m = midiasDaEtapa.find((x) => x.referencia === ref) ?? midias.find((x) => x.referencia === ref);
-      if (!m) {
-        parts.push(token);
-      } else {
-        parts.push(
-          <button
-            key={`${ref}-${idx}`}
-            type="button"
-            onClick={() => openMidia(m)}
-            className="mx-0.5 inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/15 px-2 py-0.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/25"
-          >
-            {mediaIconByType[m.tipo]}{token}
-          </button>
-        );
-      }
-      cursor = end;
-    });
-    if (cursor < descricao.length) parts.push(descricao.slice(cursor));
-    return parts;
-  };
 
   // MVP: permitimos iniciar execução também em rascunho — comportamento temporário.
   // Quando o fluxo de revisão/publicação estiver pronto, restringir para 'publicado'.
@@ -164,6 +128,11 @@ const PopDetail = () => {
             {etapas.length === 0 && <Card><CardContent className="p-6 text-sm text-muted-foreground">Nenhuma etapa cadastrada.</CardContent></Card>}
             {etapas.map((etapa: PopEtapaRow) => {
               const midiasDaEtapa = midias.filter((m) => m.etapa_id === etapa.id);
+              const porReferencia = new Map<string, PopMidiaRow>();
+              [...midiasDaEtapa, ...midias].forEach((m) => {
+                if (!porReferencia.has(m.referencia)) porReferencia.set(m.referencia, m);
+              });
+              const midiasParaDescricao = [...porReferencia.values()];
               return (
                 <Card key={etapa.id}>
                   <CardHeader className="pb-2">
@@ -173,7 +142,10 @@ const PopDetail = () => {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3 text-sm">
-                    <p className="text-muted-foreground whitespace-pre-wrap">{renderInline(etapa.descricao, midiasDaEtapa)}</p>
+                    {/* Reutiliza o preview Markdown seguro do fluxo de execução/criação: sem dangerouslySetInnerHTML, mantendo HTML como texto e mídias como chips clicáveis. */}
+                    <div className="space-y-4 text-muted-foreground">
+                      {renderMarkdownPreview(etapa.descricao, midiasParaDescricao, openMidia)}
+                    </div>
                     <div className="grid gap-2 md:grid-cols-3">
                       <div className="rounded-md border bg-muted/30 p-2"><p className="text-xs font-medium text-muted-foreground">Pré-requisito</p><p>{etapa.pre_requisito || "—"}</p></div>
                       <div className="rounded-md border bg-emerald-50/40 p-2"><p className="text-xs font-medium text-muted-foreground">Resultado esperado</p><p>{etapa.resultado_esperado || "—"}</p></div>

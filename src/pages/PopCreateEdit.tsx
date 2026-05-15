@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowDown, ArrowUp, Building2, CheckCircle2, ChevronDown, ChevronRight, Circle, Eye, FileText, Image, Info, ListChecks, Mic, Plus, Shield, Trash2, User, Video, X } from "lucide-react";
 
 import { AppLayout } from "@/components/AppLayout";
@@ -117,6 +118,34 @@ const PopCreateEdit = () => {
   const { data: popData, isLoading } = usePop(id);
   const createPop = useCreatePop();
   const updatePop = useUpdatePop();
+  const { user } = useAuth();
+
+  const { data: perfilUsuarioLogado } = useQuery({
+    enabled: !!user?.id && !isEdit,
+    queryKey: ["perfil", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("usuarios")
+        .select("nome")
+        .eq("id", user!.id)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  const nomeResponsavelUsuarioLogado = useMemo(() => {
+    const metadata = user?.user_metadata ?? {};
+    return (
+      perfilUsuarioLogado?.nome?.trim() ||
+      (typeof metadata.nome === "string" ? metadata.nome.trim() : "") ||
+      (typeof metadata.name === "string" ? metadata.name.trim() : "") ||
+      (typeof metadata.full_name === "string" ? metadata.full_name.trim() : "") ||
+      user?.email?.trim() ||
+      ""
+    );
+  }, [perfilUsuarioLogado?.nome, user?.email, user?.user_metadata]);
+
+  const responsavelEditadoPeloUsuarioRef = useRef(false);
 
   const [activeTab, setActiveTab] = useState<TabKey>("informacoes");
   const [titulo, setTitulo] = useState("");
@@ -176,6 +205,12 @@ const PopCreateEdit = () => {
       };
     }));
   }, [isEdit, popData]);
+
+  useEffect(() => {
+    // Preenche somente novos POPs com o usuário logado; edição preserva o responsável salvo e o campo continua editável.
+    if (isEdit || responsavelEditadoPeloUsuarioRef.current || responsavel.trim() || !nomeResponsavelUsuarioLogado) return;
+    setResponsavel(nomeResponsavelUsuarioLogado);
+  }, [isEdit, nomeResponsavelUsuarioLogado, responsavel]);
 
   const versaoNumero = popData?.versao_ativa?.numero ?? "v1.0";
   const versaoStatus = popData?.versao_ativa?.status ?? "rascunho";
@@ -392,8 +427,6 @@ const PopCreateEdit = () => {
     })),
   });
 
-  const { user } = useAuth();
-
   /**
    * Upload de arquivo para o bucket `pop-midias`.
    * Path: {empresa_id}/{pop_id ou _new}/{uid}-{nome}
@@ -532,7 +565,13 @@ const PopCreateEdit = () => {
                   </div>
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2 font-semibold text-foreground"><User className="h-4 w-4 text-muted-foreground" />Responsável</Label>
-                    <Input value={responsavel} onChange={(e) => setResponsavel(e.target.value)} />
+                    <Input
+                      value={responsavel}
+                      onChange={(e) => {
+                        responsavelEditadoPeloUsuarioRef.current = true;
+                        setResponsavel(e.target.value);
+                      }}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2 font-semibold text-foreground"><Eye className="h-4 w-4 text-muted-foreground" />Visibilidade</Label>
