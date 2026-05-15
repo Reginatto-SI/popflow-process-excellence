@@ -1,26 +1,24 @@
 import { useMemo, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertCircle,
   BookOpen,
   Building2,
   CalendarClock,
-  Download,
+  CircleInfo,
   Edit,
-  ExternalLink,
   Eye,
   FileQuestion,
-  FileSpreadsheet,
   FileText,
   Image,
+  ImagePlus,
+  Link as LinkIcon,
   Lock,
-  Paperclip,
   Plus,
   Search,
   StickyNote,
   Tag,
   Trash2,
-  Upload,
   UserRound,
   Wrench,
 } from "lucide-react";
@@ -63,12 +61,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import {
   useCreateKnowledgeContent,
-  useDeleteKnowledgeAttachment,
   useDeleteKnowledgeContent,
-  useKnowledgeAttachments,
   useKnowledgeContents,
   useUpdateKnowledgeContent,
-  useUploadKnowledgeAttachment,
   type KnowledgeAttachment,
   type KnowledgeContent,
   type KnowledgeContentInput,
@@ -78,8 +73,11 @@ import {
 } from "@/hooks/useBaseConhecimento";
 import { usePops } from "@/hooks/usePops";
 import { supabase } from "@/integrations/supabase/client";
+import { MediaMentionTextarea, type MediaMentionTextareaHandle } from "@/components/MediaMentionTextarea";
+import { InsertMediaDialog, type InsertedMedia } from "@/components/InsertMediaDialog";
 import { MediaViewer } from "@/components/MediaViewer";
 import type { PopMidiaTipo } from "@/hooks/usePops";
+import { renderMarkdownPreview } from "@/lib/markdownPreview";
 
 const typeLabel: Record<KnowledgeType, string> = {
   artigo: "Artigo",
@@ -181,208 +179,271 @@ const normalize = (value?: string | null) => (value ?? "").toLowerCase().trim();
 const tagText = (tags: string[]) => tags.join(", ");
 const parseTags = (value: string) => value.split(",").map((tag) => tag.trim()).filter(Boolean);
 
-const MAX_ATTACHMENT_SIZE = 25 * 1024 * 1024;
-const attachmentAccept = "image/*,application/pdf,text/plain,.txt,.doc,.docx,.xls,.xlsx";
-const allowedAttachmentExtensions = ["pdf", "txt", "doc", "docx", "xls", "xlsx"];
 
-const formatFileSize = (size?: number | null) => {
-  if (!size) return "Tamanho não informado";
-  if (size < 1024) return `${size} B`;
-  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
-  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+const slugifyRef = (s: string): string =>
+  s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^[-_]+|[-_]+$/g, "");
+
+type KnowledgeInlineMedia = {
+  uid: string;
+  id?: string;
+  tipo: PopMidiaTipo;
+  nome: string;
+  referencia: string;
+  url: string;
+  storage_path: string;
+  mime_type: string;
+  tamanho: number | null;
+  persisted: boolean;
 };
 
-const attachmentIcon = (attachment: Pick<KnowledgeAttachment, "tipo_arquivo" | "mime_type">) => {
-  if (attachment.mime_type.startsWith("image/")) return Image;
-  if (attachment.tipo_arquivo === "planilha") return FileSpreadsheet;
-  return FileText;
-};
+type UploadedInlineAsset = Pick<KnowledgeInlineMedia, "url" | "storage_path" | "mime_type" | "tamanho">;
 
-const attachmentViewerType = (attachment: KnowledgeAttachment): PopMidiaTipo => (
-  attachment.mime_type.startsWith("image/") ? "imagem" : "documento"
-);
+const uid = () => Math.random().toString(36).slice(2, 10);
+
+const inlineMediaFromAttachment = (attachment: KnowledgeAttachment): KnowledgeInlineMedia | null => {
+  if (!attachment.referencia) return null;
+  return {
+    uid: attachment.id,
+    id: attachment.id,
+    tipo: attachment.tipo_arquivo === "audio" || attachment.tipo_arquivo === "video" || attachment.tipo_arquivo === "documento" || attachment.tipo_arquivo === "imagem"
+      ? attachment.tipo_arquivo
+      : attachment.mime_type.startsWith("image/")
+        ? "imagem"
+        : "documento",
+    nome: attachment.nome_arquivo,
+    referencia: attachment.referencia,
+    url: attachment.url,
+    storage_path: attachment.storage_path,
+    mime_type: attachment.mime_type,
+    tamanho: attachment.tamanho,
+    persisted: true,
+  };
+};
 
 const FormFields = ({
   form,
   onChange,
   pops,
   usuarios,
-  editingId,
-  attachments,
-  attachmentsLoading,
-  attachmentsError,
-  canManageAttachments,
-  onAddAttachment,
-  onRemoveAttachment,
-  attachmentActionPending,
+  inlineMedia,
+  uploadInlineFile,
+  onAddInlineMedia,
 }: {
   form: KnowledgeContentInput;
   onChange: (patch: Partial<KnowledgeContentInput>) => void;
   pops: { id: string; titulo: string }[];
   usuarios: { id: string; nome: string; email: string }[];
-  editingId?: string | null;
-  attachments: KnowledgeAttachment[];
-  attachmentsLoading: boolean;
-  attachmentsError: boolean;
-  canManageAttachments: boolean;
-  onAddAttachment: (file: File) => void;
-  onRemoveAttachment: (attachment: KnowledgeAttachment) => void;
-  attachmentActionPending: boolean;
+  inlineMedia: KnowledgeInlineMedia[];
+  uploadInlineFile: (file: File) => Promise<UploadedInlineAsset>;
+  onAddInlineMedia: (media: KnowledgeInlineMedia) => Promise<void> | void;
 }) => {
   const compatibleStatuses = statusByType[form.tipo];
-  const inputRef = useRef<HTMLInputElement | null>(null);
-  const [previewAttachment, setPreviewAttachment] = useState<KnowledgeAttachment | null>(null);
+  const textareaRefs = useRef<Map<string, MediaMentionTextareaHandle | null>>(new Map());
+  const lastUploadedAssetRef = useRef<UploadedInlineAsset | null>(null);
+  const [insertDialog, setInsertDialog] = useState<{ field: keyof KnowledgeContentInput; file: File | null } | null>(null);
+  const [previewField, setPreviewField] = useState<{ label: string; value: string } | null>(null);
+  const [previewMedia, setPreviewMedia] = useState<KnowledgeInlineMedia | null>(null);
 
-  const pickAttachment = (file?: File) => {
-    if (!file) return;
-    const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
-    const accepted = file.type.startsWith("image/") || file.type === "application/pdf" || file.type.startsWith("text/") || allowedAttachmentExtensions.includes(extension);
-    if (!accepted) {
-      toast.error("Tipo de arquivo não aceito para anexos da Base de Conhecimento.");
-      return;
-    }
-    if (file.size > MAX_ATTACHMENT_SIZE) {
-      toast.error("O anexo deve ter até 25 MB.");
-      return;
-    }
-    onAddAttachment(file);
-    if (inputRef.current) inputRef.current.value = "";
+  const openInsertDialog = (field: keyof KnowledgeContentInput, file: File | null = null) => {
+    setInsertDialog({ field, file });
   };
 
-  const openAttachment = (attachment: KnowledgeAttachment) => {
-    // Imagens e PDFs usam o visualizador já existente; documentos de escritório/TXT abrem em nova aba/download externo.
-    if (attachment.mime_type.startsWith("image/") || attachment.mime_type === "application/pdf") {
-      setPreviewAttachment(attachment);
-      return;
-    }
-    window.open(attachment.url, "_blank", "noopener,noreferrer");
+  const uploadFileForDialog = async (file: File) => {
+    const asset = await uploadInlineFile(file);
+    lastUploadedAssetRef.current = asset;
+    return asset.url;
+  };
+
+  const handleInsertMediaConfirm = async (media: InsertedMedia) => {
+    if (!insertDialog || !lastUploadedAssetRef.current) return;
+    const nextMedia: KnowledgeInlineMedia = {
+      uid: uid(),
+      tipo: media.tipo,
+      nome: media.nome,
+      referencia: media.referencia,
+      url: media.url,
+      storage_path: lastUploadedAssetRef.current.storage_path,
+      mime_type: lastUploadedAssetRef.current.mime_type,
+      tamanho: lastUploadedAssetRef.current.tamanho,
+      persisted: false,
+    };
+    await onAddInlineMedia(nextMedia);
+    // Reaproveita a inserção imperativa do editor multimídia dos POPs para manter @slug no cursor do campo ativo.
+    requestAnimationFrame(() => {
+      textareaRefs.current.get(String(insertDialog.field))?.insertReferenceAtCursor(media.referencia);
+    });
+    lastUploadedAssetRef.current = null;
+  };
+
+  const mediaOptions = inlineMedia.map((media) => ({
+    referencia: media.referencia,
+    nome: media.nome,
+    tipo: media.tipo,
+  }));
+
+  const mediaEditor = (field: keyof KnowledgeContentInput, label: string, placeholder: string, rows = 8) => {
+    const value = String(form[field] ?? "");
+    return (
+      <div className="space-y-2 md:col-span-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <Label>{label}</Label>
+          <Button type="button" variant="outline" size="sm" className="h-8 gap-1" onClick={() => openInsertDialog(field)}>
+            <ImagePlus className="h-4 w-4" />
+            Inserir mídia
+          </Button>
+        </div>
+        {/* Editor compartilhado com POPs: mantém Markdown + @referencias e habilita Ctrl+V/drop de mídia sem criar fluxo paralelo. */}
+        <MediaMentionTextarea
+          ref={(node) => { textareaRefs.current.set(String(field), node); }}
+          value={value}
+          onChange={(next) => onChange({ [field]: next } as Partial<KnowledgeContentInput>)}
+          midias={mediaOptions}
+          rows={rows}
+          placeholder={placeholder}
+          className="overflow-visible rounded-xl border-border/70 shadow-sm"
+          textareaClassName="min-h-44 bg-background/80"
+          onRequestInsertMedia={(file) => openInsertDialog(field, file)}
+          onOpenInsertMedia={() => openInsertDialog(field)}
+          onPreview={() => setPreviewField({ label, value })}
+        />
+        <p className="text-xs text-muted-foreground">
+          Use <code>@referencia</code>, o botão “Inserir mídia” ou cole imagens com <kbd className="rounded border bg-background px-1">Ctrl</kbd>+<kbd className="rounded border bg-background px-1">V</kbd>.
+        </p>
+      </div>
+    );
   };
 
   return (
     <>
       <Tabs defaultValue="geral" className="space-y-4">
-        <TabsList className="grid h-auto w-full grid-cols-2 md:grid-cols-4">
-          <TabsTrigger value="geral">Geral</TabsTrigger>
-          <TabsTrigger value="conteudo">Conteúdo</TabsTrigger>
-          <TabsTrigger value="anexos">Anexos</TabsTrigger>
-          <TabsTrigger value="vinculos">Vínculos</TabsTrigger>
+        <TabsList className="grid h-auto w-full grid-cols-3 rounded-xl bg-muted/60 p-1">
+          <TabsTrigger value="geral" className="gap-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <CircleInfo className="h-4 w-4" />
+            Geral
+          </TabsTrigger>
+          <TabsTrigger value="conteudo" className="gap-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <FileText className="h-4 w-4" />
+            Conteúdo
+          </TabsTrigger>
+          <TabsTrigger value="vinculos" className="gap-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <LinkIcon className="h-4 w-4" />
+            Vínculos
+          </TabsTrigger>
         </TabsList>
 
-        <div className="max-h-[62vh] overflow-y-auto pr-2">
-          <TabsContent value="geral" className="mt-0 grid gap-4 md:grid-cols-2">
-            <div className="space-y-2 md:col-span-2">
+        <div className="max-h-[68vh] overflow-y-auto pr-2">
+          <TabsContent value="geral" className="mt-0 space-y-4 rounded-xl border bg-muted/10 p-4">
+            <div className="space-y-2">
               <Label>Título</Label>
-              <Input value={form.titulo} onChange={(e) => onChange({ titulo: e.target.value })} placeholder="Ex.: Como registrar reembolso" />
+              <Input value={form.titulo} onChange={(e) => onChange({ titulo: e.target.value })} placeholder="Ex.: Como registrar reembolso" className="text-base font-medium" />
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="space-y-2">
+                <Label>Tipo</Label>
+                <Select
+                  value={form.tipo}
+                  onValueChange={(value) => {
+                    const nextType = value as KnowledgeType;
+                    // Mantém apenas status compatíveis com o tipo selecionado; se incompatível, volta ao padrão do tipo.
+                    onChange({
+                      tipo: nextType,
+                      status: statusByType[nextType].includes(form.status) ? form.status : defaultStatusByType[nextType],
+                    });
+                  }}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="artigo">Artigo</SelectItem>
+                    <SelectItem value="duvida">Dúvida</SelectItem>
+                    <SelectItem value="solucao_erro">Solução de erro</SelectItem>
+                    <SelectItem value="anotacao">Anotação</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select value={form.status} onValueChange={(value) => onChange({ status: value as KnowledgeStatus })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {compatibleStatuses.map((status) => (
+                      <SelectItem key={status} value={status}>{statusLabel[status]}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Visibilidade</Label>
+                <Select value={form.visibilidade} onValueChange={(value) => onChange({ visibilidade: value as KnowledgeVisibility })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="empresa">Empresa</SelectItem>
+                    <SelectItem value="privado">Privado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Responsável</Label>
+                <Select value={form.responsavel_id ?? "sem_responsavel"} onValueChange={(value) => onChange({ responsavel_id: value === "sem_responsavel" ? null : value })}>
+                  <SelectTrigger><SelectValue placeholder="Responsável" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sem_responsavel">Sem responsável</SelectItem>
+                    {usuarios.map((usuario) => (
+                      <SelectItem key={usuario.id} value={usuario.id}>{usuario.nome || usuario.email}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Categoria</Label>
+                <Input value={form.categoria} onChange={(e) => onChange({ categoria: e.target.value })} placeholder="Ex.: Operações" />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Departamento</Label>
+                <Input value={form.departamento} onChange={(e) => onChange({ departamento: e.target.value })} placeholder="Ex.: Suporte" />
+              </div>
             </div>
 
             <div className="space-y-2">
-              <Label>Tipo</Label>
-              <Select
-                value={form.tipo}
-                onValueChange={(value) => {
-                  const nextType = value as KnowledgeType;
-                  // Mantém apenas status compatíveis com o tipo selecionado; se incompatível, volta ao padrão do tipo.
-                  onChange({
-                    tipo: nextType,
-                    status: statusByType[nextType].includes(form.status) ? form.status : defaultStatusByType[nextType],
-                  });
-                }}
-              >
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="artigo">Artigo</SelectItem>
-                  <SelectItem value="duvida">Dúvida</SelectItem>
-                  <SelectItem value="solucao_erro">Solução de erro</SelectItem>
-                  <SelectItem value="anotacao">Anotação</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <Select value={form.status} onValueChange={(value) => onChange({ status: value as KnowledgeStatus })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {compatibleStatuses.map((status) => (
-                    <SelectItem key={status} value={status}>{statusLabel[status]}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Visibilidade</Label>
-              <Select value={form.visibilidade} onValueChange={(value) => onChange({ visibilidade: value as KnowledgeVisibility })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="empresa">Empresa</SelectItem>
-                  <SelectItem value="privado">Privado</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Responsável</Label>
-              <Select value={form.responsavel_id ?? "sem_responsavel"} onValueChange={(value) => onChange({ responsavel_id: value === "sem_responsavel" ? null : value })}>
-                <SelectTrigger><SelectValue placeholder="Responsável" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="sem_responsavel">Sem responsável</SelectItem>
-                  {usuarios.map((usuario) => (
-                    <SelectItem key={usuario.id} value={usuario.id}>{usuario.nome || usuario.email}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Categoria</Label>
-              <Input value={form.categoria} onChange={(e) => onChange({ categoria: e.target.value })} placeholder="Ex.: Operações" />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Departamento</Label>
-              <Input value={form.departamento} onChange={(e) => onChange({ departamento: e.target.value })} placeholder="Ex.: Suporte" />
-            </div>
-
-            <div className="space-y-2 md:col-span-2">
               <Label>Tags</Label>
               <Input value={tagText(form.tags)} onChange={(e) => onChange({ tags: parseTags(e.target.value) })} placeholder="crm, chamado, reembolso" />
             </div>
           </TabsContent>
 
-          <TabsContent value="conteudo" className="mt-0 grid gap-4 md:grid-cols-2">
-            {form.tipo === "artigo" && (
-              <>
-                <div className="space-y-2 md:col-span-2">
-                  <Label>Descrição / resumo</Label>
-                  <Textarea value={form.resumo} onChange={(e) => onChange({ resumo: e.target.value })} placeholder="Resumo curto para a listagem" />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label>Conteúdo principal</Label>
-                  <Textarea className="min-h-40" value={form.conteudo} onChange={(e) => onChange({ conteudo: e.target.value })} placeholder="Registre o conteúdo consultivo ou operacional" />
-                </div>
-              </>
-            )}
+          <TabsContent value="conteudo" className="mt-0 space-y-4 rounded-xl border bg-background p-4">
+            <div className="rounded-xl border border-dashed bg-muted/20 p-3 text-sm text-muted-foreground">
+              A Base de Conhecimento usa o mesmo editor multimídia dos POPs: Markdown leve, menções <code>@midia</code>, upload pelo modal existente e Ctrl+V para imagens.
+            </div>
+
+            {form.tipo === "artigo" && mediaEditor("conteudo", "Conteúdo principal", "Registre o conteúdo consultivo ou operacional", 10)}
 
             {form.tipo === "duvida" && (
-              <>
+              <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2 md:col-span-2">
                   <Label>Pergunta</Label>
                   <Textarea value={form.pergunta} onChange={(e) => onChange({ pergunta: e.target.value })} placeholder="Qual é a dúvida recorrente?" />
                 </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label>Resposta</Label>
-                  <Textarea className="min-h-32" value={form.resposta} onChange={(e) => onChange({ resposta: e.target.value })} placeholder="Resposta ou orientação validada" />
-                </div>
+                {mediaEditor("resposta", "Resposta", "Resposta ou orientação validada", 8)}
                 <div className="space-y-2 md:col-span-2">
                   <Label>Observações</Label>
                   <Textarea value={form.observacoes} onChange={(e) => onChange({ observacoes: e.target.value })} />
                 </div>
-              </>
+              </div>
             )}
 
             {form.tipo === "solucao_erro" && (
-              <>
+              <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Sistema relacionado</Label>
                   <Input value={form.sistema_relacionado} onChange={(e) => onChange({ sistema_relacionado: e.target.value })} />
@@ -395,101 +456,41 @@ const FormFields = ({
                   <Label>Causa</Label>
                   <Textarea value={form.causa} onChange={(e) => onChange({ causa: e.target.value })} />
                 </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label>Solução</Label>
-                  <Textarea className="min-h-32" value={form.solucao} onChange={(e) => onChange({ solucao: e.target.value })} />
-                </div>
+                {mediaEditor("solucao", "Solução", "Descreva a solução e insira mídias contextuais quando necessário", 8)}
                 <div className="space-y-2 md:col-span-2">
                   <Label>Observações</Label>
                   <Textarea value={form.observacoes} onChange={(e) => onChange({ observacoes: e.target.value })} />
                 </div>
-              </>
+              </div>
             )}
 
             {form.tipo === "anotacao" && (
-              <>
-                <div className="space-y-2 md:col-span-2">
-                  <Label>Conteúdo da anotação</Label>
-                  <Textarea className="min-h-40" value={form.conteudo} onChange={(e) => onChange({ conteudo: e.target.value })} placeholder="Registre a anotação operacional" />
-                  <p className="text-xs text-muted-foreground">Anotações privadas aparecem apenas para o autor; compartilhadas usam visibilidade Empresa.</p>
-                </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                {mediaEditor("conteudo", "Conteúdo da anotação", "Registre a anotação operacional", 10)}
+                <p className="text-xs text-muted-foreground md:col-span-2">Anotações privadas aparecem apenas para o autor; compartilhadas usam visibilidade Empresa.</p>
                 <div className="space-y-2 md:col-span-2">
                   <Label>Observações</Label>
                   <Textarea value={form.observacoes} onChange={(e) => onChange({ observacoes: e.target.value })} />
                 </div>
-              </>
-            )}
-          </TabsContent>
-
-          <TabsContent value="anexos" className="mt-0 space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-muted/20 p-3">
-              <div>
-                <p className="text-sm font-medium">Anexos do conteúdo</p>
-                <p className="text-xs text-muted-foreground">Arquivos compactos vinculados ao registro, sem mídia inline no texto.</p>
-                <p className="text-xs text-muted-foreground">Evite anexar documentos sensíveis nesta versão. Os anexos usam o bucket atual de mídia do sistema.</p>
-              </div>
-              {canManageAttachments && editingId && (
-                <>
-                  <input
-                    ref={inputRef}
-                    type="file"
-                    className="hidden"
-                    accept={attachmentAccept}
-                    onChange={(e) => pickAttachment(e.target.files?.[0])}
-                  />
-                  <Button type="button" size="sm" variant="outline" onClick={() => inputRef.current?.click()} disabled={attachmentActionPending}>
-                    <Upload className="mr-2 h-4 w-4" />
-                    Adicionar anexo
-                  </Button>
-                </>
-              )}
-            </div>
-
-            {!editingId && (
-              <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-                Salve o conteúdo para habilitar anexos. Após salvar, esta aba ficará disponível para upload de arquivos.
               </div>
             )}
 
-            {editingId && attachmentsLoading && <div className="rounded-lg border p-4 text-sm text-muted-foreground">Carregando anexos...</div>}
-            {editingId && attachmentsError && <div className="rounded-lg border border-destructive/40 p-4 text-sm text-destructive">Não foi possível carregar os anexos.</div>}
-            {editingId && !attachmentsLoading && !attachmentsError && attachments.length === 0 && (
-              <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">Nenhum anexo adicionado ainda.</div>
-            )}
-            {editingId && !attachmentsLoading && !attachmentsError && attachments.length > 0 && (
-              <div className="grid gap-2">
-                {attachments.map((attachment) => {
-                  const Icon = attachmentIcon(attachment);
-                  return (
-                    <div key={attachment.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-background p-3">
-                      <div className="flex min-w-0 items-center gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground"><Icon className="h-4 w-4" /></div>
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-medium">{attachment.nome_arquivo}</p>
-                          <p className="text-xs text-muted-foreground">{attachment.tipo_arquivo.toUpperCase()} • {formatFileSize(attachment.tamanho)}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Button type="button" variant="ghost" size="sm" onClick={() => openAttachment(attachment)}>
-                          <ExternalLink className="mr-2 h-4 w-4" />Abrir
-                        </Button>
-                        <Button type="button" variant="ghost" size="icon" asChild>
-                          <a href={attachment.url} target="_blank" rel="noreferrer" download aria-label="Baixar anexo"><Download className="h-4 w-4" /></a>
-                        </Button>
-                        {canManageAttachments && (
-                          <Button type="button" variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => onRemoveAttachment(attachment)} disabled={attachmentActionPending} aria-label="Remover anexo">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+            {inlineMedia.length > 0 && (
+              <div className="rounded-xl border bg-muted/20 p-3">
+                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Mídias disponíveis no conteúdo</p>
+                <div className="flex flex-wrap gap-2">
+                  {inlineMedia.map((media) => (
+                    <Badge key={media.uid} variant="secondary" className="gap-1 rounded-full px-2 py-1">
+                      <Image className="h-3 w-3" />
+                      @{media.referencia}
+                    </Badge>
+                  ))}
+                </div>
               </div>
             )}
           </TabsContent>
 
-          <TabsContent value="vinculos" className="mt-0 space-y-4">
+          <TabsContent value="vinculos" className="mt-0 space-y-4 rounded-xl border bg-muted/10 p-4">
             <div className="space-y-2">
               <Label>POP relacionado</Label>
               <Select value={form.pop_id ?? "sem_pop"} onValueChange={(value) => onChange({ pop_id: value === "sem_pop" ? null : value, etapa_id: null })}>
@@ -507,12 +508,43 @@ const FormFields = ({
         </div>
       </Tabs>
 
+      <Dialog open={!!previewField} onOpenChange={(open) => !open && setPreviewField(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Pré-visualizar {previewField?.label}</DialogTitle>
+            <DialogDescription>Renderização contextual com o mesmo parser inline dos POPs.</DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto rounded-lg border bg-muted/20 p-4 text-sm">
+            {previewField?.value.trim() ? (
+              <div className="prose prose-sm max-w-none dark:prose-invert">
+                {renderMarkdownPreview(previewField.value, inlineMedia, setPreviewMedia)}
+              </div>
+            ) : (
+              <p className="text-muted-foreground">Sem conteúdo para pré-visualizar.</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <MediaViewer
-        open={!!previewAttachment}
-        onOpenChange={(open) => !open && setPreviewAttachment(null)}
-        tipo={previewAttachment ? attachmentViewerType(previewAttachment) : null}
-        url={previewAttachment?.url ?? null}
-        nome={previewAttachment?.nome_arquivo ?? "Anexo"}
+        open={!!previewMedia}
+        onOpenChange={(open) => !open && setPreviewMedia(null)}
+        tipo={previewMedia?.tipo ?? null}
+        url={previewMedia?.url ?? null}
+        nome={previewMedia?.nome ?? "Mídia"}
+      />
+
+      <InsertMediaDialog
+        open={!!insertDialog}
+        onOpenChange={(open) => {
+          if (!open) setInsertDialog(null);
+        }}
+        initialFile={insertDialog?.file ?? null}
+        existingRefs={inlineMedia.map((media) => media.referencia)}
+        uploadFile={uploadFileForDialog}
+        onConfirm={handleInsertMediaConfirm}
+        slugify={slugifyRef}
+        contextLabel="conteúdo"
       />
     </>
   );
@@ -547,8 +579,7 @@ const BaseConhecimento = () => {
   const createContent = useCreateKnowledgeContent();
   const updateContent = useUpdateKnowledgeContent();
   const deleteContent = useDeleteKnowledgeContent();
-  const uploadAttachment = useUploadKnowledgeAttachment();
-  const deleteAttachment = useDeleteKnowledgeAttachment();
+  const queryClient = useQueryClient();
 
   const { data: usuarios = [] } = useQuery({
     queryKey: ["usuarios-base-conhecimento"],
@@ -581,10 +612,10 @@ const BaseConhecimento = () => {
   const [viewing, setViewing] = useState<KnowledgeContent | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<KnowledgeContent | null>(null);
   const [form, setForm] = useState<KnowledgeContentInput>(emptyForm);
+  const [inlineMedia, setInlineMedia] = useState<KnowledgeInlineMedia[]>([]);
+  const [viewMedia, setViewMedia] = useState<KnowledgeInlineMedia | null>(null);
 
   const canManageKnowledge = ["admin", "gestor", "criador", "developer"].includes(perfilAtual?.role ?? "");
-  const canEditCurrentContent = !!editing && (editing.autor_id === user?.id || canManageKnowledge);
-  const { data: editingAttachments = [], isLoading: attachmentsLoading, isError: attachmentsError } = useKnowledgeAttachments(editing?.id);
 
   const categorias = useMemo(() => ["todas", ...Array.from(new Set(contents.map((item) => item.categoria).filter(Boolean)))], [contents]);
   const departamentos = useMemo(() => ["todos", ...Array.from(new Set(contents.map((item) => item.departamento).filter(Boolean)))], [contents]);
@@ -639,7 +670,8 @@ const BaseConhecimento = () => {
 
   const openCreate = () => {
     setEditing(null);
-    setForm(emptyForm);
+    setForm({ ...emptyForm, resumo: "" });
+    setInlineMedia([]);
     setFormOpen(true);
   };
 
@@ -649,28 +681,69 @@ const BaseConhecimento = () => {
       nextForm.status = defaultStatusByType[nextForm.tipo];
     }
     setEditing(content);
-    setForm(nextForm);
+    setForm({ ...nextForm, resumo: "" });
+    setInlineMedia((content.anexos ?? []).map(inlineMediaFromAttachment).filter(Boolean) as KnowledgeInlineMedia[]);
     setFormOpen(true);
   };
 
-  const addAttachment = async (file: File) => {
-    if (!editing) return;
-    try {
-      // A permissão visual acompanha autor/perfis de gestão; a RLS mantém a autorização efetiva no banco.
-      await uploadAttachment.mutateAsync({ contentId: editing.id, file });
-      toast.success("Anexo adicionado.");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Não foi possível adicionar o anexo.");
-    }
+  const currentEmpresaId = async () => {
+    if (!user) throw new Error("Sessão expirada. Faça login novamente.");
+    const { data, error } = await supabase.from("usuarios").select("empresa_id").eq("id", user.id).maybeSingle();
+    if (error) throw error;
+    if (!data?.empresa_id) throw new Error("Empresa do usuário não encontrada.");
+    return data.empresa_id as string;
   };
 
-  const removeAttachment = async (attachment: KnowledgeAttachment) => {
-    try {
-      await deleteAttachment.mutateAsync(attachment);
-      toast.success("Anexo removido.");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Não foi possível remover o anexo.");
+  const uploadInlineFile = async (file: File): Promise<UploadedInlineAsset> => {
+    const empresaId = await currentEmpresaId();
+    const safeName = file.name.replace(/[^A-Za-z0-9._-]/g, "_");
+    const storagePath = `${empresaId}/base-conhecimento/${editing?.id ?? "_new"}/${crypto.randomUUID()}-${safeName}`;
+    const { error } = await supabase.storage
+      .from("pop-midias")
+      .upload(storagePath, file, { contentType: file.type || "application/octet-stream", upsert: false });
+    if (error) throw error;
+    const { data: publicUrl } = supabase.storage.from("pop-midias").getPublicUrl(storagePath);
+    return {
+      url: publicUrl.publicUrl,
+      storage_path: storagePath,
+      mime_type: file.type || "application/octet-stream",
+      tamanho: file.size,
+    };
+  };
+
+  const persistInlineMedia = async (contentId: string, media: KnowledgeInlineMedia) => {
+    if (!user) throw new Error("Sessão expirada. Faça login novamente.");
+    const empresaId = await currentEmpresaId();
+    // A Base usa a tabela de metadados já existente para manter a mídia inline rastreável, sem criar sistema paralelo ao padrão POP.
+    const { data, error } = await supabase
+      .from("base_conhecimento_anexos")
+      .insert({
+        empresa_id: empresaId,
+        base_conhecimento_id: contentId,
+        nome_arquivo: media.nome,
+        tipo_arquivo: media.tipo,
+        mime_type: media.mime_type,
+        tamanho: media.tamanho,
+        storage_path: media.storage_path,
+        url: media.url,
+        referencia: media.referencia,
+        uso: "inline",
+        criado_por: user.id,
+      })
+      .select("*")
+      .single();
+    if (error) throw error;
+    return inlineMediaFromAttachment(data as KnowledgeAttachment);
+  };
+
+  const addInlineMedia = async (media: KnowledgeInlineMedia) => {
+    if (!editing) {
+      setInlineMedia((current) => [...current, media]);
+      return;
     }
+    const persisted = await persistInlineMedia(editing.id, media);
+    if (persisted) setInlineMedia((current) => [...current, persisted]);
+    queryClient.invalidateQueries({ queryKey: ["base-conhecimento"] });
   };
 
   const saveForm = async () => {
@@ -682,27 +755,31 @@ const BaseConhecimento = () => {
       ? form
       : { ...form, status: defaultStatusByType[form.tipo] };
     try {
+      const inputWithoutResumo = { ...input, resumo: "" };
       if (editing) {
-        await updateContent.mutateAsync({ id: editing.id, input });
+        await updateContent.mutateAsync({ id: editing.id, input: inputWithoutResumo });
         toast.success("Conteúdo atualizado.");
         setFormOpen(false);
       } else {
-        const createdId = await createContent.mutateAsync(input);
-        // Mantém o modal aberto já em modo edição para permitir anexar arquivos ao conteúdo recém-criado.
+        const createdId = await createContent.mutateAsync(inputWithoutResumo);
+        const persistedMedia = await Promise.all(inlineMedia.map((media) => persistInlineMedia(createdId, media)));
+        setInlineMedia(persistedMedia.filter(Boolean) as KnowledgeInlineMedia[]);
         setEditing({
-          ...input,
+          ...inputWithoutResumo,
           id: createdId,
           empresa_id: "",
           autor_id: user?.id ?? "",
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-          published_at: input.status === "publicado" ? new Date().toISOString() : null,
+          published_at: inputWithoutResumo.status === "publicado" ? new Date().toISOString() : null,
           autor: null,
           responsavel: null,
           pop: null,
           anexos: [],
         });
-        toast.success("Conteúdo criado. Você já pode adicionar anexos.");
+        queryClient.invalidateQueries({ queryKey: ["base-conhecimento"] });
+        toast.success("Conteúdo criado com mídia inline disponível.");
+        setFormOpen(false);
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Não foi possível salvar o conteúdo.");
@@ -842,7 +919,8 @@ const BaseConhecimento = () => {
             const Icon = typeIcon[item.tipo];
             const canEdit = item.autor_id === user?.id || canManageKnowledge;
             const canDelete = canEdit;
-            const preview = item.resumo || item.conteudo || item.pergunta || item.solucao || "Sem resumo informado.";
+            const inlineCount = (item.anexos ?? []).filter((attachment) => attachment.referencia).length;
+            const preview = item.conteudo || item.resposta || item.pergunta || item.solucao || "Sem conteúdo informado.";
             return (
               <Card key={item.id} className="border-border/70 bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
                 <CardContent className="flex flex-col gap-4 p-4 md:flex-row md:items-start md:justify-between">
@@ -859,7 +937,7 @@ const BaseConhecimento = () => {
                         <span className="inline-flex items-center gap-1.5"><UserRound className="h-3.5 w-3.5" />{item.responsavel?.nome || item.autor?.nome || "Sem responsável"}</span>
                         <span className="inline-flex items-center gap-1.5"><CalendarClock className="h-3.5 w-3.5" />Atualizado em {formatDate(item.updated_at)}</span>
                         {item.pop && <span className="inline-flex items-center gap-1.5"><BookOpen className="h-3.5 w-3.5" />Vinculado ao POP: {item.pop.titulo}</span>}
-                        {(item.anexos?.length ?? 0) > 0 && <span className="inline-flex items-center gap-1.5"><Paperclip className="h-3.5 w-3.5" />{item.anexos?.length} anexos</span>}
+                        {inlineCount > 0 && <span className="inline-flex items-center gap-1.5"><ImagePlus className="h-3.5 w-3.5" />{inlineCount} mídias inline</span>}
                       </div>
                       {item.tags.length > 0 && <div className="flex flex-wrap gap-1.5">{item.tags.map((tag) => <Badge key={tag} variant="secondary" className="text-[11px]">#{tag}</Badge>)}</div>}
                     </div>
@@ -890,14 +968,9 @@ const BaseConhecimento = () => {
             onChange={(patch) => setForm((current) => ({ ...current, ...patch }))}
             pops={pops.map((pop) => ({ id: pop.id, titulo: pop.titulo }))}
             usuarios={usuarios}
-            editingId={editing?.id}
-            attachments={editingAttachments}
-            attachmentsLoading={attachmentsLoading}
-            attachmentsError={attachmentsError}
-            canManageAttachments={canEditCurrentContent}
-            onAddAttachment={addAttachment}
-            onRemoveAttachment={removeAttachment}
-            attachmentActionPending={uploadAttachment.isPending || deleteAttachment.isPending}
+            inlineMedia={inlineMedia}
+            uploadInlineFile={uploadInlineFile}
+            onAddInlineMedia={addInlineMedia}
           />
           <DialogFooter>
             <Button variant="outline" onClick={() => setFormOpen(false)}>Cancelar</Button>
@@ -908,42 +981,51 @@ const BaseConhecimento = () => {
 
       <Dialog open={!!viewing} onOpenChange={(open) => !open && setViewing(null)}>
         <DialogContent className="max-w-3xl">
-          {viewing && (
-            <>
-              <DialogHeader>
-                <DialogTitle>{viewing.titulo}</DialogTitle>
-                <DialogDescription>{typeLabel[viewing.tipo]} • {statusLabel[viewing.status]} • {viewing.visibilidade === "privado" ? "Privado" : "Empresa"}</DialogDescription>
-              </DialogHeader>
-              <div className="max-h-[70vh] space-y-4 overflow-y-auto text-sm">
-                {viewing.resumo && <p className="text-muted-foreground">{viewing.resumo}</p>}
-                {viewing.conteudo && <div className="whitespace-pre-wrap rounded-lg border bg-muted/30 p-3">{viewing.conteudo}</div>}
-                {viewing.pergunta && <p><strong>Pergunta:</strong> {viewing.pergunta}</p>}
-                {viewing.resposta && <p><strong>Resposta:</strong> {viewing.resposta}</p>}
-                {viewing.sistema_relacionado && <p><strong>Sistema:</strong> {viewing.sistema_relacionado}</p>}
-                {viewing.erro_relacionado && <p><strong>Erro:</strong> {viewing.erro_relacionado}</p>}
-                {viewing.causa && <p><strong>Causa:</strong> {viewing.causa}</p>}
-                {viewing.solucao && <p><strong>Solução:</strong> {viewing.solucao}</p>}
-                {viewing.observacoes && <p><strong>Observações:</strong> {viewing.observacoes}</p>}
-                {(viewing.anexos?.length ?? 0) > 0 && (
-                  <div className="space-y-2 rounded-lg border bg-muted/20 p-3">
-                    <p className="font-medium">Anexos</p>
-                    <div className="flex flex-wrap gap-2">
-                      {viewing.anexos?.map((attachment) => (
-                        <Button key={attachment.id} asChild variant="outline" size="sm" className="h-auto gap-2 py-2">
-                          <a href={attachment.url} target="_blank" rel="noreferrer">
-                            <Paperclip className="h-4 w-4" />
-                            <span className="max-w-44 truncate">{attachment.nome_arquivo}</span>
-                          </a>
-                        </Button>
-                      ))}
+          {viewing && (() => {
+            const viewingInlineMedia = (viewing.anexos ?? []).map(inlineMediaFromAttachment).filter(Boolean) as KnowledgeInlineMedia[];
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle>{viewing.titulo}</DialogTitle>
+                  <DialogDescription>{typeLabel[viewing.tipo]} • {statusLabel[viewing.status]} • {viewing.visibilidade === "privado" ? "Privado" : "Empresa"}</DialogDescription>
+                </DialogHeader>
+                <div className="max-h-[70vh] space-y-4 overflow-y-auto text-sm">
+                  {viewing.conteudo && (
+                    <div className="rounded-lg border bg-muted/20 p-4">
+                      {renderMarkdownPreview(viewing.conteudo, viewingInlineMedia, setViewMedia)}
                     </div>
-                  </div>
-                )}
-              </div>
-            </>
-          )}
+                  )}
+                  {viewing.pergunta && <p><strong>Pergunta:</strong> {viewing.pergunta}</p>}
+                  {viewing.resposta && (
+                    <div className="rounded-lg border bg-muted/20 p-4">
+                      <p className="mb-2 font-medium">Resposta</p>
+                      {renderMarkdownPreview(viewing.resposta, viewingInlineMedia, setViewMedia)}
+                    </div>
+                  )}
+                  {viewing.sistema_relacionado && <p><strong>Sistema:</strong> {viewing.sistema_relacionado}</p>}
+                  {viewing.erro_relacionado && <p><strong>Erro:</strong> {viewing.erro_relacionado}</p>}
+                  {viewing.causa && <p><strong>Causa:</strong> {viewing.causa}</p>}
+                  {viewing.solucao && (
+                    <div className="rounded-lg border bg-muted/20 p-4">
+                      <p className="mb-2 font-medium">Solução</p>
+                      {renderMarkdownPreview(viewing.solucao, viewingInlineMedia, setViewMedia)}
+                    </div>
+                  )}
+                  {viewing.observacoes && <p><strong>Observações:</strong> {viewing.observacoes}</p>}
+                </div>
+              </>
+            );
+          })()}
         </DialogContent>
       </Dialog>
+
+      <MediaViewer
+        open={!!viewMedia}
+        onOpenChange={(open) => !open && setViewMedia(null)}
+        tipo={viewMedia?.tipo ?? null}
+        url={viewMedia?.url ?? null}
+        nome={viewMedia?.nome ?? "Mídia"}
+      />
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
