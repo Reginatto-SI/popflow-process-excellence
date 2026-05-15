@@ -532,7 +532,7 @@ const FormFields = ({
           <div className="max-h-[60vh] overflow-y-auto rounded-lg border bg-muted/20 p-4 text-sm">
             {previewField?.value.trim() ? (
               <div className="prose prose-sm max-w-none dark:prose-invert">
-                {renderMarkdownPreview(previewField.value, inlineMedia, setPreviewMedia)}
+                {renderMarkdownPreview(previewField.value, inlineMedia, (m) => setPreviewMedia(m))}
               </div>
             ) : (
               <p className="text-muted-foreground">Sem conteúdo para pré-visualizar.</p>
@@ -1063,14 +1063,14 @@ const BaseConhecimento = () => {
                 <div className="max-h-[70vh] space-y-4 overflow-y-auto text-sm">
                   {viewing.conteudo && (
                     <div className="rounded-lg border bg-muted/20 p-4">
-                      {renderMarkdownPreview(viewing.conteudo, viewingInlineMedia, setViewMedia)}
+                      {renderMarkdownPreview(viewing.conteudo, viewingInlineMedia, (m) => setViewMedia(m))}
                     </div>
                   )}
                   {viewing.pergunta && <p><strong>Pergunta:</strong> {viewing.pergunta}</p>}
                   {viewing.resposta && (
                     <div className="rounded-lg border bg-muted/20 p-4">
                       <p className="mb-2 font-medium">Resposta</p>
-                      {renderMarkdownPreview(viewing.resposta, viewingInlineMedia, setViewMedia)}
+                      {renderMarkdownPreview(viewing.resposta, viewingInlineMedia, (m) => setViewMedia(m))}
                     </div>
                   )}
                   {viewing.sistema_relacionado && <p><strong>Sistema:</strong> {viewing.sistema_relacionado}</p>}
@@ -1079,7 +1079,7 @@ const BaseConhecimento = () => {
                   {viewing.solucao && (
                     <div className="rounded-lg border bg-muted/20 p-4">
                       <p className="mb-2 font-medium">Solução</p>
-                      {renderMarkdownPreview(viewing.solucao, viewingInlineMedia, setViewMedia)}
+                      {renderMarkdownPreview(viewing.solucao, viewingInlineMedia, (m) => setViewMedia(m))}
                     </div>
                   )}
                   {viewing.observacoes && <p><strong>Observações:</strong> {viewing.observacoes}</p>}
