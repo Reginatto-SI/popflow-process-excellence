@@ -14,6 +14,126 @@ export type Database = {
   }
   public: {
     Tables: {
+      base_conhecimento: {
+        Row: {
+          autor_id: string
+          categoria: string
+          causa: string
+          conteudo: string
+          created_at: string
+          departamento: string
+          empresa_id: string
+          erro_relacionado: string
+          etapa_id: string | null
+          id: string
+          observacoes: string
+          pergunta: string
+          pop_id: string | null
+          published_at: string | null
+          responsavel_id: string | null
+          resposta: string
+          resumo: string
+          sistema_relacionado: string
+          solucao: string
+          status: Database["public"]["Enums"]["base_conhecimento_status"]
+          tags: string[]
+          tipo: Database["public"]["Enums"]["base_conhecimento_tipo"]
+          titulo: string
+          updated_at: string
+          visibilidade: Database["public"]["Enums"]["pop_visibilidade"]
+        }
+        Insert: {
+          autor_id: string
+          categoria?: string
+          causa?: string
+          conteudo?: string
+          created_at?: string
+          departamento?: string
+          empresa_id: string
+          erro_relacionado?: string
+          etapa_id?: string | null
+          id?: string
+          observacoes?: string
+          pergunta?: string
+          pop_id?: string | null
+          published_at?: string | null
+          responsavel_id?: string | null
+          resposta?: string
+          resumo?: string
+          sistema_relacionado?: string
+          solucao?: string
+          status?: Database["public"]["Enums"]["base_conhecimento_status"]
+          tags?: string[]
+          tipo?: Database["public"]["Enums"]["base_conhecimento_tipo"]
+          titulo: string
+          updated_at?: string
+          visibilidade?: Database["public"]["Enums"]["pop_visibilidade"]
+        }
+        Update: {
+          autor_id?: string
+          categoria?: string
+          causa?: string
+          conteudo?: string
+          created_at?: string
+          departamento?: string
+          empresa_id?: string
+          erro_relacionado?: string
+          etapa_id?: string | null
+          id?: string
+          observacoes?: string
+          pergunta?: string
+          pop_id?: string | null
+          published_at?: string | null
+          responsavel_id?: string | null
+          resposta?: string
+          resumo?: string
+          sistema_relacionado?: string
+          solucao?: string
+          status?: Database["public"]["Enums"]["base_conhecimento_status"]
+          tags?: string[]
+          tipo?: Database["public"]["Enums"]["base_conhecimento_tipo"]
+          titulo?: string
+          updated_at?: string
+          visibilidade?: Database["public"]["Enums"]["pop_visibilidade"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "base_conhecimento_autor_id_fkey"
+            columns: ["autor_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "base_conhecimento_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "base_conhecimento_etapa_id_fkey"
+            columns: ["etapa_id"]
+            isOneToOne: false
+            referencedRelation: "pop_etapas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "base_conhecimento_pop_id_fkey"
+            columns: ["pop_id"]
+            isOneToOne: false
+            referencedRelation: "pops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "base_conhecimento_responsavel_id_fkey"
+            columns: ["responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       developer_logs: {
         Row: {
           acao: string
@@ -505,6 +625,8 @@ export type Database = {
       current_user_can_manage_pops: { Args: never; Returns: boolean }
     }
     Enums: {
+      base_conhecimento_status: "rascunho" | "revisao" | "publicado" | "arquivado" | "aberta" | "resolvida"
+      base_conhecimento_tipo: "artigo" | "duvida" | "solucao_erro" | "anotacao"
       app_role: "admin" | "gestor" | "criador" | "executor" | "developer"
       pop_midia_tipo: "imagem" | "audio" | "video" | "documento"
       pop_status: "rascunho" | "revisao" | "publicado"
@@ -636,6 +758,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      base_conhecimento_status: ["rascunho", "revisao", "publicado", "arquivado", "aberta", "resolvida"],
+      base_conhecimento_tipo: ["artigo", "duvida", "solucao_erro", "anotacao"],
       app_role: ["admin", "gestor", "criador", "executor", "developer"],
       pop_midia_tipo: ["imagem", "audio", "video", "documento"],
       pop_status: ["rascunho", "revisao", "publicado"],

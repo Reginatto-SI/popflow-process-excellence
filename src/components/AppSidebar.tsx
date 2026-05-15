@@ -28,7 +28,7 @@ const items = [
   { title: "POPs", url: "/pops", icon: FileText },
   { title: "Execuções", url: "/execucoes", icon: PlayCircle },
   { title: "Revisões", url: "/revisoes", icon: ClipboardCheck },
-  { title: "Base de Conhecimento", url: "/base", icon: BookOpen },
+  { title: "Base de Conhecimento", url: "/base-conhecimento", icon: BookOpen },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
   { title: "Configurações", url: "/configuracoes", icon: Settings },
 ];
