@@ -27,6 +27,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { MediaMentionTextarea, type MediaMentionTextareaHandle } from "@/components/MediaMentionTextarea";
 import { InsertMediaDialog, type InsertedMedia } from "@/components/InsertMediaDialog";
+import { MediaViewer } from "@/components/MediaViewer";
 
 type TabKey = "informacoes" | "etapas" | "midias" | "revisao";
 
@@ -84,6 +85,8 @@ const acceptByTipo: Record<PopMidiaTipo, string> = {
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
+const MEDIA_REF_REGEX = /@([A-Za-zÀ-ÿ0-9_-]+)/g;
+
 /**
  * Gera slug seguro para referência inline de mídia.
  * Garante que não tenha espaços ou caracteres que quebrem o regex `@([A-Za-zÀ-ÿ0-9_-]+)`.
@@ -132,17 +135,41 @@ const getSafeMarkdownHref = (href: string): string | null => {
  * renderiza apenas formatações básicas em modo somente leitura e evita HTML bruto.
  * Se o produto evoluir, trocar por uma biblioteca Markdown validada (ex.: react-markdown).
  */
-const inlineMarkdown = (text: string): React.ReactNode[] => {
+const inlineMarkdown = (
+  text: string,
+  mediaByRef = new Map<string, MidiaItem>(),
+  onOpenMedia?: (midia: MidiaItem) => void,
+): React.ReactNode[] => {
   const nodes: React.ReactNode[] = [];
-  const pattern = /(\*\*[^*]+\*\*|_[^_]+_|\*[^*]+\*|\[[^\]]+\]\([^\s)]+\))/g;
+  const pattern = /(\*\*[^*]+\*\*|_[^_]+_|\*[^*]+\*|\[[^\]]+\]\([^\s)]+\)|@([A-Za-zÀ-ÿ0-9_-]+))/g;
   let lastIndex = 0;
-  text.replace(pattern, (match, _token, offset: number) => {
+  text.replace(pattern, (match, _token, mediaRef: string | undefined, offset: number) => {
     if (offset > lastIndex) nodes.push(text.slice(lastIndex, offset));
     const key = `${offset}-${match}`;
     if (match.startsWith("**")) {
       nodes.push(<strong key={key}>{match.slice(2, -2)}</strong>);
     } else if (match.startsWith("_") || match.startsWith("*")) {
       nodes.push(<em key={key}>{match.slice(1, -1)}</em>);
+    } else if (mediaRef) {
+      const midia = mediaByRef.get(mediaRef);
+      const Icon = midia ? tipoIcon[midia.tipo] : null;
+      // Menções existentes usam a lista vinculada à etapa como fonte de verdade; desconhecidas continuam texto puro.
+      nodes.push(
+        midia ? (
+          <button
+            key={key}
+            type="button"
+            onClick={() => onOpenMedia?.(midia)}
+            className="mx-0.5 inline-flex max-w-full items-center gap-2 rounded-lg border border-primary/25 bg-primary/10 px-2 py-1 text-left text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+          >
+            {/* Padrão do preview: mídia inline fica como badge/link; a visualização abre somente no MediaViewer. */}
+            {Icon && <Icon className="h-4 w-4 shrink-0" />}
+            <span className="min-w-0 truncate">{match} — {tipoLabel[midia.tipo]}</span>
+          </button>
+        ) : (
+          match
+        ),
+      );
     } else {
       const [, label, href] = match.match(/^\[([^\]]+)\]\(([^\s)]+)\)$/) ?? [];
       const safeHref = href ? getSafeMarkdownHref(href) : null;
@@ -164,9 +191,12 @@ const inlineMarkdown = (text: string): React.ReactNode[] => {
   return nodes;
 };
 
-const renderInlineMarkdown = (text: string) => inlineMarkdown(text).map((node, index) => <span key={index}>{node}</span>);
+const renderInlineMarkdown = (text: string, mediaByRef?: Map<string, MidiaItem>, onOpenMedia?: (midia: MidiaItem) => void) =>
+  inlineMarkdown(text, mediaByRef, onOpenMedia).map((node, index) => <span key={index}>{node}</span>);
 
-const renderMarkdownPreview = (markdown: string) => {
+const renderMarkdownPreview = (markdown: string, midiasDaEtapa: MidiaItem[] = [], onOpenMedia?: (midia: MidiaItem) => void) => {
+  // Indexação local evita replace fixo de @image e respeita qualquer referência real criada no fluxo de mídia.
+  const mediaByRef = new Map(midiasDaEtapa.map((m) => [m.referencia, m]));
   const lines = markdown.split(/\r?\n/);
   const blocks: React.ReactNode[] = [];
   let index = 0;
@@ -182,7 +212,7 @@ const renderMarkdownPreview = (markdown: string) => {
     if (heading) {
       const level = heading[1].length;
       const className = level === 1 ? "text-2xl" : level === 2 ? "text-xl" : "text-lg";
-      blocks.push(<h3 key={index} className={`${className} font-semibold text-foreground`}>{renderInlineMarkdown(heading[2])}</h3>);
+      blocks.push(<h3 key={index} className={`${className} font-semibold text-foreground`}>{renderInlineMarkdown(heading[2], mediaByRef, onOpenMedia)}</h3>);
       index += 1;
       continue;
     }
@@ -193,7 +223,7 @@ const renderMarkdownPreview = (markdown: string) => {
         quoteLines.push(lines[index].replace(/^>\s?/, ""));
         index += 1;
       }
-      blocks.push(<blockquote key={index} className="border-l-4 border-primary/40 bg-muted/40 py-2 pl-4 text-muted-foreground">{renderInlineMarkdown(quoteLines.join(" "))}</blockquote>);
+      blocks.push(<blockquote key={index} className="border-l-4 border-primary/40 bg-muted/40 py-2 pl-4 text-muted-foreground">{renderInlineMarkdown(quoteLines.join(" "), mediaByRef, onOpenMedia)}</blockquote>);
       continue;
     }
 
@@ -203,7 +233,7 @@ const renderMarkdownPreview = (markdown: string) => {
         items.push(lines[index].replace(/^\s*[-*]\s+/, ""));
         index += 1;
       }
-      blocks.push(<ul key={index} className="list-disc space-y-1 pl-5">{items.map((item, itemIndex) => <li key={itemIndex}>{renderInlineMarkdown(item)}</li>)}</ul>);
+      blocks.push(<ul key={index} className="list-disc space-y-1 pl-5">{items.map((item, itemIndex) => <li key={itemIndex}>{renderInlineMarkdown(item, mediaByRef, onOpenMedia)}</li>)}</ul>);
       continue;
     }
 
@@ -213,7 +243,7 @@ const renderMarkdownPreview = (markdown: string) => {
         items.push(lines[index].replace(/^\s*\d+\.\s+/, ""));
         index += 1;
       }
-      blocks.push(<ol key={index} className="list-decimal space-y-1 pl-5">{items.map((item, itemIndex) => <li key={itemIndex}>{renderInlineMarkdown(item)}</li>)}</ol>);
+      blocks.push(<ol key={index} className="list-decimal space-y-1 pl-5">{items.map((item, itemIndex) => <li key={itemIndex}>{renderInlineMarkdown(item, mediaByRef, onOpenMedia)}</li>)}</ol>);
       continue;
     }
 
@@ -222,7 +252,7 @@ const renderMarkdownPreview = (markdown: string) => {
       paragraphLines.push(lines[index]);
       index += 1;
     }
-    blocks.push(<p key={index} className="leading-7">{renderInlineMarkdown(paragraphLines.join(" "))}</p>);
+    blocks.push(<p key={index} className="leading-7">{renderInlineMarkdown(paragraphLines.join(" "), mediaByRef, onOpenMedia)}</p>);
   }
 
   return blocks;
@@ -251,6 +281,7 @@ const PopCreateEdit = () => {
   const [allStepsExpanded, setAllStepsExpanded] = useState(false);
   const [additionalInfoOpenByStep, setAdditionalInfoOpenByStep] = useState<Record<string, boolean>>({});
   const [previewStepUid, setPreviewStepUid] = useState<string | null>(null);
+  const [previewMidia, setPreviewMidia] = useState<MidiaItem | null>(null);
 
   // Carregar dados em modo edição
   useEffect(() => {
@@ -474,11 +505,12 @@ const PopCreateEdit = () => {
 
   /** Mídias usadas em uma etapa (referenciadas no texto OU vinculadas pela ordem). */
   const midiasDaEtapa = (step: StepItem) => {
-    const refRegex = /@([A-Za-zÀ-ÿ0-9_-]+)/g;
     const usadas = new Set<string>();
-    for (const m of step.descricao.matchAll(refRegex)) usadas.add(m[1]);
+    for (const m of step.descricao.matchAll(MEDIA_REF_REGEX)) usadas.add(m[1]);
     return midias.filter((m) => usadas.has(m.referencia) || m.etapaOrdem === step.ordem);
   };
+
+  const previewStepMidias = previewStep ? midiasDaEtapa(previewStep) : [];
 
   const removeRefFromStep = (step: StepItem, ref: string) => {
     const re = new RegExp(`\\s?@${ref}(?![A-Za-zÀ-ÿ0-9_-])`, "g");
@@ -1097,7 +1129,7 @@ const PopCreateEdit = () => {
           <div className="rounded-lg border bg-muted/10 p-4">
             {previewStep?.descricao.trim() ? (
               <div className="space-y-4 text-sm text-foreground">
-                {renderMarkdownPreview(previewStep.descricao)}
+                {renderMarkdownPreview(previewStep.descricao, previewStepMidias, setPreviewMidia)}
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">Nenhuma descrição preenchida para pré-visualizar.</p>
@@ -1105,6 +1137,14 @@ const PopCreateEdit = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <MediaViewer
+        open={!!previewMidia}
+        onOpenChange={(open) => { if (!open) setPreviewMidia(null); }}
+        tipo={previewMidia?.tipo ?? null}
+        url={previewMidia?.url ?? null}
+        nome={previewMidia?.nome ?? "Mídia"}
+      />
 
       <InsertMediaDialog
         open={!!insertDialog}
