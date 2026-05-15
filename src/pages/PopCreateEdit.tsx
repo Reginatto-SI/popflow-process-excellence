@@ -162,11 +162,8 @@ const inlineMarkdown = (
             onClick={() => onOpenMedia?.(midia)}
             className="mx-0.5 inline-flex max-w-full items-center gap-2 rounded-lg border border-primary/25 bg-primary/10 px-2 py-1 text-left text-xs font-medium text-primary transition-colors hover:bg-primary/20"
           >
-            {midia.tipo === "imagem" && midia.url ? (
-              <img src={midia.url} alt={midia.nome} className="h-10 w-10 rounded-md border object-cover" />
-            ) : (
-              Icon && <Icon className="h-4 w-4 shrink-0" />
-            )}
+            {/* Padrão do preview: mídia inline fica como badge/link; a visualização abre somente no MediaViewer. */}
+            {Icon && <Icon className="h-4 w-4 shrink-0" />}
             <span className="min-w-0 truncate">{match} — {tipoLabel[midia.tipo]}</span>
           </button>
         ) : (
