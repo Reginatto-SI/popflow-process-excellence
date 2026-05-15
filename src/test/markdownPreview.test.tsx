@@ -37,6 +37,18 @@ describe("renderMarkdownPreview", () => {
     expect(screen.getByText(/Linha 1/)).toHaveTextContent("Linha 1Linha 2");
   });
 
+  it("renders safe long links in a new tab", () => {
+    const url =
+      "https://www.sefaz.mt.gov.br/acesso/pages/login/login.xhtml?param=1&outro=abc-def_ghi#topo";
+
+    render(<div>{renderMarkdownPreview(`[Sefaz MT](${url})`)}</div>);
+
+    const link = screen.getByRole("link", { name: "Sefaz MT" });
+    expect(link).toHaveAttribute("href", url);
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", "noreferrer");
+  });
+
   it("does not render unsafe html or javascript links as DOM/html", () => {
     render(
       <div>
