@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { Bold, FileText, Heading2, Image as ImageIcon, ImagePlus, Italic, Link, List, ListOrdered, Mic, Quote, Video } from "lucide-react";
+import { Bold, Eye, FileText, Heading2, Image as ImageIcon, ImagePlus, Italic, Link, List, ListOrdered, Mic, Quote, Video } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,6 +24,7 @@ interface Props {
   rows?: number;
   placeholder?: string;
   className?: string;
+  textareaClassName?: string;
   /**
    * Disparado quando o usuário cola/arrasta um arquivo dentro do textarea.
    * Recebe o arquivo capturado para abrir o fluxo de inserção de mídia.
@@ -34,6 +35,10 @@ interface Props {
    * Mantém a mídia fora do editor Markdown para não criar um novo fluxo de anexos.
    */
   onOpenInsertMedia?: () => void;
+  /**
+   * Abre uma pré-visualização somente leitura: o Markdown continua salvo como texto puro.
+   */
+  onPreview?: () => void;
 }
 
 const tipoIcon: Record<PopMidiaTipo, React.ComponentType<{ className?: string }>> = {
@@ -51,7 +56,7 @@ const tipoLabel: Record<PopMidiaTipo, string> = {
 };
 
 export const MediaMentionTextarea = forwardRef<MediaMentionTextareaHandle, Props>(
-  ({ value, onChange, midias, rows = 2, placeholder, className, onRequestInsertMedia, onOpenInsertMedia }, ref) => {
+  ({ value, onChange, midias, rows = 2, placeholder, className, textareaClassName, onRequestInsertMedia, onOpenInsertMedia, onPreview }, ref) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState("");
@@ -266,12 +271,20 @@ export const MediaMentionTextarea = forwardRef<MediaMentionTextareaHandle, Props
           <Button type="button" variant="ghost" size="sm" className="h-8 px-2" onMouseDown={(e) => e.preventDefault()} onClick={insertLink} aria-label="Link">
             <Link className="h-4 w-4" />
           </Button>
-          {onOpenInsertMedia && (
-            <Button type="button" variant="ghost" size="sm" className="h-8 gap-1 px-2 sm:ml-auto" onMouseDown={(e) => e.preventDefault()} onClick={onOpenInsertMedia}>
-              <ImagePlus className="h-4 w-4" />
-              Inserir mídia
-            </Button>
-          )}
+          <div className="flex flex-wrap items-center gap-1 sm:ml-auto">
+            {onPreview && (
+              <Button type="button" variant="ghost" size="sm" className="h-8 gap-1 px-2" onMouseDown={(e) => e.preventDefault()} onClick={onPreview}>
+                <Eye className="h-4 w-4" />
+                Pré-visualizar
+              </Button>
+            )}
+            {onOpenInsertMedia && (
+              <Button type="button" variant="ghost" size="sm" className="h-8 gap-1 px-2" onMouseDown={(e) => e.preventDefault()} onClick={onOpenInsertMedia}>
+                <ImagePlus className="h-4 w-4" />
+                Inserir mídia
+              </Button>
+            )}
+          </div>
         </div>
 
         <Textarea
@@ -292,7 +305,7 @@ export const MediaMentionTextarea = forwardRef<MediaMentionTextareaHandle, Props
           }
           rows={rows}
           placeholder={placeholder}
-          className="rounded-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+          className={cn("rounded-none border-0 resize-y focus-visible:ring-0 focus-visible:ring-offset-0", textareaClassName)}
         />
 
         {open && (

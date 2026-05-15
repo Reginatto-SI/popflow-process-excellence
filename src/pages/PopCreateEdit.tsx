@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowDown, ArrowUp, Building2, CheckCircle2, ChevronDown, ChevronRight, Circle, Eye, FileText, Image, ListChecks, Mic, Plus, Shield, Trash2, User, Video, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Building2, CheckCircle2, ChevronDown, ChevronRight, Circle, Eye, FileText, Image, Info, ListChecks, Mic, Plus, Shield, Trash2, User, Video, X } from "lucide-react";
 
 import { AppLayout } from "@/components/AppLayout";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
   usePop,
@@ -101,6 +103,131 @@ const checklistFromString = (s: string): ChecklistItem[] =>
 
 const checklistToString = (items: ChecklistItem[]): string => items.map((i) => i.texto).join("; ");
 
+const hasAdditionalStepInfo = (step: Pick<StepItem, "resultadoEsperado" | "erroComum" | "preRequisito" | "checklist">) =>
+  [step.resultadoEsperado, step.erroComum, step.preRequisito, step.checklist].some((value) => value.trim().length > 0);
+
+const allowedMarkdownHrefProtocols = new Set(["http:", "https:", "mailto:", "tel:"]);
+
+const getSafeMarkdownHref = (href: string): string | null => {
+  const trimmed = href.trim();
+  if (!trimmed || /[\u0000-\u001F\u007F\s]/.test(trimmed)) return null;
+
+  if (trimmed.startsWith("#")) return trimmed;
+  if (trimmed.startsWith("/") && !trimmed.startsWith("//")) return trimmed;
+
+  const lowerHref = trimmed.toLowerCase();
+  if (lowerHref.startsWith("mailto:") || lowerHref.startsWith("tel:")) return trimmed;
+  if (!lowerHref.startsWith("http://") && !lowerHref.startsWith("https://")) return null;
+
+  try {
+    const url = new URL(trimmed);
+    return allowedMarkdownHrefProtocols.has(url.protocol) ? trimmed : null;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Preview Markdown simples para o MVP: mantém o conteúdo salvo como Markdown puro,
+ * renderiza apenas formatações básicas em modo somente leitura e evita HTML bruto.
+ * Se o produto evoluir, trocar por uma biblioteca Markdown validada (ex.: react-markdown).
+ */
+const inlineMarkdown = (text: string): React.ReactNode[] => {
+  const nodes: React.ReactNode[] = [];
+  const pattern = /(\*\*[^*]+\*\*|_[^_]+_|\*[^*]+\*|\[[^\]]+\]\([^\s)]+\))/g;
+  let lastIndex = 0;
+  text.replace(pattern, (match, _token, offset: number) => {
+    if (offset > lastIndex) nodes.push(text.slice(lastIndex, offset));
+    const key = `${offset}-${match}`;
+    if (match.startsWith("**")) {
+      nodes.push(<strong key={key}>{match.slice(2, -2)}</strong>);
+    } else if (match.startsWith("_") || match.startsWith("*")) {
+      nodes.push(<em key={key}>{match.slice(1, -1)}</em>);
+    } else {
+      const [, label, href] = match.match(/^\[([^\]]+)\]\(([^\s)]+)\)$/) ?? [];
+      const safeHref = href ? getSafeMarkdownHref(href) : null;
+      // Links suspeitos preservam o label como texto comum, sem criar alvo clicável.
+      nodes.push(
+        label && safeHref ? (
+          <a key={key} href={safeHref} target="_blank" rel="noreferrer" className="text-primary underline underline-offset-2">
+            {label}
+          </a>
+        ) : (
+          label || match
+        ),
+      );
+    }
+    lastIndex = offset + match.length;
+    return match;
+  });
+  if (lastIndex < text.length) nodes.push(text.slice(lastIndex));
+  return nodes;
+};
+
+const renderInlineMarkdown = (text: string) => inlineMarkdown(text).map((node, index) => <span key={index}>{node}</span>);
+
+const renderMarkdownPreview = (markdown: string) => {
+  const lines = markdown.split(/\r?\n/);
+  const blocks: React.ReactNode[] = [];
+  let index = 0;
+
+  while (index < lines.length) {
+    const line = lines[index];
+    if (!line.trim()) {
+      index += 1;
+      continue;
+    }
+
+    const heading = line.match(/^(#{1,3})\s+(.+)$/);
+    if (heading) {
+      const level = heading[1].length;
+      const className = level === 1 ? "text-2xl" : level === 2 ? "text-xl" : "text-lg";
+      blocks.push(<h3 key={index} className={`${className} font-semibold text-foreground`}>{renderInlineMarkdown(heading[2])}</h3>);
+      index += 1;
+      continue;
+    }
+
+    if (/^>\s?/.test(line)) {
+      const quoteLines: string[] = [];
+      while (index < lines.length && /^>\s?/.test(lines[index])) {
+        quoteLines.push(lines[index].replace(/^>\s?/, ""));
+        index += 1;
+      }
+      blocks.push(<blockquote key={index} className="border-l-4 border-primary/40 bg-muted/40 py-2 pl-4 text-muted-foreground">{renderInlineMarkdown(quoteLines.join(" "))}</blockquote>);
+      continue;
+    }
+
+    if (/^\s*[-*]\s+/.test(line)) {
+      const items: string[] = [];
+      while (index < lines.length && /^\s*[-*]\s+/.test(lines[index])) {
+        items.push(lines[index].replace(/^\s*[-*]\s+/, ""));
+        index += 1;
+      }
+      blocks.push(<ul key={index} className="list-disc space-y-1 pl-5">{items.map((item, itemIndex) => <li key={itemIndex}>{renderInlineMarkdown(item)}</li>)}</ul>);
+      continue;
+    }
+
+    if (/^\s*\d+\.\s+/.test(line)) {
+      const items: string[] = [];
+      while (index < lines.length && /^\s*\d+\.\s+/.test(lines[index])) {
+        items.push(lines[index].replace(/^\s*\d+\.\s+/, ""));
+        index += 1;
+      }
+      blocks.push(<ol key={index} className="list-decimal space-y-1 pl-5">{items.map((item, itemIndex) => <li key={itemIndex}>{renderInlineMarkdown(item)}</li>)}</ol>);
+      continue;
+    }
+
+    const paragraphLines: string[] = [];
+    while (index < lines.length && lines[index].trim() && !/^(#{1,3})\s+/.test(lines[index]) && !/^>\s?/.test(lines[index]) && !/^\s*[-*]\s+/.test(lines[index]) && !/^\s*\d+\.\s+/.test(lines[index])) {
+      paragraphLines.push(lines[index]);
+      index += 1;
+    }
+    blocks.push(<p key={index} className="leading-7">{renderInlineMarkdown(paragraphLines.join(" "))}</p>);
+  }
+
+  return blocks;
+};
+
 const PopCreateEdit = () => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -122,6 +249,8 @@ const PopCreateEdit = () => {
   const [expandedMidiaUid, setExpandedMidiaUid] = useState<string | null>(null);
   const [expandedStepUid, setExpandedStepUid] = useState<string | null>(null);
   const [allStepsExpanded, setAllStepsExpanded] = useState(false);
+  const [additionalInfoOpenByStep, setAdditionalInfoOpenByStep] = useState<Record<string, boolean>>({});
+  const [previewStepUid, setPreviewStepUid] = useState<string | null>(null);
 
   // Carregar dados em modo edição
   useEffect(() => {
@@ -132,7 +261,7 @@ const PopCreateEdit = () => {
     setResponsavel(popData.responsavel);
     setVisibilidade(popData.visibilidade);
     const etapas = popData.versao_ativa?.etapas ?? [];
-    setSteps(etapas.map((e) => ({
+    const loadedSteps = etapas.map((e) => ({
       uid: e.id,
       ordem: e.ordem,
       titulo: e.titulo,
@@ -142,7 +271,10 @@ const PopCreateEdit = () => {
       erroComum: e.erro_comum,
       preRequisito: e.pre_requisito,
       checklist: checklistToString(e.checklist ?? []),
-    })));
+    }));
+    setSteps(loadedSteps);
+    // Abre informações adicionais já preenchidas para evitar que dados existentes fiquem escondidos.
+    setAdditionalInfoOpenByStep(Object.fromEntries(loadedSteps.map((step) => [step.uid, hasAdditionalStepInfo(step)])));
     if (etapas.length > 0) setExpandedStepUid(etapas[0].id);
     const ms = popData.versao_ativa?.midias ?? [];
     const ordemPorEtapaId = new Map(etapas.map((e) => [e.id, e.ordem]));
@@ -188,6 +320,7 @@ const PopCreateEdit = () => {
       titulo: `Nova etapa ${steps.length + 1}`, descricao: "", tempo: "5 min",
       resultadoEsperado: "", erroComum: "", preRequisito: "", checklist: "",
     }]);
+    setAdditionalInfoOpenByStep((prev) => ({ ...prev, [newUid]: false }));
     setExpandedStepUid(newUid);
     setAllStepsExpanded(false);
   };
@@ -202,6 +335,7 @@ const PopCreateEdit = () => {
     });
     next.forEach((s, i) => (s.ordem = i + 1));
     setSteps(next);
+    setAdditionalInfoOpenByStep((prev) => ({ ...prev, [newUid]: false }));
     setExpandedStepUid(newUid);
     setAllStepsExpanded(false);
   };
@@ -211,6 +345,11 @@ const PopCreateEdit = () => {
     next.forEach((s, i) => (s.ordem = i + 1));
     setSteps(next);
     if (expandedStepUid === uidStep) setExpandedStepUid(null);
+    setAdditionalInfoOpenByStep((prev) => {
+      const nextOpen = { ...prev };
+      delete nextOpen[uidStep];
+      return nextOpen;
+    });
   };
 
   const toggleStep = (uidStep: string) => {
@@ -229,6 +368,7 @@ const PopCreateEdit = () => {
     s.checklist.split(";").map((t) => t.trim()).filter(Boolean).length;
 
   const stepsIncompletas = useMemo(() => steps.filter((s) => !isStepComplete(s)).length, [steps]);
+  const previewStep = steps.find((step) => step.uid === previewStepUid) ?? null;
 
   const addMidia = () => {
     const newUid = uid();
@@ -601,9 +741,12 @@ const PopCreateEdit = () => {
                                   value={step.descricao}
                                   onChange={(v) => updateStep(step.uid, "descricao", v)}
                                   midias={midias.map((m) => ({ referencia: m.referencia, nome: m.nome, tipo: m.tipo }))}
-                                  rows={5}
+                                  // Altura maior porque descrições de POP costumam conter instruções longas.
+                                  rows={10}
+                                  textareaClassName="min-h-[260px]"
                                   onRequestInsertMedia={(file) => openInsertDialog(step.uid, file)}
                                   onOpenInsertMedia={() => openInsertDialog(step.uid)}
+                                  onPreview={() => setPreviewStepUid(step.uid)}
                                 />
                                 {linked.length > 0 && (
                                   <div className="rounded-md border bg-muted/20 p-2">
@@ -639,10 +782,39 @@ const PopCreateEdit = () => {
                                   </div>
                                 )}
                               </div>
-                              <div className="space-y-1"><Label>Resultado esperado</Label><Input value={step.resultadoEsperado} onChange={(e) => updateStep(step.uid, "resultadoEsperado", e.target.value)} /></div>
-                              <div className="space-y-1"><Label>Erro comum</Label><Input value={step.erroComum} onChange={(e) => updateStep(step.uid, "erroComum", e.target.value)} /></div>
-                              <div className="space-y-1"><Label>Pré-requisito</Label><Input value={step.preRequisito} onChange={(e) => updateStep(step.uid, "preRequisito", e.target.value)} /></div>
-                              <div className="space-y-1"><Label>Checklist (separe por ;)</Label><Input value={step.checklist} onChange={(e) => updateStep(step.uid, "checklist", e.target.value)} /></div>
+                              {(() => {
+                                const additionalInfoOpen = additionalInfoOpenByStep[step.uid] ?? hasAdditionalStepInfo(step);
+                                return (
+                                  <Collapsible
+                                    open={additionalInfoOpen}
+                                    onOpenChange={(open) => setAdditionalInfoOpenByStep((prev) => ({ ...prev, [step.uid]: open }))}
+                                    className="md:col-span-2 rounded-lg border bg-muted/10"
+                                  >
+                                    {/* Mantém campos menos usados recolhidos para reduzir ruído visual na edição de etapas. */}
+                                    <CollapsibleTrigger asChild>
+                                      <button type="button" className="flex w-full items-center gap-3 p-3 text-left hover:bg-muted/40">
+                                        {additionalInfoOpen ? <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />}
+                                        <Info className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                        <div className="min-w-0 flex-1">
+                                          <p className="text-sm font-medium text-foreground">Informações adicionais da etapa</p>
+                                          <p className="text-xs text-muted-foreground">Resultado esperado, erros comuns, pré-requisitos e checklist</p>
+                                        </div>
+                                        {hasAdditionalStepInfo(step) && (
+                                          <Badge variant="secondary" className="shrink-0 text-[10px]">Com conteúdo</Badge>
+                                        )}
+                                      </button>
+                                    </CollapsibleTrigger>
+                                    <CollapsibleContent>
+                                      <div className="grid gap-4 border-t p-4 md:grid-cols-2">
+                                        <div className="space-y-1"><Label>Resultado esperado</Label><Input value={step.resultadoEsperado} onChange={(e) => updateStep(step.uid, "resultadoEsperado", e.target.value)} /></div>
+                                        <div className="space-y-1"><Label>Erro comum</Label><Input value={step.erroComum} onChange={(e) => updateStep(step.uid, "erroComum", e.target.value)} /></div>
+                                        <div className="space-y-1"><Label>Pré-requisito</Label><Input value={step.preRequisito} onChange={(e) => updateStep(step.uid, "preRequisito", e.target.value)} /></div>
+                                        <div className="space-y-1"><Label>Checklist (separe por ;)</Label><Input value={step.checklist} onChange={(e) => updateStep(step.uid, "checklist", e.target.value)} /></div>
+                                      </div>
+                                    </CollapsibleContent>
+                                  </Collapsible>
+                                );
+                              })()}
                               <div className="md:col-span-2 flex flex-wrap items-center gap-2 border-t pt-3">
                                 <Button variant="outline" size="sm" onClick={() => moveStep(index, "up")} disabled={index === 0} className="gap-1">
                                   <ArrowUp className="h-3.5 w-3.5" /> Mover para cima
@@ -912,6 +1084,27 @@ const PopCreateEdit = () => {
           </Card>
         </div>
       </div>
+
+      <Dialog open={!!previewStep} onOpenChange={(open) => { if (!open) setPreviewStepUid(null); }}>
+        <DialogContent className="max-h-[85vh] max-w-3xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Pré-visualização da etapa</DialogTitle>
+            <DialogDescription>
+              {previewStep?.titulo || "Etapa sem título"}
+            </DialogDescription>
+          </DialogHeader>
+          {/* Preview somente leitura: renderiza o Markdown sem alterar o texto salvo da descrição. */}
+          <div className="rounded-lg border bg-muted/10 p-4">
+            {previewStep?.descricao.trim() ? (
+              <div className="space-y-4 text-sm text-foreground">
+                {renderMarkdownPreview(previewStep.descricao)}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Nenhuma descrição preenchida para pré-visualizar.</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <InsertMediaDialog
         open={!!insertDialog}
