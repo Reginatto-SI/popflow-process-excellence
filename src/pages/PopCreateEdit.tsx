@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowDown, ArrowUp, Building2, CheckCircle2, ChevronDown, ChevronRight, Circle, Eye, FileText, Image, ImagePlus, ListChecks, Mic, Plus, Shield, Trash2, User, Video, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Building2, CheckCircle2, ChevronDown, ChevronRight, Circle, Eye, FileText, Image, ListChecks, Mic, Plus, Shield, Trash2, User, Video, X } from "lucide-react";
 
 import { AppLayout } from "@/components/AppLayout";
 import { Badge } from "@/components/ui/badge";
@@ -592,19 +592,7 @@ const PopCreateEdit = () => {
                               <div className="space-y-1"><Label>Título da etapa</Label><Input value={step.titulo} onChange={(e) => updateStep(step.uid, "titulo", e.target.value)} /></div>
                               <div className="space-y-1"><Label>Tempo estimado</Label><Input value={step.tempo} onChange={(e) => updateStep(step.uid, "tempo", e.target.value)} /></div>
                               <div className="space-y-2 md:col-span-2">
-                                <div className="flex items-center justify-between gap-2">
-                                  <Label>Descrição (digite @ para inserir uma mídia cadastrada)</Label>
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => openInsertDialog(step.uid)}
-                                    className="gap-1"
-                                  >
-                                    <ImagePlus className="h-3.5 w-3.5" />
-                                    Inserir mídia
-                                  </Button>
-                                </div>
+                                <Label>Descrição (digite @ para inserir uma mídia cadastrada)</Label>
                                 <MediaMentionTextarea
                                   ref={(el) => {
                                     if (el) textareaRefs.current.set(step.uid, el);
@@ -615,6 +603,7 @@ const PopCreateEdit = () => {
                                   midias={midias.map((m) => ({ referencia: m.referencia, nome: m.nome, tipo: m.tipo }))}
                                   rows={5}
                                   onRequestInsertMedia={(file) => openInsertDialog(step.uid, file)}
+                                  onOpenInsertMedia={() => openInsertDialog(step.uid)}
                                 />
                                 {linked.length > 0 && (
                                   <div className="rounded-md border bg-muted/20 p-2">
