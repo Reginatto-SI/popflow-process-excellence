@@ -5,7 +5,7 @@ import {
   BookOpen,
   Building2,
   CalendarClock,
-  CircleInfo,
+  Info,
   Edit,
   Eye,
   FileQuestion,
@@ -339,7 +339,7 @@ const FormFields = ({
       <Tabs defaultValue="geral" className="space-y-4">
         <TabsList className="grid h-auto w-full grid-cols-3 rounded-2xl border bg-muted/40 p-1 shadow-inner">
           <TabsTrigger value="geral" className="gap-2 rounded-xl py-2 text-muted-foreground transition-all hover:bg-background/70 hover:text-foreground data-[state=active]:bg-background data-[state=active]:font-semibold data-[state=active]:text-foreground data-[state=active]:shadow-sm">
-            <CircleInfo className="h-4 w-4" />
+            <Info className="h-4 w-4" />
             Geral
           </TabsTrigger>
           <TabsTrigger value="conteudo" className="gap-2 rounded-xl py-2 text-muted-foreground transition-all hover:bg-background/70 hover:text-foreground data-[state=active]:bg-background data-[state=active]:font-semibold data-[state=active]:text-foreground data-[state=active]:shadow-sm">
