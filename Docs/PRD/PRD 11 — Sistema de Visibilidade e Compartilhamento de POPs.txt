@@ -6,6 +6,8 @@
 
 Este módulo define como os POPs são visíveis e compartilhados dentro do sistema, permitindo que usuários criem processos privados (uso pessoal) ou compartilhem com a empresa.
 
+O mesmo conceito de visibilidade pode ser reaproveitado para conteúdos da Base de Conhecimento, como artigos internos, dúvidas frequentes, soluções de erro e anotações operacionais, sem transformar este PRD em especificação completa desses conteúdos.
+
 O objetivo é equilibrar:
 
 - Liberdade individual (uso pessoal)
@@ -20,12 +22,15 @@ O objetivo é equilibrar:
 - Criar fluxo natural de evolução de conhecimento
 - Aumentar adoção do sistema
 - Evitar rigidez excessiva no uso
+- Criar referência conceitual para visibilidade de conteúdos de conhecimento
 
 ---
 
 ## 🔑 3. CONCEITO PRINCIPAL
 
 Cada POP possui um nível de visibilidade.
+
+O conceito também pode ser aplicado a conteúdos de conhecimento descritos nos PRDs 13 e 14, respeitando as mesmas premissas de privacidade, empresa e evolução futura por departamento.
 
 ---
 
@@ -36,18 +41,21 @@ Cada POP possui um nível de visibilidade.
 - Não aparece para outros usuários
 - Não entra em revisão
 - Uso pessoal
+- Quando aplicado à Base de Conhecimento, não aparece na busca global de outros usuários
 
 ---
 
 #### 🏢 Empresa
 - Visível para todos da empresa (ou conforme permissões)
 - Pode entrar em revisão
-- Pode ser executado
+- Pode ser executado quando for POP
+- Quando aplicado à Base de Conhecimento, pode ser consultado por usuários autorizados
 
 ---
 
 #### 👥 Departamento (futuro)
 - Visível apenas para um grupo específico
+- Pode ser reutilizado futuramente para restringir artigos, dúvidas, soluções e anotações por departamento
 
 ---
 
@@ -167,7 +175,28 @@ Exibir no POP:
 
 ---
 
-## 🧩 7. ESTRUTURA DE DADOS
+## 🔎 7. REFERÊNCIA CONCEITUAL PARA BASE DE CONHECIMENTO
+
+A Base de Conhecimento deve reaproveitar o conceito de visibilidade sem alterar o foco deste PRD.
+
+Regras conceituais:
+
+- Conteúdos privados só aparecem para o autor
+- Conteúdos compartilhados com a empresa aparecem para usuários autorizados
+- Departamento pode ser uma evolução futura
+- Conteúdo privado não deve aparecer na busca global de outros usuários
+- Conteúdos de conhecimento devem respeitar empresa_id e permissões multi-tenant
+
+Exemplos de conteúdos que podem reutilizar essa lógica:
+
+- Artigos internos
+- Dúvidas frequentes
+- Soluções de erro
+- Anotações operacionais
+
+---
+
+## 🧩 8. ESTRUTURA DE DADOS
 
 ### POP (atualização)
 
@@ -176,7 +205,7 @@ Exibir no POP:
 
 ---
 
-## 🔐 8. REGRAS IMPORTANTES
+## 🔐 9. REGRAS IMPORTANTES
 
 - Usuário só acessa POP privado próprio
 - POP privado não pode ser acessado por outros
@@ -185,7 +214,7 @@ Exibir no POP:
 
 ---
 
-## 🎨 9. UX / UI PRINCÍPIOS
+## 🎨 10. UX / UI PRINCÍPIOS
 
 - Escolha simples na criação
 - Visual claro de visibilidade
@@ -194,16 +223,17 @@ Exibir no POP:
 
 ---
 
-## 🚫 10. FORA DO ESCOPO (AGORA)
+## 🚫 11. FORA DO ESCOPO (AGORA)
 
 - Compartilhamento por usuário específico
 - Compartilhamento por grupo avançado
 - Permissões customizadas por POP
 - Controle granular (view/edit)
+- Implementação completa de visibilidade da Base de Conhecimento neste PRD
 
 ---
 
-## 📈 11. MÉTRICAS DE SUCESSO
+## 📈 12. MÉTRICAS DE SUCESSO
 
 - % de POPs privados criados
 - % de POPs convertidos em empresa
@@ -212,7 +242,7 @@ Exibir no POP:
 
 ---
 
-## 🔥 12. DIFERENCIAL ESTRATÉGICO
+## 🔥 13. DIFERENCIAL ESTRATÉGICO
 
 Este módulo transforma o sistema de:
 
@@ -228,9 +258,10 @@ Permitindo:
 
 ---
 
-## 💡 13. FUTURO (EXPANSÃO)
+## 💡 14. FUTURO (EXPANSÃO)
 
 - Compartilhamento por departamento
+- Aplicação operacional da visibilidade por departamento em artigos, dúvidas, soluções e anotações
 - Compartilhamento com usuários específicos
 - Permissões por POP
 - Biblioteca pública de processos
