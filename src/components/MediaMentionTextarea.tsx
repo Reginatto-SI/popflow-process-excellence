@@ -265,12 +265,37 @@ export const MediaMentionTextarea = forwardRef<MediaMentionTextareaHandle, Props
       replaceSelection(next, start, start + transformed.length);
     };
 
+    const unsafeLinkProtocols = /^(javascript|data|vbscript):/i;
+    const safeHttpUrl = /^(https?:\/\/)/i;
+    const urlWithoutProtocol = /^(www\.|[A-Za-z0-9-]+\.[A-Za-z]{2,})([^\s]*)$/;
+
+    const escapeMarkdownLinkLabel = (text: string) =>
+      text.replace(/\\/g, "\\\\").replace(/]/g, "\\]");
+
+    const linkForSelection = (selected: string) => {
+      const trimmed = selected.trim();
+      if (!trimmed || unsafeLinkProtocols.test(trimmed)) return null;
+      if (safeHttpUrl.test(trimmed)) return trimmed;
+      if (urlWithoutProtocol.test(trimmed)) return `https://${trimmed}`;
+      return null;
+    };
+
     const insertLink = () => {
       const { start, end, selected } = getSelection();
-      const label = selected || "texto do link";
-      const inserted = `[${label}](https://exemplo.com)`;
+      const selectedText = selected.trim();
+      const label = selectedText || "texto do link";
+      const href = linkForSelection(selectedText) ?? "https://";
+      // Converte apenas a seleção acionada pelo botão em Markdown link, sem auto-linkar texto digitado ou mexer em @midias.
+      const inserted = `[${escapeMarkdownLinkLabel(label)}](${href})`;
       const next = value.slice(0, start) + inserted + value.slice(end);
-      replaceSelection(next, start + 1, start + 1 + label.length);
+
+      if (selectedText && linkForSelection(selectedText)) {
+        replaceSelection(next, start + inserted.length, start + inserted.length);
+        return;
+      }
+
+      const urlCursor = start + inserted.length - 1;
+      replaceSelection(next, urlCursor, urlCursor);
     };
 
     return (
