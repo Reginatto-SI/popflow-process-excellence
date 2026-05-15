@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Check, CheckCircle2, Clock3, FileAudio2, FileImage, FileText, Film } from "lucide-react";
+import { Check, CheckCircle2, Clock3 } from "lucide-react";
 
 import { AppSidebar } from "@/components/AppSidebar";
 import { Badge } from "@/components/ui/badge";
@@ -11,23 +11,14 @@ import { Progress } from "@/components/ui/progress";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { MediaViewer } from "@/components/MediaViewer";
 import { useToast } from "@/hooks/use-toast";
-import type { PopMidiaTipo, PopMidiaRow } from "@/hooks/usePops";
+import type { PopMidiaRow } from "@/hooks/usePops";
 import {
   useConcluirEtapa,
   useExecucao,
   useExecucaoEtapas,
   useFinalizarExecucao,
 } from "@/hooks/useExecucoes";
-
-const mediaIcons: Record<PopMidiaTipo, ReactNode> = {
-  imagem: <FileImage className="h-3.5 w-3.5" />,
-  audio: <FileAudio2 className="h-3.5 w-3.5" />,
-  video: <Film className="h-3.5 w-3.5" />,
-  documento: <FileText className="h-3.5 w-3.5" />,
-};
-
-// Mesmo padrão usado no PopDetail (suporta @Sintegra, @midia1, @acesso-a-tela).
-const REF_REGEX = /@([A-Za-zÀ-ÿ0-9_-]+)/g;
+import { renderMarkdownPreview } from "@/lib/markdownPreview";
 
 export default function PopExecution() {
   const { id } = useParams();
@@ -120,35 +111,11 @@ export default function PopExecution() {
     }
   };
 
-  const renderInstruction = (texto: string) => {
-    if (!texto) return null;
-    const matches = [...texto.matchAll(REF_REGEX)];
-    if (matches.length === 0) return texto;
-    const parts: ReactNode[] = [];
-    let cursor = 0;
-    matches.forEach((match, idx) => {
-      const token = match[0];
-      const ref = match[1];
-      const start = match.index ?? 0;
-      const end = start + token.length;
-      if (start > cursor) parts.push(texto.slice(cursor, start));
-      const m = midiasDaEtapa.find((x) => x.referencia === ref) ?? midias.find((x) => x.referencia === ref);
-      if (!m) parts.push(token);
-      else parts.push(
-        <button
-          key={`${ref}-${idx}`}
-          type="button"
-          onClick={() => setViewer({ open: true, midia: m })}
-          className="mx-0.5 inline-flex items-center gap-1 rounded-full border border-primary/25 bg-primary/10 px-2 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
-        >
-          {mediaIcons[m.tipo]}{token}
-        </button>
-      );
-      cursor = end;
-    });
-    if (cursor < texto.length) parts.push(texto.slice(cursor));
-    return parts;
-  };
+  const porReferencia = new Map<string, PopMidiaRow>();
+  [...midiasDaEtapa, ...midias].forEach((m) => {
+    if (!porReferencia.has(m.referencia)) porReferencia.set(m.referencia, m);
+  });
+  const midiasParaDescricao = [...porReferencia.values()];
 
   return (
     <SidebarProvider defaultOpen={false}>
@@ -186,7 +153,10 @@ export default function PopExecution() {
                     <CardTitle className="text-lg">Etapa {etapa.ordem} — {etapa.titulo}</CardTitle>
                     {etapa.tempo_estimado && <Badge variant="secondary" className="gap-1"><Clock3 className="h-3.5 w-3.5" />{etapa.tempo_estimado}</Badge>}
                   </div>
-                  <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">{renderInstruction(etapa.descricao)}</p>
+                  {/* Renderiza Markdown seguro sem dangerouslySetInnerHTML: HTML digitado pelo usuário permanece texto, e mídias viram chips clicáveis. */}
+                  <div className="space-y-4 text-sm leading-relaxed text-muted-foreground">
+                    {renderMarkdownPreview(etapa.descricao, midiasParaDescricao, (midia) => setViewer({ open: true, midia }))}
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-3 border-t pt-4">
                   <p className="text-xs font-semibold uppercase text-muted-foreground">Checklist da etapa</p>
