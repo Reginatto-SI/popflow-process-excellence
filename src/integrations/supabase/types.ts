@@ -695,9 +695,15 @@ export type Database = {
       current_user_can_manage_pops: { Args: never; Returns: boolean }
     }
     Enums: {
-      base_conhecimento_status: "rascunho" | "revisao" | "publicado" | "arquivado" | "aberta" | "resolvida"
-      base_conhecimento_tipo: "artigo" | "duvida" | "solucao_erro" | "anotacao"
       app_role: "admin" | "gestor" | "criador" | "executor" | "developer"
+      base_conhecimento_status:
+        | "rascunho"
+        | "revisao"
+        | "publicado"
+        | "arquivado"
+        | "aberta"
+        | "resolvida"
+      base_conhecimento_tipo: "artigo" | "duvida" | "solucao_erro" | "anotacao"
       pop_midia_tipo: "imagem" | "audio" | "video" | "documento"
       pop_status: "rascunho" | "revisao" | "publicado"
       pop_visibilidade: "privado" | "empresa"
@@ -828,9 +834,16 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      base_conhecimento_status: ["rascunho", "revisao", "publicado", "arquivado", "aberta", "resolvida"],
-      base_conhecimento_tipo: ["artigo", "duvida", "solucao_erro", "anotacao"],
       app_role: ["admin", "gestor", "criador", "executor", "developer"],
+      base_conhecimento_status: [
+        "rascunho",
+        "revisao",
+        "publicado",
+        "arquivado",
+        "aberta",
+        "resolvida",
+      ],
+      base_conhecimento_tipo: ["artigo", "duvida", "solucao_erro", "anotacao"],
       pop_midia_tipo: ["imagem", "audio", "video", "documento"],
       pop_status: ["rascunho", "revisao", "publicado"],
       pop_visibilidade: ["privado", "empresa"],
