@@ -61,6 +61,18 @@ describe("MediaMentionTextarea link button", () => {
     );
   });
 
+  it("inserts a fenced code block without changing existing media references", async () => {
+    const textarea = renderEditor("Use @midia1");
+
+    textarea.focus();
+    textarea.setSelectionRange(4, 11);
+    fireEvent.click(screen.getByRole("button", { name: "Bloco de código" }));
+
+    await waitFor(() =>
+      expect(textarea).toHaveValue("Use ```\n@midia1\n```"),
+    );
+  });
+
   it("keeps unsafe protocol selections on an editable placeholder href", async () => {
     const unsafeUrl = "javascript:alert(1)";
     const textarea = renderEditor(unsafeUrl);

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { renderMarkdownPreview } from "@/lib/markdownPreview";
+import { renderMarkdownPreview, stripMarkdownForSearchPreview } from "@/lib/markdownPreview";
 
 describe("renderMarkdownPreview", () => {
   it("renders basic markdown and media references without raw markers", () => {
@@ -47,6 +47,20 @@ describe("renderMarkdownPreview", () => {
     expect(link).toHaveAttribute("href", url);
     expect(link).toHaveAttribute("target", "_blank");
     expect(link).toHaveAttribute("rel", "noreferrer");
+  });
+
+  it("renders fenced code blocks as safe text", () => {
+    const { container } = render(
+      <div>{renderMarkdownPreview("```\nconst token = '<safe>';\n```")}</div>,
+    );
+
+    expect(container.querySelector("pre code")).toHaveTextContent("const token = '<safe>';");
+  });
+
+  it("normalizes markdown and inline refs for list previews/search", () => {
+    expect(
+      stripMarkdownForSearchPreview("## Título\nVeja **passo** em @midia1 e [manual](https://exemplo.com)."),
+    ).toBe("Título Veja passo em e manual.");
   });
 
   it("does not render unsafe html or javascript links as DOM/html", () => {

@@ -1,15 +1,15 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { Bold, Eye, FileText, Heading2, Image as ImageIcon, ImagePlus, Italic, Link, List, ListOrdered, Mic, Quote, Video } from "lucide-react";
+import { Bold, Code2, Eye, FileText, Heading2, Image as ImageIcon, ImagePlus, Italic, Link, List, ListOrdered, Mic, Quote, Video } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import type { PopMidiaTipo } from "@/hooks/usePops";
+import type { InlineMediaTipo } from "@/lib/markdownPreview";
 
 export interface MentionMidia {
   referencia: string;
   nome: string;
-  tipo: PopMidiaTipo;
+  tipo: InlineMediaTipo;
 }
 
 export interface MediaMentionTextareaHandle {
@@ -41,14 +41,14 @@ interface Props {
   onPreview?: () => void;
 }
 
-const tipoIcon: Record<PopMidiaTipo, React.ComponentType<{ className?: string }>> = {
+const tipoIcon: Record<InlineMediaTipo, React.ComponentType<{ className?: string }>> = {
   imagem: ImageIcon,
   audio: Mic,
   video: Video,
   documento: FileText,
 };
 
-const tipoLabel: Record<PopMidiaTipo, string> = {
+const tipoLabel: Record<InlineMediaTipo, string> = {
   imagem: "Imagem",
   audio: "Áudio",
   video: "Vídeo",
@@ -300,7 +300,7 @@ export const MediaMentionTextarea = forwardRef<MediaMentionTextareaHandle, Props
 
     return (
       <div className={cn("relative rounded-md border border-input bg-background", className)}>
-        {/* Toolbar Markdown-first: adiciona apenas sintaxe Markdown ao texto salvo, sem HTML bruto. */}
+        {/* Toolbar Markdown-first compartilhada entre POP e Base: adiciona só sintaxe Markdown ao texto salvo, sem HTML bruto ou editor pesado. */}
         <div className="flex flex-wrap items-center gap-1 border-b bg-muted/30 p-2">
           <Button type="button" variant="ghost" size="sm" className="h-8 px-2" onMouseDown={(e) => e.preventDefault()} onClick={() => wrapSelection("**", "**", "texto importante")} aria-label="Negrito">
             <Bold className="h-4 w-4" />
@@ -324,6 +324,10 @@ export const MediaMentionTextarea = forwardRef<MediaMentionTextareaHandle, Props
           </Button>
           <Button type="button" variant="ghost" size="sm" className="h-8 px-2" onMouseDown={(e) => e.preventDefault()} onClick={insertLink} aria-label="Link">
             <Link className="h-4 w-4" />
+          </Button>
+          <Button type="button" variant="ghost" size="sm" className="h-8 gap-1 px-2" onMouseDown={(e) => e.preventDefault()} onClick={() => insertBlock("```\n{{text}}\n```", "cole o comando ou código aqui")} aria-label="Bloco de código">
+            <Code2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Código</span>
           </Button>
           <div className="flex flex-wrap items-center gap-1 sm:ml-auto">
             {onPreview && (
