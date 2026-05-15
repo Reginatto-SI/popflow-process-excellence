@@ -76,8 +76,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { MediaMentionTextarea, type MediaMentionTextareaHandle } from "@/components/MediaMentionTextarea";
 import { InsertMediaDialog, type InsertedMedia } from "@/components/InsertMediaDialog";
 import { MediaViewer } from "@/components/MediaViewer";
-import type { PopMidiaTipo } from "@/hooks/usePops";
-import { renderMarkdownPreview } from "@/lib/markdownPreview";
+import { renderMarkdownPreview, stripMarkdownForSearchPreview, type InlineMediaTipo } from "@/lib/markdownPreview";
 
 const typeLabel: Record<KnowledgeType, string> = {
   artigo: "Artigo",
@@ -178,6 +177,7 @@ const formatDate = (iso?: string | null) => {
 const normalize = (value?: string | null) => (value ?? "").toLowerCase().trim();
 const tagText = (tags: string[]) => tags.join(", ");
 const parseTags = (value: string) => value.split(",").map((tag) => tag.trim()).filter(Boolean);
+const compactPreviewText = (value?: string | null) => stripMarkdownForSearchPreview(value ?? "");
 
 
 const slugifyRef = (s: string): string =>
@@ -192,7 +192,7 @@ const slugifyRef = (s: string): string =>
 type KnowledgeInlineMedia = {
   uid: string;
   id?: string;
-  tipo: PopMidiaTipo;
+  tipo: InlineMediaTipo;
   nome: string;
   referencia: string;
   url: string;
@@ -234,6 +234,7 @@ const FormFields = ({
   inlineMedia,
   uploadInlineFile,
   onAddInlineMedia,
+  onDiscardUploadedAsset,
 }: {
   form: KnowledgeContentInput;
   onChange: (patch: Partial<KnowledgeContentInput>) => void;
@@ -242,6 +243,7 @@ const FormFields = ({
   inlineMedia: KnowledgeInlineMedia[];
   uploadInlineFile: (file: File) => Promise<UploadedInlineAsset>;
   onAddInlineMedia: (media: KnowledgeInlineMedia) => Promise<void> | void;
+  onDiscardUploadedAsset: (asset: UploadedInlineAsset) => Promise<void>;
 }) => {
   const compatibleStatuses = statusByType[form.tipo];
   const textareaRefs = useRef<Map<string, MediaMentionTextareaHandle | null>>(new Map());
@@ -279,6 +281,19 @@ const FormFields = ({
       textareaRefs.current.get(String(insertDialog.field))?.insertReferenceAtCursor(media.referencia);
     });
     lastUploadedAssetRef.current = null;
+  };
+
+  const handleInsertDialogOpenChange = async (open: boolean) => {
+    if (open) return;
+
+    // Limitação atual: o upload acontece antes da confirmação final para reaproveitar o modal dos POPs.
+    // Se o usuário fechar após o upload e antes do vínculo, removemos o objeto temporário para não deixar lixo no bucket.
+    const pendingAsset = lastUploadedAssetRef.current;
+    lastUploadedAssetRef.current = null;
+    setInsertDialog(null);
+    if (pendingAsset) {
+      await onDiscardUploadedAsset(pendingAsset);
+    }
   };
 
   const mediaOptions = inlineMedia.map((media) => ({
@@ -322,16 +337,16 @@ const FormFields = ({
   return (
     <>
       <Tabs defaultValue="geral" className="space-y-4">
-        <TabsList className="grid h-auto w-full grid-cols-3 rounded-xl bg-muted/60 p-1">
-          <TabsTrigger value="geral" className="gap-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+        <TabsList className="grid h-auto w-full grid-cols-3 rounded-2xl border bg-muted/40 p-1 shadow-inner">
+          <TabsTrigger value="geral" className="gap-2 rounded-xl py-2 text-muted-foreground transition-all hover:bg-background/70 hover:text-foreground data-[state=active]:bg-background data-[state=active]:font-semibold data-[state=active]:text-foreground data-[state=active]:shadow-sm">
             <CircleInfo className="h-4 w-4" />
             Geral
           </TabsTrigger>
-          <TabsTrigger value="conteudo" className="gap-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+          <TabsTrigger value="conteudo" className="gap-2 rounded-xl py-2 text-muted-foreground transition-all hover:bg-background/70 hover:text-foreground data-[state=active]:bg-background data-[state=active]:font-semibold data-[state=active]:text-foreground data-[state=active]:shadow-sm">
             <FileText className="h-4 w-4" />
             Conteúdo
           </TabsTrigger>
-          <TabsTrigger value="vinculos" className="gap-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+          <TabsTrigger value="vinculos" className="gap-2 rounded-xl py-2 text-muted-foreground transition-all hover:bg-background/70 hover:text-foreground data-[state=active]:bg-background data-[state=active]:font-semibold data-[state=active]:text-foreground data-[state=active]:shadow-sm">
             <LinkIcon className="h-4 w-4" />
             Vínculos
           </TabsTrigger>
@@ -537,7 +552,7 @@ const FormFields = ({
       <InsertMediaDialog
         open={!!insertDialog}
         onOpenChange={(open) => {
-          if (!open) setInsertDialog(null);
+          void handleInsertDialogOpenChange(open);
         }}
         initialFile={insertDialog?.file ?? null}
         existingRefs={inlineMedia.map((media) => media.referencia)}
@@ -613,6 +628,7 @@ const BaseConhecimento = () => {
   const [deleteTarget, setDeleteTarget] = useState<KnowledgeContent | null>(null);
   const [form, setForm] = useState<KnowledgeContentInput>(emptyForm);
   const [inlineMedia, setInlineMedia] = useState<KnowledgeInlineMedia[]>([]);
+  const [sessionInlineMediaIds, setSessionInlineMediaIds] = useState<string[]>([]);
   const [viewMedia, setViewMedia] = useState<KnowledgeInlineMedia | null>(null);
 
   const canManageKnowledge = ["admin", "gestor", "criador", "developer"].includes(perfilAtual?.role ?? "");
@@ -625,17 +641,18 @@ const BaseConhecimento = () => {
     const termo = normalize(busca);
     return contents.filter((item) => {
       // Filtro local simples do MVP: busca apenas nos conteúdos já retornados pela RLS do Supabase.
+      // Markdown e @referencias são normalizados para evitar poluir a busca futura com sintaxe inline.
       const searchBucket = [
         item.titulo,
         item.resumo,
-        item.conteudo,
+        compactPreviewText(item.conteudo),
         item.categoria,
         item.departamento,
-        item.pergunta,
-        item.resposta,
-        item.causa,
-        item.solucao,
-        item.observacoes,
+        compactPreviewText(item.pergunta),
+        compactPreviewText(item.resposta),
+        compactPreviewText(item.causa),
+        compactPreviewText(item.solucao),
+        compactPreviewText(item.observacoes),
         ...(item.tags ?? []),
       ].map(normalize).join(" ");
       return (
@@ -672,6 +689,7 @@ const BaseConhecimento = () => {
     setEditing(null);
     setForm({ ...emptyForm, resumo: "" });
     setInlineMedia([]);
+    setSessionInlineMediaIds([]);
     setFormOpen(true);
   };
 
@@ -683,6 +701,7 @@ const BaseConhecimento = () => {
     setEditing(content);
     setForm({ ...nextForm, resumo: "" });
     setInlineMedia((content.anexos ?? []).map(inlineMediaFromAttachment).filter(Boolean) as KnowledgeInlineMedia[]);
+    setSessionInlineMediaIds([]);
     setFormOpen(true);
   };
 
@@ -697,6 +716,8 @@ const BaseConhecimento = () => {
   const uploadInlineFile = async (file: File): Promise<UploadedInlineAsset> => {
     const empresaId = await currentEmpresaId();
     const safeName = file.name.replace(/[^A-Za-z0-9._-]/g, "_");
+    // Bucket herdado do PRD 12: mantemos o prefixo base-conhecimento para isolar a origem e facilitar limpeza futura.
+    // TODO: quando houver drafts persistentes, trocar "_new" por um id temporário rastreável em banco/edge cleanup.
     const storagePath = `${empresaId}/base-conhecimento/${editing?.id ?? "_new"}/${crypto.randomUUID()}-${safeName}`;
     const { error } = await supabase.storage
       .from("pop-midias")
@@ -709,6 +730,37 @@ const BaseConhecimento = () => {
       mime_type: file.type || "application/octet-stream",
       tamanho: file.size,
     };
+  };
+
+  const discardUploadedAsset = async (asset: UploadedInlineAsset) => {
+    if (!asset.storage_path) return;
+    const { error } = await supabase.storage.from("pop-midias").remove([asset.storage_path]);
+    if (error) {
+      toast.warning(`Upload temporário não removido automaticamente: ${error.message}`);
+    }
+  };
+
+  const cleanupPendingInlineMedia = async () => {
+    const pending = inlineMedia.filter((media) => !media.persisted && media.storage_path);
+    const sessionPersisted = inlineMedia.filter((media) => media.id && sessionInlineMediaIds.includes(media.id));
+
+    // Cleanup simples do cenário cancelar/fechar antes de salvar.
+    // Mídias já persistidas antes de abrir o modal ficam preservadas; as adicionadas nesta sessão de edição são revertidas.
+    // Uma rotina futura no backend ainda deve varrer falhas/network timeouts e abas fechadas abruptamente.
+    const storagePaths = [...pending, ...sessionPersisted].map((media) => media.storage_path).filter(Boolean);
+    if (storagePaths.length > 0) {
+      const { error } = await supabase.storage.from("pop-midias").remove(storagePaths);
+      if (error) {
+        toast.warning(`Não foi possível limpar todos os uploads temporários: ${error.message}`);
+      }
+    }
+
+    if (sessionInlineMediaIds.length > 0) {
+      const { error } = await supabase.from("base_conhecimento_anexos").delete().in("id", sessionInlineMediaIds);
+      if (error) {
+        toast.warning(`Não foi possível reverter todos os vínculos de mídia inline: ${error.message}`);
+      }
+    }
   };
 
   const persistInlineMedia = async (contentId: string, media: KnowledgeInlineMedia) => {
@@ -742,7 +794,10 @@ const BaseConhecimento = () => {
       return;
     }
     const persisted = await persistInlineMedia(editing.id, media);
-    if (persisted) setInlineMedia((current) => [...current, persisted]);
+    if (persisted) {
+      setInlineMedia((current) => [...current, persisted]);
+      if (persisted.id) setSessionInlineMediaIds((current) => [...current, persisted.id]);
+    }
     queryClient.invalidateQueries({ queryKey: ["base-conhecimento"] });
   };
 
@@ -758,6 +813,7 @@ const BaseConhecimento = () => {
       const inputWithoutResumo = { ...input, resumo: "" };
       if (editing) {
         await updateContent.mutateAsync({ id: editing.id, input: inputWithoutResumo });
+        setSessionInlineMediaIds([]);
         toast.success("Conteúdo atualizado.");
         setFormOpen(false);
       } else {
@@ -777,6 +833,7 @@ const BaseConhecimento = () => {
           pop: null,
           anexos: [],
         });
+        setSessionInlineMediaIds([]);
         queryClient.invalidateQueries({ queryKey: ["base-conhecimento"] });
         toast.success("Conteúdo criado com mídia inline disponível.");
         setFormOpen(false);
@@ -784,6 +841,19 @@ const BaseConhecimento = () => {
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Não foi possível salvar o conteúdo.");
     }
+  };
+
+  const handleFormOpenChange = async (open: boolean) => {
+    if (open) {
+      setFormOpen(true);
+      return;
+    }
+
+    await cleanupPendingInlineMedia();
+    setFormOpen(false);
+    setEditing(null);
+    setInlineMedia([]);
+    setSessionInlineMediaIds([]);
   };
 
   const confirmDelete = async () => {
@@ -920,7 +990,7 @@ const BaseConhecimento = () => {
             const canEdit = item.autor_id === user?.id || canManageKnowledge;
             const canDelete = canEdit;
             const inlineCount = (item.anexos ?? []).filter((attachment) => attachment.referencia).length;
-            const preview = item.conteudo || item.resposta || item.pergunta || item.solucao || "Sem conteúdo informado.";
+            const preview = compactPreviewText(item.conteudo || item.resposta || item.pergunta || item.solucao) || "Sem conteúdo informado.";
             return (
               <Card key={item.id} className="border-border/70 bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
                 <CardContent className="flex flex-col gap-4 p-4 md:flex-row md:items-start md:justify-between">
@@ -957,7 +1027,7 @@ const BaseConhecimento = () => {
         </section>
       </div>
 
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
+      <Dialog open={formOpen} onOpenChange={(open) => { void handleFormOpenChange(open); }}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>{editing ? "Editar conteúdo" : "Novo conteúdo"}</DialogTitle>
@@ -971,9 +1041,10 @@ const BaseConhecimento = () => {
             inlineMedia={inlineMedia}
             uploadInlineFile={uploadInlineFile}
             onAddInlineMedia={addInlineMedia}
+            onDiscardUploadedAsset={discardUploadedAsset}
           />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setFormOpen(false)}>Cancelar</Button>
+            <Button variant="outline" onClick={() => { void handleFormOpenChange(false); }}>Cancelar</Button>
             <Button onClick={saveForm} disabled={createContent.isPending || updateContent.isPending}>Salvar</Button>
           </DialogFooter>
         </DialogContent>

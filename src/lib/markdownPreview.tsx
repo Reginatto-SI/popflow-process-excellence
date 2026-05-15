@@ -3,12 +3,16 @@ import { FileText, Image, Mic, Video } from "lucide-react";
 
 import type { PopMidiaTipo } from "@/hooks/usePops";
 
+// Tipo ainda nasce no módulo POP por compatibilidade com o enum/tabela original,
+// mas o contrato abaixo é deliberadamente genérico para POP, Base de Conhecimento e futuros comentários.
+export type InlineMediaTipo = PopMidiaTipo;
+
 export interface MarkdownMediaRef {
   referencia: string;
-  tipo: PopMidiaTipo;
+  tipo: InlineMediaTipo;
 }
 
-const mediaTypeLabel: Record<PopMidiaTipo, string> = {
+const mediaTypeLabel: Record<InlineMediaTipo, string> = {
   imagem: "Imagem",
   audio: "Áudio",
   video: "Vídeo",
@@ -16,7 +20,7 @@ const mediaTypeLabel: Record<PopMidiaTipo, string> = {
 };
 
 const MediaTypeIcon: Record<
-  PopMidiaTipo,
+  InlineMediaTipo,
   ComponentType<{ className?: string }>
 > = {
   imagem: Image,
@@ -52,6 +56,26 @@ const getSafeMarkdownHref = (href: string): string | null => {
     return null;
   }
 };
+
+/**
+ * Texto plano para listagens/busca local. Remove sintaxe Markdown e @referencias
+ * para evitar poluir previews e preparar uma indexação futura com conteúdo limpo.
+ */
+export const stripMarkdownForSearchPreview = (markdown: string) =>
+  markdown
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    .replace(/@([A-Za-zÀ-ÿ0-9_-]+)/g, " ")
+    .replace(/^\s{0,3}#{1,6}\s+/gm, "")
+    .replace(/^\s{0,3}>\s?/gm, "")
+    .replace(/^\s*[-*]\s+/gm, "")
+    .replace(/^\s*\d+\.\s+/gm, "")
+    .replace(/(\*\*|__)(.*?)\1/g, "$2")
+    .replace(/([*_])(.*?)\1/g, "$2")
+    .replace(/\s+/g, " ")
+    .trim();
 
 const inlineMarkdown = <TMedia extends MarkdownMediaRef>(
   text: string,
@@ -150,15 +174,16 @@ const renderInlineMarkdownLines = <TMedia extends MarkdownMediaRef>(
   ]);
 
 /**
- * Renderizador Markdown seguro e intencionalmente limitado para descrições de etapas.
+ * Renderizador Markdown seguro e intencionalmente limitado, compartilhado por POPs,
+ * Base de Conhecimento e futuros contextos com @referencias.
  * Ele não transforma HTML do usuário em DOM (`dangerouslySetInnerHTML`), então tags maliciosas ficam como texto.
  */
 export const renderMarkdownPreview = <TMedia extends MarkdownMediaRef>(
   markdown: string,
-  midiasDaEtapa: TMedia[] = [],
+  inlineMedia: TMedia[] = [],
   onOpenMedia?: (midia: TMedia) => void,
 ) => {
-  const mediaByRef = new Map(midiasDaEtapa.map((m) => [m.referencia, m]));
+  const mediaByRef = new Map(inlineMedia.map((m) => [m.referencia, m]));
   const lines = markdown.split(/\r?\n/);
   const blocks: ReactNode[] = [];
   let index = 0;
@@ -167,6 +192,25 @@ export const renderMarkdownPreview = <TMedia extends MarkdownMediaRef>(
     const line = lines[index];
     if (!line.trim()) {
       index += 1;
+      continue;
+    }
+
+    if (line.trim().startsWith("```")) {
+      const codeLines: string[] = [];
+      index += 1;
+      while (index < lines.length && !lines[index].trim().startsWith("```")) {
+        codeLines.push(lines[index]);
+        index += 1;
+      }
+      if (index < lines.length) index += 1;
+      blocks.push(
+        <pre
+          key={index}
+          className="overflow-x-auto rounded-lg border bg-muted/70 p-3 text-xs leading-5 text-foreground"
+        >
+          <code>{codeLines.join("\n")}</code>
+        </pre>,
+      );
       continue;
     }
 
@@ -247,7 +291,8 @@ export const renderMarkdownPreview = <TMedia extends MarkdownMediaRef>(
       !/^(#{1,3})\s+/.test(lines[index]) &&
       !/^>\s?/.test(lines[index]) &&
       !/^\s*[-*]\s+/.test(lines[index]) &&
-      !/^\s*\d+\.\s+/.test(lines[index])
+      !/^\s*\d+\.\s+/.test(lines[index]) &&
+      !lines[index].trim().startsWith("```")
     ) {
       paragraphLines.push(lines[index]);
       index += 1;
