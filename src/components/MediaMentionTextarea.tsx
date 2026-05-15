@@ -236,6 +236,35 @@ export const MediaMentionTextarea = forwardRef<MediaMentionTextareaHandle, Props
       replaceSelection(next, start, start + transformed.length);
     };
 
+    const insertNumberedList = () => {
+      const { start, end, selected } = getSelection();
+      if (!selected) {
+        insertBlock("1. item");
+        return;
+      }
+
+      let itemNumber = 1;
+      const transformed = selected
+        .split("\n")
+        .map((line) => {
+          if (!line.trim()) return line;
+
+          // Reaplica a numeração sobre o conteúdo limpo para normalizar listas já numeradas sem duplicar prefixos.
+          const existingNumberedItem = line.match(/^(\s*)\d+\.\s*(.*)$/);
+          if (existingNumberedItem) {
+            const [, indentation, content] = existingNumberedItem;
+            return `${indentation}${itemNumber++}. ${content}`;
+          }
+
+          const indentation = line.match(/^\s*/)?.[0] ?? "";
+          const content = line.slice(indentation.length);
+          return `${indentation}${itemNumber++}. ${content}`;
+        })
+        .join("\n");
+      const next = value.slice(0, start) + transformed + value.slice(end);
+      replaceSelection(next, start, start + transformed.length);
+    };
+
     const insertLink = () => {
       const { start, end, selected } = getSelection();
       const label = selected || "texto do link";
@@ -261,7 +290,7 @@ export const MediaMentionTextarea = forwardRef<MediaMentionTextareaHandle, Props
           <Button type="button" variant="ghost" size="sm" className="h-8 px-2" onMouseDown={(e) => e.preventDefault()} onClick={() => insertLinePrefix("- ", "item")} aria-label="Lista com marcadores">
             <List className="h-4 w-4" />
           </Button>
-          <Button type="button" variant="ghost" size="sm" className="h-8 px-2" onMouseDown={(e) => e.preventDefault()} onClick={() => insertLinePrefix("1. ", "item")} aria-label="Lista numerada">
+          <Button type="button" variant="ghost" size="sm" className="h-8 px-2" onMouseDown={(e) => e.preventDefault()} onClick={insertNumberedList} aria-label="Lista numerada">
             <ListOrdered className="h-4 w-4" />
           </Button>
           <Button type="button" variant="ghost" size="sm" className="h-8 gap-1 px-2" onMouseDown={(e) => e.preventDefault()} onClick={() => insertBlock("> Atenção: {{text}}", "descreva aqui o ponto importante.")} aria-label="Atenção ou dica">
