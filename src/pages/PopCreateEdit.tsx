@@ -1020,7 +1020,7 @@ const PopCreateEdit = () => {
           <div className="rounded-lg border bg-muted/10 p-4">
             {previewStep?.descricao.trim() ? (
               <div className="space-y-4 text-sm text-foreground">
-                {renderMarkdownPreview(previewStep.descricao, previewStepMidias, setPreviewMidia)}
+                {renderMarkdownPreview(previewStep.descricao, previewStepMidias, (m) => setPreviewMidia(m))}
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">Nenhuma descrição preenchida para pré-visualizar.</p>
