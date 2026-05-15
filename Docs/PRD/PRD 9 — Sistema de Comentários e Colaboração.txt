@@ -6,7 +6,7 @@
 
 Este módulo tem como objetivo permitir colaboração entre usuários dentro dos POPs, possibilitando troca de conhecimento, dúvidas, sugestões de melhoria e comunicação contextualizada diretamente nas etapas dos processos.
 
-O foco é transformar o sistema em um ambiente vivo de aprendizado e melhoria contínua.
+O foco é transformar o sistema em um ambiente vivo de aprendizado e melhoria contínua. Comentários são conversas contextuais dentro de POPs e etapas; dúvidas frequentes, soluções de erro e artigos estruturados pertencem à Base de Conhecimento descrita nos PRDs 13 e 14.
 
 ---
 
@@ -15,8 +15,9 @@ O foco é transformar o sistema em um ambiente vivo de aprendizado e melhoria co
 - Permitir comunicação dentro do contexto do processo
 - Reduzir dúvidas fora do sistema (WhatsApp, conversa paralela)
 - Facilitar melhoria contínua dos POPs
-- Registrar conhecimento informal (insights, dicas)
+- Registrar conhecimento informal contextual (insights, dicas)
 - Aumentar engajamento dos usuários
+- Diferenciar conversas colaborativas de conteúdos estruturados da Base de Conhecimento
 
 ---
 
@@ -68,7 +69,34 @@ O foco é transformar o sistema em um ambiente vivo de aprendizado e melhoria co
 
 ---
 
-## 🧱 5. FUNCIONALIDADES (MVP)
+## 🔑 5. DIFERENÇA ENTRE COMENTÁRIO E BASE DE CONHECIMENTO
+
+### Comentário em POP ou etapa
+- Conversa contextual vinculada a um POP ou etapa
+- Serve para perguntas, respostas, sugestões e alinhamentos durante criação, revisão ou execução
+- Pode estar aberto ou resolvido
+- Não é conteúdo oficial por padrão
+- Não substitui artigo, dúvida frequente ou solução de erro estruturada
+
+---
+
+### Conteúdo estruturado da Base de Conhecimento
+- Dúvida frequente, solução de erro, anotação ou artigo com campos próprios
+- Pode ter categoria, departamento, tags, visibilidade, responsável e status editorial
+- Deve ser consultável como conteúdo organizado
+- Pode nascer a partir de comentários resolvidos em uma evolução futura
+
+---
+
+### Regra principal
+
+Comentário é colaboração contextual. Artigo, dúvida frequente e solução de erro são conteúdos estruturados da Base de Conhecimento.
+
+Não misturar comentário com artigo oficial sem curadoria, revisão e decisão explícita de promoção do conteúdo.
+
+---
+
+## 🧱 6. FUNCIONALIDADES (MVP)
 
 ### 📌 Comentários por etapa
 - Cada etapa pode ter comentários
@@ -108,7 +136,7 @@ O foco é transformar o sistema em um ambiente vivo de aprendizado e melhoria co
 
 ---
 
-## 🧩 6. ESTRUTURA DE DADOS
+## 🧩 7. ESTRUTURA DE DADOS
 
 ### Comentario
 - id
@@ -131,7 +159,7 @@ O foco é transformar o sistema em um ambiente vivo de aprendizado e melhoria co
 
 ---
 
-## 🎨 7. UX / UI PRINCÍPIOS
+## 🎨 8. UX / UI PRINCÍPIOS
 
 - Interface simples (estilo chat leve)
 - Comentários visíveis sem poluir a tela
@@ -141,7 +169,7 @@ O foco é transformar o sistema em um ambiente vivo de aprendizado e melhoria co
 
 ---
 
-## 💡 8. POSICIONAMENTO NA INTERFACE
+## 💡 9. POSICIONAMENTO NA INTERFACE
 
 Sugestões:
 
@@ -153,17 +181,19 @@ ou
 
 ---
 
-## 🚫 9. FORA DO ESCOPO (AGORA)
+## 🚫 10. FORA DO ESCOPO (AGORA)
 
 - Chat em tempo real
 - Menções completas (@usuario com autocomplete)
 - Reações (emoji)
 - Upload dentro de comentários
 - Comentários globais por POP
+- Transformar automaticamente comentário em artigo oficial
+- Substituir dúvidas ou soluções estruturadas da Base de Conhecimento por comentários
 
 ---
 
-## 📈 10. MÉTRICAS DE SUCESSO
+## 📈 11. MÉTRICAS DE SUCESSO
 
 - Número de comentários por POP
 - Tempo médio de resposta
@@ -173,7 +203,7 @@ ou
 
 ---
 
-## 🔥 11. DIFERENCIAL ESTRATÉGICO
+## 🔥 12. DIFERENCIAL ESTRATÉGICO
 
 Este módulo transforma o sistema de:
 
@@ -190,13 +220,16 @@ Permitindo:
 
 ---
 
-## 💡 12. FUTURO (EXPANSÃO)
+## 💡 13. FUTURO (EXPANSÃO)
 
 - Menções com @usuario
 - Comentários com anexos
 - Integração com notificações avançadas
 - Sugestões automáticas de melhoria via IA
 - Conversas vinculadas a erros recorrentes
+- Transformar comentário resolvido em dúvida frequente
+- Transformar comentário resolvido em solução de erro
+- Transformar comentário resolvido em artigo de conhecimento após curadoria
 
 ---
 

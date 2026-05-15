@@ -49,6 +49,9 @@ O objetivo do PopFlow é eliminar a dependência de conhecimento individual e ce
 - Mídia inline multimodal
 - Visibilidade e compartilhamento de POPs
 - Versionamento avançado
+- Base de Conhecimento (menu único)
+  - Artigos internos
+  - Dúvidas frequentes, soluções de erro e anotações operacionais
 
 ---
 
@@ -66,6 +69,8 @@ O objetivo do PopFlow é eliminar a dependência de conhecimento individual e ce
 10. PRD 10 — Versionamento avançado
 11. PRD 11 — Visibilidade e compartilhamento
 12. PRD 12 — Mídia inline multimodal
+13. PRD 13 — Base de Conhecimento e Artigos Internos
+14. PRD 14 — Dúvidas Frequentes, Soluções de Erro e Anotações Operacionais
 
 ---
 

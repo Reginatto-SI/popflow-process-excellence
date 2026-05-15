@@ -4,19 +4,22 @@
 
 ## 🧠 1. VISÃO
 
-Este módulo transforma o sistema em uma base de conhecimento pesquisável, permitindo que usuários encontrem rapidamente processos, etapas, instruções e soluções sem precisar navegar manualmente.
+Este módulo transforma o sistema em uma base de conhecimento pesquisável, permitindo que usuários encontrem rapidamente processos, etapas, instruções, artigos internos, dúvidas frequentes, soluções de erro e anotações permitidas pela visibilidade sem precisar navegar manualmente.
 
-O objetivo é criar um “Google interno” dos processos da empresa.
+O objetivo é criar um “Google interno” dos processos e conhecimentos operacionais da empresa.
+
+A busca inteligente deve contemplar tanto conteúdos executáveis, como POPs e etapas, quanto conteúdos consultivos da Base de Conhecimento definidos nos PRDs 13 e 14.
 
 ---
 
 ## 🎯 2. OBJETIVO
 
-- Permitir busca rápida por POPs e etapas
+- Permitir busca rápida por POPs, etapas e conteúdos de conhecimento
 - Reduzir tempo para encontrar informações
 - Aumentar produtividade operacional
 - Facilitar uso do sistema no dia a dia
 - Evitar dependência de colegas para dúvidas simples
+- Conectar processos executáveis a artigos, dúvidas, soluções e anotações relevantes
 
 ---
 
@@ -25,13 +28,16 @@ O objetivo é criar um “Google interno” dos processos da empresa.
 ### Executor
 - Busca como fazer tarefas específicas
 - Resolve dúvidas rapidamente
+- Encontra soluções de erro e anotações compartilhadas
 
 ### Criador de POP
 - Reutiliza conteúdo existente
 - Evita duplicação de processos
+- Identifica dúvidas e soluções que podem virar POP ou artigo
 
 ### Gestor
 - Garante acesso rápido ao conhecimento
+- Identifica lacunas de conteúdo a partir das buscas
 
 ---
 
@@ -39,10 +45,15 @@ O objetivo é criar um “Google interno” dos processos da empresa.
 
 ### Busca simples
 1. Usuário digita na barra de busca
-2. Sistema retorna:
+2. Sistema retorna resultados em uma experiência unificada, sem exigir menus separados para cada tipo de conteúdo:
    - POPs relevantes
    - Etapas específicas
-   - Conteúdos relacionados
+   - Erros comuns das etapas
+   - Resultados esperados
+   - Artigos internos
+   - Dúvidas frequentes
+   - Soluções de erro
+   - Anotações permitidas pela visibilidade
 
 ---
 
@@ -52,6 +63,8 @@ O objetivo é criar um “Google interno” dos processos da empresa.
    - Para o POP
    ou
    - Para a etapa específica dentro do POP
+   ou
+   - Para o conteúdo da Base de Conhecimento permitido ao usuário
 
 ---
 
@@ -71,6 +84,11 @@ O objetivo é criar um “Google interno” dos processos da empresa.
 - Resultado esperado
 - Erros comuns
 - Tags
+- Título de artigo interno
+- Conteúdo de artigo interno
+- Pergunta e resposta de dúvida frequente
+- Causa, solução e observações de solução de erro
+- Conteúdo de anotação permitida pela visibilidade
 
 ---
 
@@ -78,19 +96,26 @@ O objetivo é criar um “Google interno” dos processos da empresa.
 
 Exibir lista com:
 
-- Nome do POP
+- Tipo do resultado
+- Nome do POP ou título do conteúdo
 - Nome da etapa (se aplicável)
 - Trecho do conteúdo (preview)
+- Categoria
 - Departamento
+- Status
+- Visibilidade quando aplicável
 - Relevância
 
 ---
 
 ### 📌 Tipos de resultado
 
-- POP completo
-- Etapa específica
-- Conteúdo interno (texto)
+- POP
+- Etapa
+- Artigo
+- Dúvida
+- Solução de erro
+- Anotação
 
 ---
 
@@ -101,9 +126,12 @@ Exibir lista com:
 
 ### 📌 Filtros
 
+- Tipo de conteúdo
+- Categoria
 - Departamento
-- Tipo (POP ou etapa)
-- Status (publicado, rascunho)
+- Status
+- Visibilidade quando aplicável
+- Tags
 
 ---
 
@@ -115,6 +143,9 @@ Campos que devem ser indexados:
 - titulo
 - descricao
 - tags
+- departamento
+- status
+- visibilidade
 
 ---
 
@@ -123,6 +154,68 @@ Campos que devem ser indexados:
 - descricao
 - resultado_esperado
 - erro_comum
+- pop_id
+
+---
+
+### Artigo interno
+- titulo
+- resumo
+- conteudo
+- categoria
+- departamento
+- tags
+- status
+- visibilidade
+- pop_id (opcional)
+- etapa_id (opcional)
+
+---
+
+### Dúvida frequente
+- titulo
+- pergunta
+- resposta
+- categoria
+- departamento
+- tags
+- status
+- visibilidade
+- pop_id (opcional)
+- etapa_id (opcional)
+
+---
+
+### Solução de erro
+- titulo
+- descricao
+- sistema_relacionado
+- erro_relacionado
+- causa
+- solucao
+- observacoes
+- categoria
+- departamento
+- tags
+- status
+- visibilidade
+- pop_id (opcional)
+- etapa_id (opcional)
+
+---
+
+### Anotação
+- titulo
+- descricao
+- conteudo
+- observacoes
+- categoria
+- departamento
+- tags
+- status
+- visibilidade
+- pop_id (opcional)
+- etapa_id (opcional)
 
 ---
 
@@ -132,42 +225,68 @@ Prioridade de resultados:
 
 1. Match no título do POP
 2. Match no título da etapa
-3. Match na descrição
-4. Match em erro comum
-5. Match em resultado esperado
+3. Match no título de artigo, dúvida, solução ou anotação
+4. Match na descrição
+5. Match em erro comum
+6. Match em resultado esperado
+7. Match em pergunta, resposta, causa ou solução
+8. Match em conteúdo de artigo ou anotação
+9. Match em tags
+
+A busca deve sempre respeitar visibilidade, empresa e permissões do usuário antes de exibir qualquer resultado.
 
 ---
 
-## 🎨 8. UX / UI PRINCÍPIOS
+## 🔐 8. REGRAS DE VISIBILIDADE NA BUSCA
+
+- Conteúdos privados só aparecem para o autor
+- Conteúdos compartilhados com a empresa aparecem apenas para usuários autorizados
+- Conteúdos de outras empresas nunca devem aparecer
+- Conteúdo privado não deve aparecer na busca global de outros usuários
+- Conteúdos arquivados podem ficar fora da busca padrão ou aparecer apenas com filtro específico
+- Departamento pode ser filtro e evolução futura de acesso restrito
+
+---
+
+## 🎨 9. UX / UI PRINCÍPIOS
 
 - Busca rápida (instantânea)
+- Busca deve reforçar a decisão de menu único da Base de Conhecimento
+- Artigos, dúvidas, soluções de erro e anotações podem ser filtrados por tipo, mas não exigem áreas ou menus separados
 - Interface simples (tipo Google)
 - Resultados claros e organizados
 - Clique leva direto ao ponto relevante
 - Highlight visual do termo buscado
+- Tipo de conteúdo deve ser evidente no resultado
+- Filtros devem ajudar sem deixar a busca complexa
 
 ---
 
-## 🚫 9. FORA DO ESCOPO (AGORA)
+## 🚫 10. FORA DO ESCOPO (AGORA)
 
 - Busca semântica (IA)
 - Correção automática de texto (did you mean)
 - Sugestões inteligentes
 - Busca por áudio
 - Busca por imagem
+- Respostas automáticas geradas por IA
+- Indexação de anexos e mídia
 
 ---
 
-## 📈 10. MÉTRICAS DE SUCESSO
+## 📈 11. MÉTRICAS DE SUCESSO
 
 - Número de buscas por usuário
 - Tempo até encontrar informação
 - Redução de dúvidas operacionais
 - Aumento de uso do sistema
+- Cliques em resultados por tipo de conteúdo
+- Buscas sem resultado
+- Conteúdos mais encontrados por categoria e departamento
 
 ---
 
-## 🔥 11. DIFERENCIAL ESTRATÉGICO
+## 🔥 12. DIFERENCIAL ESTRATÉGICO
 
 Este módulo transforma o sistema de:
 
@@ -181,16 +300,19 @@ Permitindo:
 - Redução de dependência entre pessoas
 - Uso contínuo do sistema
 - Centralização real do conhecimento
+- Conexão entre POPs executáveis e conhecimento consultivo
 
 ---
 
-## 💡 12. FUTURO (EXPANSÃO)
+## 💡 13. FUTURO (EXPANSÃO)
 
 - Busca semântica com IA
 - Sugestões automáticas de POPs
+- Sugestões automáticas de artigos relacionados
 - Auto-complete inteligente
 - Histórico de buscas
 - Recomendações baseadas em uso
+- Identificação de lacunas de conhecimento a partir de buscas sem resultado
 
 ---
 
@@ -201,4 +323,3 @@ Tela(s) relacionadas:
 - [01-dashboard-popflow.html] — Busca global no topo
 - [02-listagem-de-pops-popflow.html] — Busca de procedimentos
 - [03-detalhe-do-pop-popflow.html] — Acesso ao conteúdo do POP
-

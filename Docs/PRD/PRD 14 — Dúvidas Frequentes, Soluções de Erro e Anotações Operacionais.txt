@@ -1,0 +1,402 @@
+# 📄 PRD 14 — Dúvidas Frequentes, Soluções de Erro e Anotações Operacionais
+
+---
+
+## 🧠 1. VISÃO
+
+Este módulo documenta a camada operacional da Base de Conhecimento do PopFlow, voltada para capturar conteúdos rápidos do dia a dia antes que eles se tornem conteúdo oficial.
+
+A área deve permitir registrar dúvidas comuns, perguntas e respostas, soluções de erros, anotações pessoais, anotações compartilhadas, aprendizados informais, problemas recorrentes, dicas internas e macetes operacionais.
+
+O foco é evitar perda de conhecimento prático e criar um caminho natural para evolução de informação informal em artigo oficial ou POP, quando fizer sentido.
+
+Na experiência do usuário, dúvidas, soluções de erro e anotações devem aparecer dentro do menu único “Base de Conhecimento”. Não devem existir menus laterais separados para cada tipo de conteúdo no MVP.
+
+---
+
+## 🎯 2. OBJETIVO
+
+- Capturar conhecimento operacional do dia a dia
+- Registrar dúvidas frequentes e respostas úteis
+- Documentar soluções de erros recorrentes
+- Permitir anotações pessoais e compartilhadas
+- Reduzir repetição de perguntas entre colaboradores
+- Criar insumos para futuros artigos oficiais e POPs
+- Complementar a Base de Conhecimento sem substituir governança formal
+
+---
+
+## 🔑 3. DIFERENÇA ENTRE DÚVIDA, SOLUÇÃO DE ERRO E ANOTAÇÃO
+
+Todos os tipos abaixo podem aparecer juntos na mesma Base de Conhecimento, desde que a interface deixe claro o tipo de cada item. A separação é conceitual e operacional, não uma orientação para criar menus independentes.
+
+### POP
+- Processo executável passo a passo
+- Deve continuar fora da Base de Conhecimento como formato principal de execução guiada
+- Pode aparecer como conteúdo relacionado ou vinculado
+
+---
+
+### Artigo
+- Conteúdo consultivo ou explicativo
+- Deve ser documentado principalmente no PRD 13
+- Pode aparecer junto das dúvidas, soluções e anotações dentro da Base de Conhecimento
+
+---
+
+### Dúvida frequente
+- Pergunta recorrente feita por usuários
+- Pode ter resposta curta ou orientação associada
+- Pode estar aberta ou resolvida
+- Pode evoluir para artigo oficial se for relevante para muitas pessoas
+
+---
+
+### Solução de erro
+- Registro de um problema ou erro identificado
+- Deve conter causa, solução e observações quando possível
+- Pode estar vinculada a sistema, POP ou etapa
+- Pode evoluir para POP quando representar uma rotina corretiva recorrente
+
+---
+
+### Anotação operacional
+- Registro rápido de aprendizado, dica ou observação
+- Pode ser pessoal ou compartilhada
+- Não precisa ser conteúdo oficial
+- Pode virar dúvida frequente ou artigo se ganhar relevância
+
+---
+
+## 👤 4. USUÁRIOS
+
+### Executor
+- Registra dúvidas durante o trabalho
+- Consulta soluções de erro
+- Cria anotações pessoais
+
+---
+
+### Colaborador experiente
+- Responde dúvidas recorrentes
+- Documenta dicas e macetes
+- Compartilha aprendizados informais
+
+---
+
+### Gestor / Revisor
+- Identifica padrões recorrentes
+- Decide o que deve virar artigo oficial ou POP
+- Arquiva conteúdo obsoleto
+
+---
+
+## 🔄 5. FLUXOS PRINCIPAIS
+
+### Orientação de simplicidade para MVP
+
+O MVP deve concentrar a experiência em uma única área de Base de Conhecimento, evitando excesso de fluxos separados.
+
+A primeira versão deve priorizar:
+
+- Cadastro simples
+- Listagem unificada
+- Busca
+- Filtros por tipo, categoria, departamento, status, visibilidade e tags
+- Vínculo opcional com POP ou etapa
+
+No MVP, evitar:
+
+- Workflow complexo
+- Menus múltiplos
+- Permissões granulares avançadas
+- IA
+- Transformação automática de conteúdo
+- Anexos obrigatórios
+- Automações
+
+---
+
+### Organização interna sugerida
+
+Dentro do menu “Base de Conhecimento”, a tela pode organizar conteúdos por:
+
+- Todos
+- Artigos
+- Dúvidas
+- Soluções de erro
+- Anotações
+- POPs relacionados ou conteúdos vinculados
+
+Essa organização é conceitual e não deve ser implementada nesta etapa documental.
+
+---
+
+### Fluxo de criação de uma dúvida
+1. Usuário identifica uma dúvida recorrente
+2. Registra título e pergunta
+3. Informa categoria, departamento, tags e visibilidade
+4. Opcionalmente vincula a um POP ou etapa
+5. Dúvida nasce com status aberta
+6. Quando houver resposta validada, pode ser marcada como resolvida
+7. Futuramente pode ser publicada como FAQ ou transformada em artigo oficial
+
+---
+
+### Fluxo de criação de uma solução de erro
+1. Usuário encontra um erro ou problema recorrente
+2. Registra descrição do erro
+3. Informa sistema relacionado e erro relacionado, se aplicável
+4. Preenche causa, solução e observações
+5. Opcionalmente vincula a um POP ou etapa
+6. Define visibilidade privada ou empresa
+7. Conteúdo pode ser publicado como solução consultável
+8. Se a solução exigir passos recorrentes, pode ser avaliada para virar POP
+
+---
+
+### Fluxo de criação de uma anotação
+1. Usuário registra aprendizado, dica ou observação rápida
+2. Define se a anotação é privada ou compartilhada com a empresa
+3. Informa tags, categoria ou departamento quando fizer sentido
+4. Opcionalmente vincula a POP ou etapa
+5. Anotação fica disponível conforme visibilidade
+6. Futuramente pode ser promovida para dúvida frequente, solução de erro ou artigo oficial
+
+---
+
+## 🏷️ 6. STATUS
+
+### Aberta
+- Dúvida ou problema ainda sem resolução validada
+- Requer resposta, análise ou complemento
+
+---
+
+### Resolvida
+- Dúvida respondida ou erro solucionado
+- Pode servir como referência operacional
+
+---
+
+### Publicada
+- Conteúdo validado para consulta por usuários autorizados
+- Pode aparecer na busca conforme visibilidade
+
+---
+
+### Arquivada
+- Conteúdo antigo, duplicado ou obsoleto
+- Não deve aparecer como resultado principal da busca
+
+---
+
+## 🔐 7. VISIBILIDADE
+
+### Privada
+- Visível apenas para o autor
+- Útil para anotações pessoais ou rascunhos de solução
+- Não deve aparecer na busca global de outros usuários
+
+---
+
+### Empresa
+- Visível para usuários autorizados da empresa
+- Pode aparecer na busca global
+- Deve respeitar empresa_id, permissões e regras multi-tenant
+
+---
+
+### Departamento (futuro)
+- Pode restringir conteúdo a um departamento ou grupo específico
+- Deve ser tratado como evolução futura alinhada ao PRD 11
+
+---
+
+## 🔗 8. VÍNCULOS OPCIONAIS
+
+Cada dúvida, solução de erro ou anotação pode ser vinculada opcionalmente a:
+
+- Um POP
+- Uma etapa de POP
+- Um sistema relacionado
+- Um erro relacionado
+
+Esses vínculos ajudam a contextualizar o conhecimento, mas não transformam o conteúdo em comentário nem em etapa executável.
+
+---
+
+## 🧱 9. CAMPOS PRINCIPAIS
+
+### Campos comuns
+- Título
+- Tipo (duvida, solucao_erro, anotacao)
+- Descrição
+- Responsável
+- Autor
+- Tags
+- Categoria
+- Departamento
+- Status
+- Visibilidade
+- POP relacionado (opcional)
+- Etapa relacionada (opcional)
+- Data de criação
+- Data de atualização
+
+---
+
+### Campos para solução de erro
+- Sistema relacionado
+- Erro relacionado
+- Causa
+- Solução
+- Observações
+
+---
+
+### Campos para dúvida
+- Pergunta
+- Resposta
+- Indicação se é dúvida recorrente
+
+---
+
+### Campos para anotação
+- Conteúdo da anotação
+- Indicação se é pessoal ou compartilhada
+- Observações complementares
+
+---
+
+## 🔁 10. EVOLUÇÃO DE CONTEÚDO
+
+### Dúvida ou anotação → artigo oficial
+
+Quando uma dúvida ou anotação se tornar relevante para várias pessoas, ela pode ser avaliada para virar artigo oficial da Base de Conhecimento.
+
+Essa transformação deve exigir curadoria, revisão e definição de responsável.
+
+---
+
+### Solução recorrente → POP
+
+Quando uma solução de erro exigir passos claros, repetíveis e executáveis, ela pode ser avaliada para virar POP.
+
+A regra principal é:
+
+- Conteúdo explicativo ou consultivo deve permanecer na Base de Conhecimento
+- Processo executável passo a passo deve virar POP
+
+---
+
+## 🧩 11. ESTRUTURA DE DADOS SUGERIDA
+
+### ConhecimentoOperacional
+- id
+- empresa_id
+- tipo (duvida, solucao_erro, anotacao)
+- titulo
+- descricao
+- pergunta
+- resposta
+- sistema_relacionado
+- erro_relacionado
+- causa
+- solucao
+- observacoes
+- categoria
+- departamento
+- tags
+- status (aberta, resolvida, publicada, arquivada)
+- visibilidade (privada, empresa)
+- responsavel_id
+- autor_id
+- pop_id (opcional)
+- etapa_id (opcional)
+- data_criacao
+- data_atualizacao
+
+---
+
+## 🔐 12. REGRAS DE GOVERNANÇA
+
+- Conteúdos privados só devem aparecer para o autor
+- Conteúdos da empresa devem respeitar permissões e empresa_id
+- Soluções de erro publicadas devem ter causa ou solução minimamente descrita
+- Conteúdos duplicados devem ser consolidados ou arquivados
+- Dúvidas resolvidas podem ser promovidas, mas não automaticamente
+- Anotações compartilhadas não devem ser tratadas como artigo oficial sem curadoria
+- Soluções recorrentes devem ser avaliadas para virar POP quando tiverem execução passo a passo
+- Conteúdos arquivados não devem aparecer como referência principal
+
+---
+
+## 🎨 13. UX / UI PRINCÍPIOS
+
+- Registro rápido e simples
+- Diferenciação visual clara entre dúvida, solução de erro e anotação
+- Campos objetivos para causa, solução e observações
+- Filtros por tipo, status, categoria, departamento, sistema e tags
+- Indicação clara de visibilidade privada ou empresa
+- Vínculos com POPs e etapas devem ser fáceis de identificar
+- Conteúdo operacional deve ser leve, sem exigir estrutura completa de artigo oficial
+
+---
+
+## 🚫 14. FORA DO ESCOPO (AGORA)
+
+- Implementação de telas
+- Criação de banco de dados real
+- Migrations
+- Transformação automática em artigo ou POP
+- Workflow complexo de aprovação
+- Menus laterais separados para dúvidas, soluções de erro ou anotações
+- Chat em tempo real
+- Comentários substituindo dúvidas estruturadas
+- Busca semântica com IA
+- IA respondendo dúvidas automaticamente
+- Upload de anexos ou mídia
+
+---
+
+## 📈 15. MÉTRICAS DE SUCESSO
+
+- Número de dúvidas registradas
+- % de dúvidas resolvidas
+- Número de soluções de erro consultadas
+- Redução de perguntas repetidas
+- Número de anotações promovidas para artigo
+- Número de soluções recorrentes avaliadas para POP
+- Tempo médio para resolver dúvidas
+- Uso de tags, categorias e vínculos com POPs
+
+---
+
+## 🔥 16. DIFERENCIAL ESTRATÉGICO
+
+Este módulo transforma conhecimento informal de:
+
+👉 Conversas e anotações perdidas  
+em  
+👉 Registro operacional reaproveitável
+
+Permitindo:
+
+- Aprendizado coletivo
+- Resolução mais rápida de problemas
+- Captura de conhecimento antes da formalização
+- Identificação de lacunas em POPs e artigos
+- Evolução gradual de conteúdo informal para oficial
+
+---
+
+## 💡 17. FUTURO (EXPANSÃO COM IA)
+
+- Agrupamento automático de dúvidas semelhantes
+- Sugestão de resposta com base em artigos publicados
+- Detecção de soluções recorrentes que deveriam virar POP
+- Recomendação de artigos relacionados
+- Resumo automático de threads ou anotações longas
+- Identificação de temas com muitas dúvidas abertas
+- Assistente para transformar anotação em artigo estruturado

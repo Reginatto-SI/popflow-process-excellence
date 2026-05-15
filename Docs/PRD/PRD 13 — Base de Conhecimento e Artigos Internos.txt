@@ -1,0 +1,452 @@
+# 📄 PRD 13 — Base de Conhecimento e Artigos Internos
+
+---
+
+## 🧠 1. VISÃO
+
+Este módulo cria uma área de Base de Conhecimento dentro do PopFlow para centralizar conteúdos internos da empresa que não necessariamente precisam virar POPs executáveis.
+
+A Base de Conhecimento deve reunir artigos, orientações, manuais, explicações técnicas e procedimentos auxiliares em um ambiente pesquisável, organizado e governável.
+
+O objetivo é transformar conhecimento interno disperso em conteúdo institucional acessível, sem confundir esse conteúdo com execução guiada de processos.
+
+Na experiência do usuário, a Base de Conhecimento deve aparecer preferencialmente como um único menu lateral chamado “Base de Conhecimento”. Artigos, dúvidas, soluções de erro e anotações não devem virar menus laterais separados no MVP; esses tipos devem conviver na mesma área, organizados internamente por abas, filtros ou cards.
+
+---
+
+## 🎯 2. OBJETIVO
+
+- Centralizar conhecimento interno não executável
+- Reduzir dependência de conversas informais e arquivos soltos
+- Facilitar consulta a orientações, manuais e explicações técnicas
+- Complementar os POPs sem substituir o fluxo de execução guiada
+- Criar uma base organizada para treinamento, suporte e padronização
+- Preparar o sistema para futuras funcionalidades de IA sobre conhecimento interno
+
+---
+
+## ❗ 3. PROBLEMA QUE RESOLVE
+
+Hoje, parte do conhecimento operacional pode ficar espalhada em mensagens, documentos externos, anotações individuais ou na memória de colaboradores.
+
+Nem todo conhecimento precisa ser transformado em POP. Alguns conteúdos são explicativos, consultivos ou de apoio, como manuais, políticas internas, orientações técnicas e referências auxiliares.
+
+Sem um local próprio para esse tipo de conteúdo, a empresa corre risco de:
+
+- Duplicar informações
+- Perder aprendizados importantes
+- Criar POPs para conteúdos que não são processos executáveis
+- Dificultar a busca por respostas rápidas
+- Depender excessivamente de pessoas específicas
+
+---
+
+## 🔑 4. DIFERENÇA ENTRE POP E ARTIGO DE CONHECIMENTO
+
+### POP
+- Processo executável passo a passo
+- Possui etapas ordenadas
+- Pode ser executado com tracking
+- Pode ter resultado esperado por etapa
+- Deve orientar uma rotina operacional padronizada
+
+---
+
+### Artigo de conhecimento
+- Conteúdo consultivo ou explicativo
+- Não é uma execução guiada
+- Não exige marcação de etapas concluídas
+- Pode explicar conceitos, regras, sistemas, orientações ou boas práticas
+- Pode apoiar um POP, mas não substitui o POP
+
+---
+
+### Regra principal
+
+Artigo de conhecimento não é execução guiada.
+
+Quando o conteúdo representar uma rotina operacional passo a passo que precisa ser executada, o formato correto continua sendo um POP.
+
+---
+
+## 👤 5. USUÁRIOS
+
+### Colaborador
+- Consulta artigos para tirar dúvidas
+- Usa orientações internas no dia a dia
+- Acessa manuais e explicações técnicas
+
+---
+
+### Criador de conteúdo
+- Cria artigos internos
+- Organiza conhecimento por categoria, departamento e tags
+- Mantém conteúdo atualizado
+
+---
+
+### Gestor / Revisor
+- Garante qualidade e governança dos artigos
+- Define conteúdos oficiais
+- Arquiva informações obsoletas
+
+---
+
+## 🧱 6. TIPOS DE CONTEÚDO ACEITOS
+
+A Base de Conhecimento deve aceitar conteúdos como:
+
+- Artigos internos
+- Orientações operacionais
+- Manuais internos
+- Explicações técnicas
+- Procedimentos auxiliares não executáveis
+- Políticas e diretrizes internas
+- Guias de uso de sistemas
+- Referências de apoio a processos
+- Conteúdos de treinamento
+
+---
+
+### Separação conceitual dos tipos
+
+Mesmo aparecendo juntos na Base de Conhecimento, os tipos devem continuar conceitualmente separados:
+
+- POP é processo executável
+- Artigo é conteúdo consultivo
+- Dúvida é pergunta e resposta
+- Solução de erro é problema, causa e solução
+- Anotação é registro rápido, privado ou compartilhado
+
+Essa separação ajuda a orientar filtros, badges e futuras regras de governança sem exigir menus separados.
+
+---
+
+## 🗂️ 7. ORGANIZAÇÃO DO CONTEÚDO
+
+### 📌 Menu único
+
+A navegação principal deve priorizar simplicidade:
+
+- Um único menu lateral: “Base de Conhecimento”
+- Não criar menus separados para Artigos, Dúvidas, Soluções de erro e Anotações
+- Tipos de conteúdo devem aparecer dentro da mesma área
+- A diferenciação deve acontecer por abas, filtros, cards ou badges visuais
+
+Essa decisão evita fragmentação da experiência e mantém a Base de Conhecimento como um espaço único de consulta.
+
+---
+
+### 📌 Organização interna sugerida
+
+A tela de Base de Conhecimento pode organizar conteúdos conceitualmente por:
+
+- Todos
+- Artigos
+- Dúvidas
+- Soluções de erro
+- Anotações
+- POPs relacionados ou conteúdos vinculados
+
+Essa organização é apenas diretriz de produto para futura implementação e não implica criação de tela agora.
+
+---
+
+### 📌 Categoria
+
+Cada artigo pode ser associado a uma categoria para facilitar navegação e filtros.
+
+Exemplos:
+
+- Atendimento
+- Financeiro
+- Operações
+- Sistemas internos
+- Qualidade
+- Treinamento
+
+---
+
+### 📌 Departamento
+
+Cada artigo pode indicar o departamento relacionado ao conteúdo.
+
+Exemplos:
+
+- Comercial
+- Suporte
+- Financeiro
+- Operações
+- RH
+
+Departamento como critério de acesso mais restrito pode ser evolução futura, alinhada ao PRD 11.
+
+---
+
+### 📌 Tags
+
+Tags ajudam a conectar conteúdos por tema, termo técnico, sistema, erro ou contexto operacional.
+
+Exemplos:
+
+- onboarding
+- faturamento
+- crm
+- chamado
+- integração
+- reembolso
+
+---
+
+## 🏷️ 8. STATUS DO CONTEÚDO
+
+### Rascunho
+- Conteúdo em construção
+- Visível apenas para o autor ou responsáveis autorizados
+- Ainda não deve ser usado como referência oficial
+
+---
+
+### Em revisão
+- Conteúdo pronto para validação
+- Pode ser avaliado por gestor, revisor ou responsável
+- Ainda não deve ser tratado como publicado oficialmente
+
+---
+
+### Publicado
+- Conteúdo disponível conforme visibilidade definida
+- Pode aparecer na busca para usuários autorizados
+- Deve ser considerado referência ativa
+
+---
+
+### Arquivado
+- Conteúdo mantido para histórico
+- Não deve aparecer como referência principal
+- Pode ficar fora da busca padrão
+
+---
+
+## 👥 9. RESPONSABILIDADE E METADADOS
+
+Cada artigo deve possuir, no mínimo:
+
+- Responsável pelo conteúdo
+- Autor original
+- Data de criação
+- Data de atualização
+- Status
+- Categoria
+- Departamento relacionado
+- Tags
+- Visibilidade
+
+O responsável deve ser a pessoa ou papel encarregado de manter o conteúdo correto e atualizado.
+
+---
+
+## 🔐 10. VISIBILIDADE
+
+A Base de Conhecimento deve reaproveitar conceitualmente a lógica do PRD 11.
+
+### Privado
+- Visível apenas para o autor
+- Útil para rascunhos, estudos e conteúdo pessoal
+- Não deve aparecer na busca global de outros usuários
+
+---
+
+### Empresa
+- Visível para usuários autorizados da empresa
+- Pode aparecer na busca global conforme permissões
+- Deve respeitar regras de multi-tenant e acesso da empresa
+
+---
+
+### Departamento (futuro)
+- Visível apenas para pessoas de um departamento ou grupo
+- Deve ser tratado como evolução futura
+- Não faz parte do escopo atual do MVP
+
+---
+
+## 🔗 11. VÍNCULOS COM POPs
+
+Artigos podem ter vínculo opcional com:
+
+- Um POP específico
+- Uma etapa específica de um POP
+
+Esse vínculo serve para contextualizar o conteúdo de apoio, mas não transforma o artigo em etapa executável.
+
+Exemplos:
+
+- Artigo explicando uma regra usada em um POP
+- Manual de sistema citado por uma etapa
+- Orientação interna relacionada a uma atividade recorrente
+
+---
+
+## 🖼️ 12. ANEXOS E MÍDIA
+
+Anexos ou mídia dentro de artigos podem ser considerados evolução futura, alinhados ao PRD 12.
+
+Possibilidades futuras:
+
+- Imagens explicativas
+- Vídeos curtos
+- Áudios de orientação
+- PDFs internos
+- Links de apoio
+
+No escopo atual, este PRD documenta a necessidade conceitual, sem implementar upload, armazenamento ou renderização de mídia.
+
+---
+
+## 🔄 13. FLUXO PRINCIPAL
+
+### Orientação de simplicidade para MVP
+
+O MVP deve evitar excesso de fluxos separados. A Base de Conhecimento deve começar simples, com cadastro, listagem, busca, filtros, status, tags, visibilidade e vínculo opcional com POP ou etapa.
+
+No MVP, evitar:
+
+- Workflow complexo
+- Menus múltiplos
+- Permissões granulares avançadas
+- IA
+- Transformação automática de conteúdo
+- Anexos obrigatórios
+- Automações
+
+---
+
+### Criação de artigo
+1. Usuário acessa a Base de Conhecimento
+2. Clica em “Criar artigo”
+3. Preenche título, conteúdo, categoria, departamento, tags e visibilidade
+4. Salva como rascunho
+5. Opcionalmente envia para revisão
+6. Conteúdo é publicado quando validado
+
+---
+
+### Consulta de artigo
+1. Usuário acessa a Base de Conhecimento ou busca global
+2. Filtra por categoria, departamento, status ou tags
+3. Abre o artigo
+4. Consulta conteúdo e vínculos relacionados
+
+---
+
+### Atualização de artigo
+1. Responsável identifica necessidade de atualização
+2. Edita conteúdo
+3. Atualiza data de modificação
+4. Mantém ou altera status conforme governança
+
+---
+
+## 🧩 14. ESTRUTURA DE DADOS SUGERIDA
+
+### ArtigoConhecimento
+- id
+- empresa_id
+- titulo
+- resumo
+- conteudo
+- categoria
+- departamento
+- tags
+- status (rascunho, em_revisao, publicado, arquivado)
+- visibilidade (privado, empresa)
+- responsavel_id
+- autor_id
+- pop_id (opcional)
+- etapa_id (opcional)
+- data_criacao
+- data_atualizacao
+- data_publicacao
+
+---
+
+## 🔐 15. REGRAS DE GOVERNANÇA
+
+- Artigos publicados devem ter responsável definido
+- Conteúdos privados só podem ser acessados pelo autor ou usuários explicitamente autorizados no futuro
+- Conteúdos da empresa devem respeitar permissões e empresa_id
+- Artigos arquivados não devem aparecer como resultado principal da busca
+- Conteúdo obsoleto deve ser atualizado ou arquivado
+- Artigos não devem duplicar POPs executáveis
+- Quando um artigo passar a representar um processo passo a passo, deve ser avaliado para virar POP
+
+---
+
+## 🎨 16. UX / UI PRINCÍPIOS
+
+- Interface simples e consultiva
+- Leitura confortável
+- Organização clara por categoria, departamento e tags
+- Destaque visual para status e visibilidade
+- Busca e filtros fáceis de acessar
+- Conteúdo deve parecer referência interna, não tarefa executável
+- Vínculos com POPs devem ser visíveis, mas secundários
+
+---
+
+## 🚫 17. FORA DO ESCOPO (AGORA)
+
+- Implementação de telas
+- Criação de banco de dados real
+- Migrations
+- Upload de anexos
+- Editor avançado colaborativo em tempo real
+- Controle granular por usuário
+- Workflow complexo de aprovação
+- Menus laterais separados para cada tipo de conteúdo
+- IA gerando artigos automaticamente
+- Busca semântica com IA
+- Transformação automática de artigo em POP
+
+---
+
+## 📈 18. MÉTRICAS DE SUCESSO
+
+- Número de artigos publicados
+- Número de consultas à Base de Conhecimento
+- Taxa de artigos atualizados dentro do prazo esperado
+- Redução de dúvidas repetidas
+- Uso de tags e categorias
+- Artigos vinculados a POPs ou etapas
+- Tempo médio para encontrar conteúdo interno
+
+---
+
+## 🔥 19. DIFERENCIAL ESTRATÉGICO
+
+Este módulo transforma o PopFlow de:
+
+👉 Sistema focado apenas em processos executáveis  
+em  
+👉 Plataforma de conhecimento operacional estruturado
+
+Permitindo:
+
+- Preservação do conhecimento interno
+- Melhor onboarding de colaboradores
+- Menos dependência de especialistas
+- Complemento natural aos POPs
+- Base preparada para inteligência futura
+
+---
+
+## 💡 20. FUTURO (EXPANSÃO COM IA)
+
+- Sugestão automática de artigos relacionados
+- Resumo automático de conteúdos longos
+- Identificação de artigos desatualizados
+- Recomendação de transformar artigo em POP
+- Busca semântica sobre artigos e POPs
+- Assistente interno respondendo com base nos artigos publicados
+- Detecção de lacunas de conhecimento
