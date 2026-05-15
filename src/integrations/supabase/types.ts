@@ -134,6 +134,70 @@ export type Database = {
           },
         ]
       }
+      base_conhecimento_anexos: {
+        Row: {
+          base_conhecimento_id: string
+          created_at: string
+          criado_por: string
+          empresa_id: string
+          id: string
+          mime_type: string
+          nome_arquivo: string
+          storage_path: string
+          tamanho: number | null
+          tipo_arquivo: string
+          url: string
+        }
+        Insert: {
+          base_conhecimento_id: string
+          created_at?: string
+          criado_por: string
+          empresa_id: string
+          id?: string
+          mime_type?: string
+          nome_arquivo: string
+          storage_path: string
+          tamanho?: number | null
+          tipo_arquivo?: string
+          url: string
+        }
+        Update: {
+          base_conhecimento_id?: string
+          created_at?: string
+          criado_por?: string
+          empresa_id?: string
+          id?: string
+          mime_type?: string
+          nome_arquivo?: string
+          storage_path?: string
+          tamanho?: number | null
+          tipo_arquivo?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "base_conhecimento_anexos_base_conhecimento_id_fkey"
+            columns: ["base_conhecimento_id"]
+            isOneToOne: false
+            referencedRelation: "base_conhecimento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "base_conhecimento_anexos_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "base_conhecimento_anexos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       developer_logs: {
         Row: {
           acao: string
