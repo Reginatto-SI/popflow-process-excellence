@@ -1136,6 +1136,7 @@ const BaseConhecimento = () => {
             uploadInlineFile={uploadInlineFile}
             onAddInlineMedia={addInlineMedia}
             onDiscardUploadedAsset={discardUploadedAsset}
+            categoriasExistentes={contents.map((item) => item.categoria).filter(Boolean) as string[]}
           />
           <DialogFooter>
             <Button variant="outline" onClick={() => { void handleFormOpenChange(false); }}>Cancelar</Button>
