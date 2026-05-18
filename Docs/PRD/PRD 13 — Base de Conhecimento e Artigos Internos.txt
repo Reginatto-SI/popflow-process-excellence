@@ -380,6 +380,8 @@ No MVP, evitar:
 - Conteúdo obsoleto deve ser atualizado ou arquivado
 - Artigos não devem duplicar POPs executáveis
 - Quando um artigo passar a representar um processo passo a passo, deve ser avaliado para virar POP
+- Artigos podem se vincular opcionalmente a registros do Cofre de Acessos e Credenciais Operacionais definido no PRD 15
+- Artigos nunca devem exibir senha, token, segredo ou credencial diretamente; quando houver necessidade operacional, devem orientar o usuário autorizado a consultar o Cofre
 
 ---
 

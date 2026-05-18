@@ -245,6 +245,8 @@ A busca deve sempre respeitar visibilidade, empresa e permissões do usuário an
 - Conteúdo privado não deve aparecer na busca global de outros usuários
 - Conteúdos arquivados podem ficar fora da busca padrão ou aparecer apenas com filtro específico
 - Departamento pode ser filtro e evolução futura de acesso restrito
+- Registros do Cofre de Acessos e Credenciais Operacionais, definido no PRD 15, ficam fora da busca global comum no MVP
+- O Cofre de Acessos deve possuir busca própria e restrita, sem indexar senhas, anexos sensíveis ou credenciais como texto comum
 
 ---
 
