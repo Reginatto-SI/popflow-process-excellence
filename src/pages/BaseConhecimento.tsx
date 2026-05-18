@@ -530,9 +530,10 @@ const FormFields = ({
           </TabsContent>
 
           <TabsContent value="conteudo" className="mt-0 space-y-4 rounded-xl border bg-background p-4">
-            <div className="rounded-xl border border-dashed bg-muted/20 p-3 text-sm text-muted-foreground">
-              A Base de Conhecimento usa o mesmo editor multimídia dos POPs: Markdown leve, menções <code>@midia</code>, upload pelo modal existente e Ctrl+V para imagens.
-            </div>
+            {/* Texto discreto: o botão "Inserir mídia" agora vive apenas na toolbar do editor. */}
+            <p className="text-xs text-muted-foreground">
+              Use o editor para escrever o conteúdo. Você pode inserir referências de mídia pelo botão "Inserir mídia" ou colar imagens com <kbd className="rounded border bg-background px-1">Ctrl</kbd> + <kbd className="rounded border bg-background px-1">V</kbd>.
+            </p>
 
             {form.tipo === "artigo" && mediaEditor("conteudo", "Conteúdo principal", "Registre o conteúdo consultivo ou operacional", 10)}
 
