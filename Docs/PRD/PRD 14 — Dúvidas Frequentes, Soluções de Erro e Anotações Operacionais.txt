@@ -329,6 +329,8 @@ A regra principal é:
 - Anotações compartilhadas não devem ser tratadas como artigo oficial sem curadoria
 - Soluções recorrentes devem ser avaliadas para virar POP quando tiverem execução passo a passo
 - Conteúdos arquivados não devem aparecer como referência principal
+- Dúvidas, soluções de erro e anotações podem referenciar um acesso do Cofre de Acessos e Credenciais Operacionais definido no PRD 15 quando isso ajudar a contextualizar a operação
+- Credenciais, senhas, tokens e segredos devem permanecer restritos ao Cofre de Acessos e não devem ser copiados para campos livres de dúvida, solução ou anotação
 
 ---
 

@@ -176,6 +176,8 @@ Exemplo:
 - Usuário nunca pode acessar dados de outra empresa
 - Validação de permissões no frontend e backend
 - Operações críticas devem validar role
+- Módulos sensíveis, como o Cofre de Acessos e Credenciais Operacionais definido no PRD 15, podem exigir permissões próprias além das roles principais
+- Ter uma role administrativa não deve substituir automaticamente validações específicas de ações sensíveis quando o módulo exigir permissão granular
 
 ---
 

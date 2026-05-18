@@ -52,6 +52,7 @@ O objetivo do PopFlow é eliminar a dependência de conhecimento individual e ce
 - Base de Conhecimento (menu único)
   - Artigos internos
   - Dúvidas frequentes, soluções de erro e anotações operacionais
+- Cofre de Acessos e Credenciais Operacionais
 
 ---
 
@@ -71,6 +72,7 @@ O objetivo do PopFlow é eliminar a dependência de conhecimento individual e ce
 12. PRD 12 — Mídia inline multimodal
 13. PRD 13 — Base de Conhecimento e Artigos Internos
 14. PRD 14 — Dúvidas Frequentes, Soluções de Erro e Anotações Operacionais
+15. PRD 15 — Cofre de Acessos e Credenciais Operacionais
 
 ---
 
