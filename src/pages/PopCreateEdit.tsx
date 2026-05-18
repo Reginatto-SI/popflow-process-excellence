@@ -19,6 +19,7 @@ import {
   usePop,
   useCreatePop,
   useUpdatePop,
+  normalizeEtapasInputOrder,
   type ChecklistItem,
   type CreatePopInput,
   type PopMidiaTipo,
@@ -163,6 +164,8 @@ const PopCreateEdit = () => {
   const [additionalInfoOpenByStep, setAdditionalInfoOpenByStep] = useState<Record<string, boolean>>({});
   const [previewStepUid, setPreviewStepUid] = useState<string | null>(null);
   const [previewMidia, setPreviewMidia] = useState<MidiaItem | null>(null);
+  const saveInProgressRef = useRef(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Carregar dados em modo edição
   useEffect(() => {
@@ -407,7 +410,8 @@ const PopCreateEdit = () => {
 
   const buildPayload = (): CreatePopInput => ({
     titulo, descricao, departamento, responsavel, visibilidade,
-    etapas: steps.map((s) => ({
+    // Reordena pelo array atual para impedir payload com ordens duplicadas mesmo se o estado local ficar inconsistente.
+    etapas: normalizeEtapasInputOrder(steps.map((s) => ({
       ordem: s.ordem,
       titulo: s.titulo,
       descricao: s.descricao,
@@ -416,7 +420,7 @@ const PopCreateEdit = () => {
       resultado_esperado: s.resultadoEsperado,
       erro_comum: s.erroComum,
       checklist: checklistFromString(s.checklist),
-    })),
+    }))),
     midias: midias.map((m) => ({
       etapa_ordem: m.etapaOrdem,
       referencia: m.referencia,
@@ -466,10 +470,16 @@ const PopCreateEdit = () => {
   };
 
   const handleSave = async () => {
+    if (saveInProgressRef.current) return;
     if (!titulo.trim()) {
       toast.error("Informe o título");
       return;
     }
+
+    // Bloqueio síncrono evita duplo clique antes do React atualizar o disabled do botão.
+    saveInProgressRef.current = true;
+    setIsSaving(true);
+
     try {
       if (isEdit && id) {
         await updatePop.mutateAsync({ popId: id, input: buildPayload() });
@@ -482,6 +492,9 @@ const PopCreateEdit = () => {
       }
     } catch (err) {
       toast.error((err as Error).message);
+    } finally {
+      saveInProgressRef.current = false;
+      setIsSaving(false);
     }
   };
 
@@ -501,7 +514,7 @@ const PopCreateEdit = () => {
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleDiscard}>Descartar</Button>
-            <Button onClick={handleSave} disabled={createPop.isPending || updatePop.isPending}>Salvar</Button>
+            <Button onClick={handleSave} disabled={isSaving || createPop.isPending || updatePop.isPending}>Salvar</Button>
           </div>
         </header>
 
@@ -981,7 +994,7 @@ const PopCreateEdit = () => {
                     )}
 
                     <div className="flex gap-2 pt-2">
-                      <Button onClick={handleSave} disabled={createPop.isPending || updatePop.isPending}>
+                      <Button onClick={handleSave} disabled={isSaving || createPop.isPending || updatePop.isPending}>
                         {isEdit ? "Salvar alterações" : "Criar POP"}
                       </Button>
                     </div>
