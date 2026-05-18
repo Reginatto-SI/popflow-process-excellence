@@ -70,6 +70,33 @@ export interface PopFull extends PopRow {
   }) | null;
 }
 
+const normalizeStepValue = (value: unknown) =>
+  String(value ?? "").trim();
+
+const etapaLogicalKey = (etapa: PopEtapaRow) =>
+  [
+    etapa.pop_versao_id,
+    etapa.ordem,
+    normalizeStepValue(etapa.titulo),
+    normalizeStepValue(etapa.descricao),
+    normalizeStepValue(etapa.tempo_estimado),
+    normalizeStepValue(etapa.pre_requisito),
+    normalizeStepValue(etapa.resultado_esperado),
+    normalizeStepValue(etapa.erro_comum),
+    JSON.stringify(etapa.checklist ?? []),
+  ].join("|");
+
+export const dedupePopEtapas = (etapas: PopEtapaRow[]) => {
+  const seen = new Set<string>();
+
+  return etapas.filter((etapa) => {
+    const key = etapaLogicalKey(etapa);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+
 // ===== Lista =====
 export function usePops() {
   return useQuery({
@@ -111,12 +138,14 @@ export function usePop(id: string | undefined) {
 
         if (v) {
           const [{ data: etapas }, { data: midias }] = await Promise.all([
-            supabase.from("pop_etapas").select("*").eq("pop_versao_id", v.id).order("ordem"),
+            supabase.from("pop_etapas").select("*").eq("pop_versao_id", v.id).order("ordem").order("created_at"),
             supabase.from("pop_midias").select("*").eq("pop_versao_id", v.id).order("ordem"),
           ]);
+          const etapasCarregadas = (etapas ?? []) as unknown as PopEtapaRow[];
           versao_ativa = {
             ...(v as PopVersaoRow),
-            etapas: (etapas ?? []) as unknown as PopEtapaRow[],
+            // Fallback visual: não substitui a integridade de dados por pop_versao_id + ordem no banco/salvamento.
+            etapas: dedupePopEtapas(etapasCarregadas),
             midias: (midias ?? []) as unknown as PopMidiaRow[],
           };
         }
@@ -157,6 +186,12 @@ export interface CreatePopInput {
   etapas: EtapaInput[];
   midias: MidiaInput[];
 }
+
+export const normalizeEtapasInputOrder = (etapas: EtapaInput[]): EtapaInput[] =>
+  etapas.map((etapa, index) => ({
+    ...etapa,
+    ordem: index + 1,
+  }));
 
 // ===== Criar POP completo =====
 export function useCreatePop() {
@@ -208,7 +243,9 @@ export function useCreatePop() {
       if (verr) throw verr;
 
       // 3) etapas
-      const etapasInsert = input.etapas.map((e) => ({
+      // Normaliza antes de persistir para nunca enviar duas etapas com a mesma ordem na versão.
+      const etapasNormalizadas = normalizeEtapasInputOrder(input.etapas);
+      const etapasInsert = etapasNormalizadas.map((e) => ({
         pop_versao_id: versao.id,
         empresa_id,
         ordem: e.ordem,
@@ -296,7 +333,9 @@ export function useUpdatePop() {
       await supabase.from("pop_midias").delete().eq("pop_versao_id", pop.versao_ativa_id);
       await supabase.from("pop_etapas").delete().eq("pop_versao_id", pop.versao_ativa_id);
 
-      const etapasInsert = input.etapas.map((e) => ({
+      // Normaliza antes de persistir para nunca recriar etapas com ordem duplicada na versão ativa.
+      const etapasNormalizadas = normalizeEtapasInputOrder(input.etapas);
+      const etapasInsert = etapasNormalizadas.map((e) => ({
         pop_versao_id: pop.versao_ativa_id!,
         empresa_id: pop.empresa_id,
         ordem: e.ordem,
