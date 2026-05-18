@@ -55,6 +55,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
@@ -226,6 +230,94 @@ const inlineMediaFromAttachment = (attachment: KnowledgeAttachment): KnowledgeIn
   };
 };
 
+// Combobox simples de Categoria com criação rápida.
+// Não há tabela `categorias` dedicada: as opções vêm das categorias já gravadas em
+// `base_conhecimento.categoria` da empresa atual (isolamento garantido pelo RLS da tabela).
+// Normalizamos espaços/caixa apenas para comparar e evitar duplicidade trivial; o valor
+// gravado preserva a forma escolhida pelo usuário.
+const normalizeCategoria = (value: string) => value.trim().replace(/\s+/g, " ");
+const categoriaKey = (value: string) => normalizeCategoria(value).toLowerCase();
+
+const CategoriaCombobox = ({
+  value,
+  onChange,
+  options,
+}: {
+  value: string;
+  onChange: (next: string) => void;
+  options: string[];
+}) => {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+
+  // Dedupe ignorando caixa/espaços; preserva a primeira forma encontrada.
+  const uniqueOptions = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const opt of options) {
+      const key = categoriaKey(opt);
+      if (key && !seen.has(key)) seen.set(key, normalizeCategoria(opt));
+    }
+    return Array.from(seen.values()).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [options]);
+
+  const normalizedSearch = normalizeCategoria(search);
+  const matchExists = uniqueOptions.some((opt) => categoriaKey(opt) === categoriaKey(normalizedSearch));
+  const canCreate = normalizedSearch.length > 0 && !matchExists;
+
+  const handleSelect = (next: string) => {
+    onChange(normalizeCategoria(next));
+    setSearch("");
+    setOpen(false);
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="w-full justify-between font-normal"
+        >
+          <span className={cn("truncate", !value && "text-muted-foreground")}>
+            {value || "Selecione ou crie uma categoria"}
+          </span>
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Pesquisar categoria…" value={search} onValueChange={setSearch} />
+          <CommandList>
+            <CommandEmpty>{canCreate ? null : "Nenhuma categoria encontrada."}</CommandEmpty>
+            {uniqueOptions.length > 0 && (
+              <CommandGroup heading="Categorias da empresa">
+                {uniqueOptions.map((opt) => (
+                  <CommandItem key={opt} value={opt} onSelect={() => handleSelect(opt)}>
+                    <Check className={cn("mr-2 h-4 w-4", categoriaKey(value) === categoriaKey(opt) ? "opacity-100" : "opacity-0")} />
+                    {opt}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+            {canCreate && (
+              <CommandGroup heading="Nova">
+                {/* Criação rápida: sem tela administrativa, sem migration. O valor é apenas
+                    persistido em base_conhecimento.categoria no submit do formulário. */}
+                <CommandItem value={`__create__${normalizedSearch}`} onSelect={() => handleSelect(normalizedSearch)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Criar categoria "{normalizedSearch}"
+                </CommandItem>
+              </CommandGroup>
+            )}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+};
+
 const FormFields = ({
   form,
   onChange,
@@ -235,6 +327,7 @@ const FormFields = ({
   uploadInlineFile,
   onAddInlineMedia,
   onDiscardUploadedAsset,
+  categoriasExistentes,
 }: {
   form: KnowledgeContentInput;
   onChange: (patch: Partial<KnowledgeContentInput>) => void;
@@ -244,6 +337,7 @@ const FormFields = ({
   uploadInlineFile: (file: File) => Promise<UploadedInlineAsset>;
   onAddInlineMedia: (media: KnowledgeInlineMedia) => Promise<void> | void;
   onDiscardUploadedAsset: (asset: UploadedInlineAsset) => Promise<void>;
+  categoriasExistentes: string[];
 }) => {
   const compatibleStatuses = statusByType[form.tipo];
   const textareaRefs = useRef<Map<string, MediaMentionTextareaHandle | null>>(new Map());
@@ -306,14 +400,10 @@ const FormFields = ({
     const value = String(form[field] ?? "");
     return (
       <div className="space-y-2 md:col-span-2">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <Label>{label}</Label>
-          <Button type="button" variant="outline" size="sm" className="h-8 gap-1" onClick={() => openInsertDialog(field)}>
-            <ImagePlus className="h-4 w-4" />
-            Inserir mídia
-          </Button>
-        </div>
-        {/* Editor compartilhado com POPs: mantém Markdown + @referencias e habilita Ctrl+V/drop de mídia sem criar fluxo paralelo. */}
+        <Label>{label}</Label>
+        {/* Editor compartilhado com POPs: Markdown + @referencias + Ctrl+V/drop.
+            O botão "Inserir mídia" fica APENAS dentro da toolbar do editor (onOpenInsertMedia)
+            para evitar duplicidade com o botão antes existente no header deste bloco. */}
         <MediaMentionTextarea
           ref={(node) => { textareaRefs.current.set(String(field), node); }}
           value={value}
@@ -327,9 +417,6 @@ const FormFields = ({
           onOpenInsertMedia={() => openInsertDialog(field)}
           onPreview={() => setPreviewField({ label, value })}
         />
-        <p className="text-xs text-muted-foreground">
-          Use <code>@referencia</code>, o botão “Inserir mídia” ou cole imagens com <kbd className="rounded border bg-background px-1">Ctrl</kbd>+<kbd className="rounded border bg-background px-1">V</kbd>.
-        </p>
       </div>
     );
   };
@@ -421,7 +508,13 @@ const FormFields = ({
 
               <div className="space-y-2">
                 <Label>Categoria</Label>
-                <Input value={form.categoria} onChange={(e) => onChange({ categoria: e.target.value })} placeholder="Ex.: Operações" />
+                {/* Combobox com criação rápida: usa as categorias já existentes em base_conhecimento
+                    da empresa atual (RLS) e permite criar nova categoria a partir do termo digitado. */}
+                <CategoriaCombobox
+                  value={form.categoria}
+                  onChange={(next) => onChange({ categoria: next })}
+                  options={categoriasExistentes}
+                />
               </div>
 
               <div className="space-y-2">
@@ -437,9 +530,10 @@ const FormFields = ({
           </TabsContent>
 
           <TabsContent value="conteudo" className="mt-0 space-y-4 rounded-xl border bg-background p-4">
-            <div className="rounded-xl border border-dashed bg-muted/20 p-3 text-sm text-muted-foreground">
-              A Base de Conhecimento usa o mesmo editor multimídia dos POPs: Markdown leve, menções <code>@midia</code>, upload pelo modal existente e Ctrl+V para imagens.
-            </div>
+            {/* Texto discreto: o botão "Inserir mídia" agora vive apenas na toolbar do editor. */}
+            <p className="text-xs text-muted-foreground">
+              Use o editor para escrever o conteúdo. Você pode inserir referências de mídia pelo botão "Inserir mídia" ou colar imagens com <kbd className="rounded border bg-background px-1">Ctrl</kbd> + <kbd className="rounded border bg-background px-1">V</kbd>.
+            </p>
 
             {form.tipo === "artigo" && mediaEditor("conteudo", "Conteúdo principal", "Registre o conteúdo consultivo ou operacional", 10)}
 
@@ -1042,6 +1136,7 @@ const BaseConhecimento = () => {
             uploadInlineFile={uploadInlineFile}
             onAddInlineMedia={addInlineMedia}
             onDiscardUploadedAsset={discardUploadedAsset}
+            categoriasExistentes={contents.map((item) => item.categoria).filter(Boolean) as string[]}
           />
           <DialogFooter>
             <Button variant="outline" onClick={() => { void handleFormOpenChange(false); }}>Cancelar</Button>

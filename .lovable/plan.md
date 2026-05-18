@@ -1,53 +1,64 @@
 ## Objetivo
 
-Transformar a aba "Etapas" em uma lista de cards colapsáveis, mantendo todos os campos e comportamentos atuais. Apenas uma etapa fica aberta por padrão; etapas fechadas mostram um resumo compacto. Adicionar ações de massa e melhorar o painel "Resumo do POP".
+Refinar o modal de criação/edição da Base de Conhecimento em `/base-conhecimento`:
 
-## Alterações (apenas em `src/pages/PopCreateEdit.tsx`)
+1. Trocar o input livre de **Categoria** por um seletor pesquisável com criação rápida.
+2. Remover o botão **Inserir mídia** duplicado na aba **Conteúdo**.
+3. Suavizar o texto explicativo no topo da aba.
 
-### 1. Estado de expansão
-- Novo estado `expandedStepUid: string | null` (uma aberta por vez).
-- Helpers: `toggleStep(uid)`, `expandAll()` (modo "todas abertas" via flag `allExpanded`), `collapseAll()`.
-- Ao criar etapa via `addStep` ou "Adicionar etapa abaixo", definir `expandedStepUid` para o `uid` recém-criado.
-- Ao carregar POP existente: abrir a primeira etapa por padrão.
+Mudança mínima, sem nova tela, sem nova tabela, sem refatorar arquitetura.
 
-### 2. Header da seção Etapas
-Substituir o `CardHeader` atual por uma barra com:
-- Título "Etapas".
-- Botões: "Expandir todas", "Recolher todas", "Adicionar etapa".
+## Escopo
 
-### 3. Card de etapa (modo fechado)
-Resumo em uma linha:
-```
-Etapa N — {titulo}
-{tempo} · {X} mídias · {Y} itens de checklist · {Completa|Incompleta}
-```
-- "Mídias" = `getStepMidias(step).length` (já existe).
-- "Checklist" = quantos itens não vazios em `step.checklist` (split por linha).
-- "Completa" = título preenchido + descrição preenchida + resultado esperado preenchido (regra simples, ajustável).
-- Ícone chevron para expandir; clique no header alterna.
+Apenas `src/pages/BaseConhecimento.tsx`. Nenhum outro arquivo, rota, migration ou componente novo precisa ser criado — todos os primitivos já existem (`Popover`, `Command`, `MediaMentionTextarea` com toolbar de inserir mídia, fluxo `InsertMediaDialog`).
 
-### 4. Card de etapa (modo aberto)
-Mantém **exatamente** os campos atuais (título, tempo, descrição com `MediaMentionTextarea`, botão "Inserir mídia", chips de mídias vinculadas, resultado esperado, erro comum, pré-requisitos, checklist).
-- Adicionar no rodapé do card: botão discreto "Adicionar etapa abaixo" (cria nova etapa com `ordem = step.ordem + 1`, reordena demais e abre a nova).
-- Manter ações já existentes de mover/remover (se existirem) ou adicionar mover ↑/↓ e remover no header do card.
+## Alterações
 
-### 5. Painel lateral "Resumo do POP"
-Enriquecer o card existente com:
-- Total de etapas.
-- Tempo estimado total (soma simples de minutos extraídos via regex do campo `tempo`, ex: "5 min" → 5).
-- Total de mídias (`midias.length`).
-- Etapas incompletas (contagem pela mesma regra de "Completa").
+### 1. Campo Categoria → Combobox pesquisável com criação rápida
 
-### 6. Comportamento "uma aberta por vez"
-- Ao expandir uma etapa, fechar a anterior (a menos que esteja em modo "Expandir todas").
-- "Recolher todas" volta para `expandedStepUid = null` e desativa o modo "todas".
+Substituir, dentro do form do modal, o `<Input>` de Categoria por um combobox baseado em `Popover` + `Command` (shadcn, já no projeto):
 
-## Fora do escopo
-- Não alterar dados, persistência, mídia inline, aba Mídias, fluxo de execução nem layout geral da página.
-- Não criar componentes em arquivos novos (mudança incremental no arquivo existente). Se o JSX do card crescer demais, posso extrair `StepCard` em arquivo próprio — confirmar se preferir isso.
+- Fonte das opções: derivar do hook `useKnowledgeContents` já carregado na página (a query é por empresa via RLS, então a lista só contém categorias da empresa atual — sem categorias globais).
+- Deduplicar ignorando caixa e espaços extras (`trim().toLowerCase()` para comparar; valor exibido mantém a forma já cadastrada).
+- Pesquisa em tempo real via `CommandInput`.
+- Quando o termo digitado não bate com nenhuma opção existente, mostrar um item `Criar categoria "X"` que grava no form o valor normalizado (`trim()`, colapsa espaços internos).
+- Selecionar uma opção existente apenas seta `form.categoria` — não cria nada novo no banco.
+- A "criação" é implícita: o valor é gravado em `base_conhecimento.categoria` no submit, igual hoje. Nas próximas aberturas do modal a nova categoria já aparece na lista (mesma query).
 
-## Detalhes técnicos
-- Usar `Collapsible` do shadcn (`@/components/ui/collapsible`) para animação simples, ou apenas condicional `expandedStepUid === step.uid`.
-- Ícones: `ChevronDown`, `ChevronUp`, `CheckCircle2`, `Circle`, `Plus`, `ArrowUp`, `ArrowDown`, `Trash2` do `lucide-react`.
-- Cores: tokens semânticos existentes (`text-muted-foreground`, `text-primary`, etc.).
-- Persistência do estado de expansão: apenas em memória (não salvar).
+Para passar a lista de categorias até o sub-componente do form, adicionar uma prop `categoriasExistentes: string[]` derivada uma vez no componente pai.
+
+Comentário no código explicando: por que não há tabela nova, regra de normalização, e que o isolamento por empresa vem do RLS de `base_conhecimento`.
+
+### 2. Remover botão duplicado de Inserir mídia
+
+Em `mediaEditor` (~linha 305 de `src/pages/BaseConhecimento.tsx`):
+
+- Remover o `<Button>Inserir mídia</Button>` que fica no header acima do editor (linhas ~311–314).
+- Manter apenas o botão da toolbar interna do `MediaMentionTextarea`, já ligado via `onOpenInsertMedia` e `onRequestInsertMedia` — fluxo de upload continua o mesmo (`InsertMediaDialog` existente).
+- O `<Label>` continua no header, sem o botão ao lado.
+
+Comentário no código apontando que a inserção fica centralizada na toolbar para evitar redundância.
+
+### 3. Texto da aba Conteúdo
+
+Substituir o bloco `<div class="rounded-xl border border-dashed …">` no topo da aba Conteúdo (linha ~440) por uma linha mais discreta:
+
+- Trocar o estilo de caixa tracejada por um `<p className="text-xs text-muted-foreground">`.
+- Conteúdo:  
+  `Use o editor para escrever o conteúdo. Você pode inserir referências de mídia pelo botão "Inserir mídia" ou colar imagens com Ctrl + V.`
+
+Também ajustar a frase de ajuda logo abaixo do editor (linhas ~330–332) para não repetir a mesma instrução — deixar uma única dica curta ou remover, já que o texto do topo cobre.
+
+## Fora de escopo
+
+- Não criar tabela `categorias` nem migration.
+- Não criar tela/menu administrativo de categorias.
+- Não mexer em Tags nem em Departamento.
+- Não alterar outras telas, sidebar ou layout.
+- Não trocar o fluxo de upload/`InsertMediaDialog`.
+
+## Resultado
+
+- Categoria vira combobox pesquisável com opção "Criar categoria \"X\"", padronizando os valores usados nos filtros e na busca da listagem.
+- Aba Conteúdo passa a ter só um ponto de entrada para inserir mídia (toolbar do editor).
+- Texto explicativo mais discreto, sem redundância.
