@@ -405,18 +405,18 @@ export function useUpdatePop() {
       const oldMidiasById = new Map(oldMidias.map((midia) => [midia.id, midia]));
       const actorName = await getActorName(user.id);
 
-      // Atualizar campos do POP
-      const { error: uerr } = await supabase
-        .from("pops")
-        .update({
-          titulo: input.titulo,
-          descricao: input.descricao,
-          departamento: input.departamento,
-          responsavel: input.responsavel,
-          visibilidade: input.visibilidade,
-        })
-        .eq("id", popId);
-      if (uerr) throw uerr;
+      const oldEtapaIds = oldEtapas.map((etapa) => etapa.id);
+      if (oldEtapaIds.length > 0) {
+        // Valida bloqueio antes de qualquer DELETE destrutivo: execuções usam FK RESTRICT para etapas.
+        const { count: execucoesVinculadas, error: execucoesVinculadasError } = await supabase
+          .from("execucao_etapas")
+          .select("id", { count: "exact", head: true })
+          .in("etapa_id", oldEtapaIds);
+        if (execucoesVinculadasError) throw execucoesVinculadasError;
+        if ((execucoesVinculadas ?? 0) > 0) {
+          throw new Error("Este POP já possui execuções vinculadas. Para alterar etapas, será necessário criar uma nova versão do POP.");
+        }
+      }
 
       const atividades: Array<{
         empresa_id: string;
@@ -453,8 +453,27 @@ export function useUpdatePop() {
 
       // No MVP: edição direta da versão atual em rascunho. Limpar e recriar etapas/mídias.
       // (Próxima etapa do PRD 10: criar nova versão se status != rascunho)
-      await supabase.from("pop_midias").delete().eq("pop_versao_id", pop.versao_ativa_id);
-      await supabase.from("pop_etapas").delete().eq("pop_versao_id", pop.versao_ativa_id);
+      // Não ignore falhas: mídias são vinculadas às etapas e devem ser recriadas antes da troca de etapas.
+      const { data: midiasRemovidas, error: deleteMidiasError } = await supabase
+        .from("pop_midias")
+        .delete()
+        .eq("pop_versao_id", pop.versao_ativa_id)
+        .select("id");
+      if (deleteMidiasError) throw deleteMidiasError;
+      if (oldMidias.length > 0 && (midiasRemovidas?.length ?? 0) !== oldMidias.length) {
+        throw new Error("Não foi possível remover todas as mídias antigas do POP. Verifique permissões/RLS antes de salvar novamente.");
+      }
+
+      // Não ignore falhas: se etapas antigas permanecerem, o salvamento não deve inserir cópias novas.
+      const { data: etapasRemovidas, error: deleteEtapasError } = await supabase
+        .from("pop_etapas")
+        .delete()
+        .eq("pop_versao_id", pop.versao_ativa_id)
+        .select("id");
+      if (deleteEtapasError) throw deleteEtapasError;
+      if (oldEtapas.length > 0 && (etapasRemovidas?.length ?? 0) !== oldEtapas.length) {
+        throw new Error("Não foi possível remover todas as etapas antigas do POP. Verifique permissões/RLS antes de salvar novamente.");
+      }
 
       // Normaliza antes de persistir para nunca recriar etapas com ordem duplicada na versão ativa.
       const etapasNormalizadas = normalizeEtapasInputOrder(input.etapas);
@@ -602,6 +621,19 @@ export function useUpdatePop() {
           });
         }
       }
+
+      // Atualiza dados gerais só depois das exclusões/inserções de etapas e mídias passarem sem erro.
+      const { error: uerr } = await supabase
+        .from("pops")
+        .update({
+          titulo: input.titulo,
+          descricao: input.descricao,
+          departamento: input.departamento,
+          responsavel: input.responsavel,
+          visibilidade: input.visibilidade,
+        })
+        .eq("id", popId);
+      if (uerr) throw uerr;
 
       if (atividades.length > 0) {
         const { error: atividadeError } = await supabase.from("pop_atividades").insert(atividades as never);
