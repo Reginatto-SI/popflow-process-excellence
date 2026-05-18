@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   AlertCircle,
   Building2,
@@ -10,6 +10,7 @@ import {
   Ellipsis,
   FileText,
   Lock,
+  PlayCircle,
   Plus,
   Search,
   Shield,
@@ -87,6 +88,9 @@ const formatUpdatedAt = (iso?: string | null) => {
   }).format(date);
 };
 
+const isPopStatus = (value: string | null): value is PopStatus =>
+  value === "rascunho" || value === "revisao" || value === "publicado";
+
 const friendlyDeleteError = (error: unknown) => {
   const message = error instanceof Error ? error.message : String(error);
   if (
@@ -100,12 +104,18 @@ const friendlyDeleteError = (error: unknown) => {
 
 const PopsList = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { data: pops = [], isLoading, isError } = usePops();
   const deletePop = useDeletePop();
 
+  const statusParam = searchParams.get("status");
+  const acaoParam = searchParams.get("acao");
+  const statusFiltroInicial = isPopStatus(statusParam) ? statusParam : "todos";
+  const mostrarContextoExecucao = acaoParam === "executar";
+
   const [busca, setBusca] = useState("");
   const [statusFiltro, setStatusFiltro] = useState<"todos" | PopStatus>(
-    "todos",
+    statusFiltroInicial,
   );
   const [departamentoFiltro, setDepartamentoFiltro] = useState("todos");
   const [visibilidadeFiltro, setVisibilidadeFiltro] = useState<
@@ -163,11 +173,18 @@ const PopsList = () => {
     );
   }, [pops]);
 
+  useEffect(() => {
+    // Query string vinda das ações rápidas aplica o contexto inicial da listagem de POPs.
+    setStatusFiltro(isPopStatus(statusParam) ? statusParam : "todos");
+  }, [statusParam]);
+
   const limparFiltros = () => {
     setBusca("");
     setStatusFiltro("todos");
     setDepartamentoFiltro("todos");
     setVisibilidadeFiltro("todas");
+    // Remove query strings das ações rápidas para manter a listagem em estado neutro.
+    navigate("/pops", { replace: true });
   };
 
   const confirmDelete = async () => {
@@ -197,6 +214,15 @@ const PopsList = () => {
             Criar POP
           </Button>
         </header>
+
+        {mostrarContextoExecucao && (
+          <Card className="border-border/70 shadow-sm">
+            <CardContent className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
+              <PlayCircle className="h-4 w-4 text-primary" />
+              Selecione um POP na lista para abrir os detalhes e iniciar a execução quando disponível.
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardContent className="px-8 pb-8 pt-6">
