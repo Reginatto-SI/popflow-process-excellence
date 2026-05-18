@@ -230,6 +230,94 @@ const inlineMediaFromAttachment = (attachment: KnowledgeAttachment): KnowledgeIn
   };
 };
 
+// Combobox simples de Categoria com criação rápida.
+// Não há tabela `categorias` dedicada: as opções vêm das categorias já gravadas em
+// `base_conhecimento.categoria` da empresa atual (isolamento garantido pelo RLS da tabela).
+// Normalizamos espaços/caixa apenas para comparar e evitar duplicidade trivial; o valor
+// gravado preserva a forma escolhida pelo usuário.
+const normalizeCategoria = (value: string) => value.trim().replace(/\s+/g, " ");
+const categoriaKey = (value: string) => normalizeCategoria(value).toLowerCase();
+
+const CategoriaCombobox = ({
+  value,
+  onChange,
+  options,
+}: {
+  value: string;
+  onChange: (next: string) => void;
+  options: string[];
+}) => {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+
+  // Dedupe ignorando caixa/espaços; preserva a primeira forma encontrada.
+  const uniqueOptions = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const opt of options) {
+      const key = categoriaKey(opt);
+      if (key && !seen.has(key)) seen.set(key, normalizeCategoria(opt));
+    }
+    return Array.from(seen.values()).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [options]);
+
+  const normalizedSearch = normalizeCategoria(search);
+  const matchExists = uniqueOptions.some((opt) => categoriaKey(opt) === categoriaKey(normalizedSearch));
+  const canCreate = normalizedSearch.length > 0 && !matchExists;
+
+  const handleSelect = (next: string) => {
+    onChange(normalizeCategoria(next));
+    setSearch("");
+    setOpen(false);
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="w-full justify-between font-normal"
+        >
+          <span className={cn("truncate", !value && "text-muted-foreground")}>
+            {value || "Selecione ou crie uma categoria"}
+          </span>
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Pesquisar categoria…" value={search} onValueChange={setSearch} />
+          <CommandList>
+            <CommandEmpty>{canCreate ? null : "Nenhuma categoria encontrada."}</CommandEmpty>
+            {uniqueOptions.length > 0 && (
+              <CommandGroup heading="Categorias da empresa">
+                {uniqueOptions.map((opt) => (
+                  <CommandItem key={opt} value={opt} onSelect={() => handleSelect(opt)}>
+                    <Check className={cn("mr-2 h-4 w-4", categoriaKey(value) === categoriaKey(opt) ? "opacity-100" : "opacity-0")} />
+                    {opt}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+            {canCreate && (
+              <CommandGroup heading="Nova">
+                {/* Criação rápida: sem tela administrativa, sem migration. O valor é apenas
+                    persistido em base_conhecimento.categoria no submit do formulário. */}
+                <CommandItem value={`__create__${normalizedSearch}`} onSelect={() => handleSelect(normalizedSearch)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Criar categoria "{normalizedSearch}"
+                </CommandItem>
+              </CommandGroup>
+            )}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+};
+
 const FormFields = ({
   form,
   onChange,
@@ -239,6 +327,7 @@ const FormFields = ({
   uploadInlineFile,
   onAddInlineMedia,
   onDiscardUploadedAsset,
+  categoriasExistentes,
 }: {
   form: KnowledgeContentInput;
   onChange: (patch: Partial<KnowledgeContentInput>) => void;
@@ -248,6 +337,7 @@ const FormFields = ({
   uploadInlineFile: (file: File) => Promise<UploadedInlineAsset>;
   onAddInlineMedia: (media: KnowledgeInlineMedia) => Promise<void> | void;
   onDiscardUploadedAsset: (asset: UploadedInlineAsset) => Promise<void>;
+  categoriasExistentes: string[];
 }) => {
   const compatibleStatuses = statusByType[form.tipo];
   const textareaRefs = useRef<Map<string, MediaMentionTextareaHandle | null>>(new Map());
