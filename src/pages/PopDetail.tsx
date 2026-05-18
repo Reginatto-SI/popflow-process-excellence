@@ -1,18 +1,20 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Building2, Clock3, FileAudio2, FileImage, FileText, Film, Loader2, Lock, PlayCircle, Share2 } from "lucide-react";
+import { Activity, Building2, Clock3, FileAudio2, FileImage, FileText, Film, History, Loader2, Lock, PlayCircle, Share2 } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { AppLayout } from "@/components/AppLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { MediaViewer } from "@/components/MediaViewer";
 import { renderMarkdownPreview } from "@/lib/markdownPreview";
 import { useToast } from "@/hooks/use-toast";
-import { usePop, type PopMidiaTipo, type PopStatus, type PopMidiaRow, type PopEtapaRow } from "@/hooks/usePops";
+import { usePop, usePopAtividades, type PopMidiaTipo, type PopStatus, type PopMidiaRow, type PopEtapaRow } from "@/hooks/usePops";
 import { useStartExecucao } from "@/hooks/useExecucoes";
 
 const statusLabel: Record<PopStatus, string> = {
@@ -27,6 +29,30 @@ const statusClass: Record<PopStatus, string> = {
   publicado: "bg-emerald-600 text-white",
 };
 
+
+const formatActivityDate = (value: string) => {
+  const date = new Date(value);
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const startOfDate = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  const time = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(date);
+
+  if (startOfDate === startOfToday) return `Hoje às ${time}`;
+  if (startOfDate === startOfToday - 24 * 60 * 60 * 1000) return `Ontem às ${time}`;
+  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(date);
+};
+
+const actionLabel: Record<string, string> = {
+  pop_criado: "Criação",
+  pop_informacoes_editadas: "Edição",
+  etapa_adicionada: "Etapa",
+  etapa_editada: "Etapa",
+  etapa_removida: "Remoção",
+  midia_adicionada: "Mídia",
+  midia_removida: "Mídia",
+  midia_alterada: "Mídia",
+};
+
 const mediaIconByType: Record<PopMidiaTipo, ReactNode> = {
   imagem: <FileImage className="h-3 w-3" />,
   audio: <FileAudio2 className="h-3 w-3" />,
@@ -39,8 +65,10 @@ const PopDetail = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { data: pop, isLoading } = usePop(id);
+  const { data: atividades = [], isLoading: isLoadingAtividades } = usePopAtividades(id);
   const startExec = useStartExecucao();
   const [viewer, setViewer] = useState<{ open: boolean; midia: PopMidiaRow | null }>({ open: false, midia: null });
+  const [activitiesOpen, setActivitiesOpen] = useState(false);
 
   if (isLoading) return <AppLayout title="Detalhe do POP"><p className="p-6 text-sm text-muted-foreground">Carregando...</p></AppLayout>;
   if (!pop) return <AppLayout title="Detalhe do POP"><p className="p-6 text-sm text-muted-foreground">POP não encontrado.</p></AppLayout>;
@@ -92,6 +120,7 @@ const PopDetail = () => {
             </div>
             <div className="flex flex-wrap gap-2">
               <Button variant="outline"><Share2 className="mr-2 h-4 w-4" />Compartilhar</Button>
+              <Button variant="outline" onClick={() => setActivitiesOpen(true)}><History className="mr-2 h-4 w-4" />Atividades</Button>
               <Button variant="outline" onClick={() => navigate(`/pops/${pop.id}/editar`)}>Editar</Button>
               <TooltipProvider>
                 <Tooltip>
@@ -198,6 +227,45 @@ const PopDetail = () => {
           </aside>
         </div>
       </div>
+
+
+      <Dialog open={activitiesOpen} onOpenChange={setActivitiesOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Registro de atividades</DialogTitle>
+            <DialogDescription>Acompanhe as principais ações realizadas neste POP.</DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh] pr-4">
+            {isLoadingAtividades ? (
+              <div className="flex items-center gap-2 rounded-md border bg-muted/30 p-4 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Carregando atividades...
+              </div>
+            ) : atividades.length === 0 ? (
+              <div className="rounded-md border bg-muted/30 p-4 text-sm text-muted-foreground">Nenhuma atividade registrada ainda.</div>
+            ) : (
+              <div className="space-y-3">
+                {atividades.map((atividade) => (
+                  <div key={atividade.id} className="flex gap-3 rounded-md border bg-background p-3">
+                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                      <Activity className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-sm font-medium leading-relaxed">{atividade.descricao}</p>
+                        <Badge variant="secondary" className="text-[10px]">{actionLabel[atividade.acao] ?? atividade.acao}</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {atividade.usuario?.nome ?? "Usuário"} • {formatActivityDate(atividade.created_at)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
 
       <MediaViewer
         open={viewer.open}

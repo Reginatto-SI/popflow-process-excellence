@@ -70,6 +70,21 @@ export interface PopFull extends PopRow {
   }) | null;
 }
 
+export interface PopAtividadeRow {
+  id: string;
+  empresa_id: string;
+  pop_id: string;
+  pop_versao_id: string | null;
+  usuario_id: string;
+  acao: string;
+  alvo_tipo: string;
+  alvo_id: string | null;
+  descricao: string;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  usuario?: { nome: string } | null;
+}
+
 const normalizeStepValue = (value: unknown) =>
   String(value ?? "").trim();
 
@@ -156,8 +171,27 @@ export function usePop(id: string | undefined) {
   });
 }
 
+// ===== Registro de atividades =====
+export function usePopAtividades(popId: string | undefined) {
+  return useQuery({
+    enabled: !!popId,
+    queryKey: ["pop-atividades", popId],
+    queryFn: async (): Promise<PopAtividadeRow[]> => {
+      if (!popId) return [];
+      const { data, error } = await supabase
+        .from("pop_atividades")
+        .select("*, usuario:usuarios(nome)")
+        .eq("pop_id", popId)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as unknown as PopAtividadeRow[];
+    },
+  });
+}
+
 // ===== Payloads de salvamento =====
 export interface EtapaInput {
+  id?: string;
   ordem: number;
   titulo: string;
   descricao: string;
@@ -169,6 +203,7 @@ export interface EtapaInput {
 }
 
 export interface MidiaInput {
+  id?: string;
   etapa_ordem: number | null; // ligamos por ordem para mídia ↔ etapa
   referencia: string;
   nome: string;
@@ -192,6 +227,32 @@ export const normalizeEtapasInputOrder = (etapas: EtapaInput[]): EtapaInput[] =>
     ...etapa,
     ordem: index + 1,
   }));
+
+const getActorName = async (userId: string) => {
+  const { data, error } = await supabase.from("usuarios").select("nome").eq("id", userId).maybeSingle();
+  if (error) throw error;
+  return data?.nome?.trim() || "Usuário";
+};
+
+const etapaLabel = (etapa: Pick<EtapaInput | PopEtapaRow, "ordem" | "titulo">) =>
+  `Etapa ${etapa.ordem}${etapa.titulo?.trim() ? ` — ${etapa.titulo.trim()}` : ""}`;
+
+const stepChanged = (before: PopEtapaRow, after: EtapaInput) =>
+  before.ordem !== after.ordem
+  || before.titulo !== after.titulo
+  || before.descricao !== after.descricao
+  || before.tempo_estimado !== after.tempo_estimado
+  || before.pre_requisito !== after.pre_requisito
+  || before.resultado_esperado !== after.resultado_esperado
+  || before.erro_comum !== after.erro_comum
+  || JSON.stringify(before.checklist ?? []) !== JSON.stringify(after.checklist ?? []);
+
+const mediaChanged = (before: PopMidiaRow, after: MidiaInput) =>
+  before.referencia !== after.referencia
+  || before.nome !== after.nome
+  || before.tipo !== after.tipo
+  || before.ordem !== after.ordem
+  || (before.url ?? null) !== (after.url ?? null);
 
 // ===== Criar POP completo =====
 export function useCreatePop() {
@@ -289,10 +350,26 @@ export function useCreatePop() {
         .eq("id", pop.id);
       if (uperr) throw uperr;
 
+      const actorName = await getActorName(user.id);
+      // Registra a criação do POP no histórico consultado pelo modal de atividades.
+      const { error: activityError } = await supabase.from("pop_atividades").insert({
+        empresa_id,
+        pop_id: pop.id,
+        pop_versao_id: versao.id,
+        usuario_id: user.id,
+        acao: "pop_criado",
+        alvo_tipo: "pop",
+        alvo_id: pop.id,
+        descricao: `${actorName} criou o POP`,
+        metadata: { titulo: input.titulo } as never,
+      });
+      if (activityError) throw activityError;
+
       return pop.id as string;
     },
-    onSuccess: () => {
+    onSuccess: (popId) => {
       qc.invalidateQueries({ queryKey: ["pops"] });
+      qc.invalidateQueries({ queryKey: ["pop-atividades", popId] });
     },
   });
 }
@@ -315,6 +392,19 @@ export function useUpdatePop() {
       if (!pop) throw new Error("POP não encontrado");
       if (!pop.versao_ativa_id) throw new Error("POP sem versão ativa");
 
+      const [{ data: etapasAtuais, error: etapasAtuaisError }, { data: midiasAtuais, error: midiasAtuaisError }] = await Promise.all([
+        supabase.from("pop_etapas").select("*").eq("pop_versao_id", pop.versao_ativa_id).order("ordem"),
+        supabase.from("pop_midias").select("*").eq("pop_versao_id", pop.versao_ativa_id).order("ordem"),
+      ]);
+      if (etapasAtuaisError) throw etapasAtuaisError;
+      if (midiasAtuaisError) throw midiasAtuaisError;
+
+      const oldEtapas = (etapasAtuais ?? []) as unknown as PopEtapaRow[];
+      const oldMidias = (midiasAtuais ?? []) as unknown as PopMidiaRow[];
+      const oldEtapasById = new Map(oldEtapas.map((etapa) => [etapa.id, etapa]));
+      const oldMidiasById = new Map(oldMidias.map((midia) => [midia.id, midia]));
+      const actorName = await getActorName(user.id);
+
       // Atualizar campos do POP
       const { error: uerr } = await supabase
         .from("pops")
@@ -327,6 +417,39 @@ export function useUpdatePop() {
         })
         .eq("id", popId);
       if (uerr) throw uerr;
+
+      const atividades: Array<{
+        empresa_id: string;
+        pop_id: string;
+        pop_versao_id: string | null;
+        usuario_id: string;
+        acao: string;
+        alvo_tipo: string;
+        alvo_id: string | null;
+        descricao: string;
+        metadata: Record<string, unknown>;
+      }> = [];
+
+      if (
+        pop.titulo !== input.titulo
+        || pop.descricao !== input.descricao
+        || pop.departamento !== input.departamento
+        || pop.responsavel !== input.responsavel
+        || pop.visibilidade !== input.visibilidade
+      ) {
+        // Registra edição geral de forma resumida, sem diff campo a campo no MVP.
+        atividades.push({
+          empresa_id: pop.empresa_id,
+          pop_id: popId,
+          pop_versao_id: pop.versao_ativa_id,
+          usuario_id: user.id,
+          acao: "pop_informacoes_editadas",
+          alvo_tipo: "pop",
+          alvo_id: popId,
+          descricao: `${actorName} editou as informações gerais do POP`,
+          metadata: {},
+        });
+      }
 
       // No MVP: edição direta da versão atual em rascunho. Limpar e recriar etapas/mídias.
       // (Próxima etapa do PRD 10: criar nova versão se status != rascunho)
@@ -353,9 +476,65 @@ export function useUpdatePop() {
         .select();
       if (eerr) throw eerr;
 
+      const createdEtapas = (etapasCriadas ?? []) as unknown as PopEtapaRow[];
+      const createdEtapaByOrdem = new Map(createdEtapas.map((etapa) => [etapa.ordem, etapa]));
+
+      const realEtapaId = (etapa: EtapaInput) =>
+        etapa.id && oldEtapasById.has(etapa.id) ? etapa.id : undefined;
+      const inputEtapaIds = new Set(etapasNormalizadas.map(realEtapaId).filter(Boolean));
+      for (const etapaAntiga of oldEtapas) {
+        if (!inputEtapaIds.has(etapaAntiga.id)) {
+          // Registra remoção de etapa detectada pelo formulário de edição.
+          atividades.push({
+            empresa_id: pop.empresa_id,
+            pop_id: popId,
+            pop_versao_id: pop.versao_ativa_id,
+            usuario_id: user.id,
+            acao: "etapa_removida",
+            alvo_tipo: "etapa",
+            alvo_id: etapaAntiga.id,
+            descricao: `${actorName} removeu a ${etapaLabel(etapaAntiga)}`,
+            metadata: { ordem: etapaAntiga.ordem, titulo: etapaAntiga.titulo },
+          });
+        }
+      }
+
+      for (const etapaNova of etapasNormalizadas) {
+        const etapaIdReal = realEtapaId(etapaNova);
+        const etapaAntiga = etapaIdReal ? oldEtapasById.get(etapaIdReal) : undefined;
+        if (!etapaAntiga) {
+          const etapaCriada = createdEtapaByOrdem.get(etapaNova.ordem);
+          // Registra etapa nova somente quando não há ID real correspondente no banco.
+          atividades.push({
+            empresa_id: pop.empresa_id,
+            pop_id: popId,
+            pop_versao_id: pop.versao_ativa_id,
+            usuario_id: user.id,
+            acao: "etapa_adicionada",
+            alvo_tipo: "etapa",
+            alvo_id: etapaCriada?.id ?? null,
+            descricao: `${actorName} adicionou a ${etapaLabel(etapaNova)}`,
+            metadata: { ordem: etapaNova.ordem, titulo: etapaNova.titulo },
+          });
+        } else if (stepChanged(etapaAntiga, etapaNova)) {
+          // Registra edição de etapa sem detalhar diff campo a campo.
+          atividades.push({
+            empresa_id: pop.empresa_id,
+            pop_id: popId,
+            pop_versao_id: pop.versao_ativa_id,
+            usuario_id: user.id,
+            acao: "etapa_editada",
+            alvo_tipo: "etapa",
+            alvo_id: etapaAntiga.id,
+            descricao: `${actorName} editou a ${etapaLabel(etapaNova)}`,
+            metadata: { ordem: etapaNova.ordem, titulo: etapaNova.titulo },
+          });
+        }
+      }
+
       if (input.midias.length > 0) {
         const ordemToId = new Map<number, string>();
-        (etapasCriadas ?? []).forEach((e: { ordem: number; id: string }) => ordemToId.set(e.ordem, e.id));
+        createdEtapas.forEach((e) => ordemToId.set(e.ordem, e.id));
         const midiasInsert = input.midias.map((m) => ({
           pop_versao_id: pop.versao_ativa_id!,
           empresa_id: pop.empresa_id,
@@ -370,11 +549,71 @@ export function useUpdatePop() {
         if (merr) throw merr;
       }
 
+      const realMidiaId = (midia: MidiaInput) =>
+        midia.id && oldMidiasById.has(midia.id) ? midia.id : undefined;
+      const inputMidiaIds = new Set(input.midias.map(realMidiaId).filter(Boolean));
+      for (const midiaAntiga of oldMidias) {
+        const etapaAntiga = midiaAntiga.etapa_id ? oldEtapasById.get(midiaAntiga.etapa_id) : undefined;
+        if (!inputMidiaIds.has(midiaAntiga.id)) {
+          // Registra remoção de mídia quando ela some do formulário.
+          atividades.push({
+            empresa_id: pop.empresa_id,
+            pop_id: popId,
+            pop_versao_id: pop.versao_ativa_id,
+            usuario_id: user.id,
+            acao: "midia_removida",
+            alvo_tipo: "midia",
+            alvo_id: midiaAntiga.id,
+            descricao: `${actorName} removeu uma mídia${etapaAntiga ? ` na ${etapaLabel(etapaAntiga)}` : " do POP"}`,
+            metadata: { nome: midiaAntiga.nome, referencia: midiaAntiga.referencia },
+          });
+        }
+      }
+
+      for (const midiaNova of input.midias) {
+        const midiaIdReal = realMidiaId(midiaNova);
+        const midiaAntiga = midiaIdReal ? oldMidiasById.get(midiaIdReal) : undefined;
+        const etapaNova = midiaNova.etapa_ordem != null ? createdEtapaByOrdem.get(midiaNova.etapa_ordem) : undefined;
+        if (!midiaAntiga) {
+          // Registra adição de mídia identificada no formulário.
+          atividades.push({
+            empresa_id: pop.empresa_id,
+            pop_id: popId,
+            pop_versao_id: pop.versao_ativa_id,
+            usuario_id: user.id,
+            acao: "midia_adicionada",
+            alvo_tipo: "midia",
+            alvo_id: null,
+            descricao: `${actorName} adicionou uma mídia${etapaNova ? ` na ${etapaLabel(etapaNova)}` : " ao POP"}`,
+            metadata: { nome: midiaNova.nome, referencia: midiaNova.referencia },
+          });
+        } else if (mediaChanged(midiaAntiga, midiaNova)) {
+          // Registra alteração de mídia de forma resumida.
+          atividades.push({
+            empresa_id: pop.empresa_id,
+            pop_id: popId,
+            pop_versao_id: pop.versao_ativa_id,
+            usuario_id: user.id,
+            acao: "midia_alterada",
+            alvo_tipo: "midia",
+            alvo_id: midiaAntiga.id,
+            descricao: `${actorName} alterou uma mídia${etapaNova ? ` na ${etapaLabel(etapaNova)}` : " do POP"}`,
+            metadata: { nome: midiaNova.nome, referencia: midiaNova.referencia },
+          });
+        }
+      }
+
+      if (atividades.length > 0) {
+        const { error: atividadeError } = await supabase.from("pop_atividades").insert(atividades as never);
+        if (atividadeError) throw atividadeError;
+      }
+
       return popId;
     },
     onSuccess: (popId) => {
       qc.invalidateQueries({ queryKey: ["pops"] });
       qc.invalidateQueries({ queryKey: ["pop", popId] });
+      qc.invalidateQueries({ queryKey: ["pop-atividades", popId] });
     },
   });
 }

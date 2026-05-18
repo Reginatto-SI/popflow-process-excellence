@@ -35,7 +35,8 @@ import { renderMarkdownPreview } from "@/lib/markdownPreview";
 type TabKey = "informacoes" | "etapas" | "midias" | "revisao";
 
 interface StepItem {
-  uid: string; // local
+  id?: string; // ID real do banco; ausente para etapas locais ainda não persistidas.
+  uid: string; // controle local da UI
   ordem: number;
   titulo: string;
   descricao: string;
@@ -47,6 +48,7 @@ interface StepItem {
 }
 
 interface MidiaItem {
+  id?: string; // ID real do banco; ausente para mídias locais ainda não persistidas.
   uid: string;
   tipo: PopMidiaTipo;
   nome: string;
@@ -177,6 +179,7 @@ const PopCreateEdit = () => {
     setVisibilidade(popData.visibilidade);
     const etapas = popData.versao_ativa?.etapas ?? [];
     const loadedSteps = etapas.map((e) => ({
+      id: e.id,
       uid: e.id,
       ordem: e.ordem,
       titulo: e.titulo,
@@ -197,6 +200,7 @@ const PopCreateEdit = () => {
       // Normaliza referências antigas que podem conter espaços/caracteres inválidos
       const safeRef = slugifyRef(m.referencia) || slugifyRef(m.nome) || `midia-${m.ordem}`;
       return {
+        id: m.id,
         uid: m.id,
         tipo: m.tipo,
         nome: m.nome,
@@ -222,7 +226,7 @@ const PopCreateEdit = () => {
     [steps],
   );
 
-  const updateStep = (uidStep: string, field: keyof Omit<StepItem, "uid" | "ordem">, value: string) =>
+  const updateStep = (uidStep: string, field: keyof Omit<StepItem, "id" | "uid" | "ordem">, value: string) =>
     setSteps((prev) => prev.map((s) => (s.uid === uidStep ? { ...s, [field]: value } : s)));
 
   const moveStep = (index: number, direction: "up" | "down") => {
@@ -309,7 +313,7 @@ const PopCreateEdit = () => {
 
   const updateMidia = (
     uidM: string,
-    field: keyof Omit<MidiaItem, "uid" | "ordem">,
+    field: keyof Omit<MidiaItem, "id" | "uid" | "ordem">,
     value: string | number | null,
   ) =>
     setMidias((prev) => prev.map((m) => {
@@ -412,6 +416,7 @@ const PopCreateEdit = () => {
     titulo, descricao, departamento, responsavel, visibilidade,
     // Reordena pelo array atual para impedir payload com ordens duplicadas mesmo se o estado local ficar inconsistente.
     etapas: normalizeEtapasInputOrder(steps.map((s) => ({
+      id: s.id,
       ordem: s.ordem,
       titulo: s.titulo,
       descricao: s.descricao,
@@ -422,6 +427,7 @@ const PopCreateEdit = () => {
       checklist: checklistFromString(s.checklist),
     }))),
     midias: midias.map((m) => ({
+      id: m.id,
       etapa_ordem: m.etapaOrdem,
       referencia: m.referencia,
       nome: m.nome,

@@ -369,6 +369,77 @@ export type Database = {
         }
         Relationships: []
       }
+      pop_atividades: {
+        Row: {
+          acao: string
+          alvo_id: string | null
+          alvo_tipo: string
+          created_at: string
+          descricao: string
+          empresa_id: string
+          id: string
+          metadata: Json
+          pop_id: string
+          pop_versao_id: string | null
+          usuario_id: string
+        }
+        Insert: {
+          acao: string
+          alvo_id?: string | null
+          alvo_tipo: string
+          created_at?: string
+          descricao: string
+          empresa_id: string
+          id?: string
+          metadata?: Json
+          pop_id: string
+          pop_versao_id?: string | null
+          usuario_id: string
+        }
+        Update: {
+          acao?: string
+          alvo_id?: string | null
+          alvo_tipo?: string
+          created_at?: string
+          descricao?: string
+          empresa_id?: string
+          id?: string
+          metadata?: Json
+          pop_id?: string
+          pop_versao_id?: string | null
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pop_atividades_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pop_atividades_pop_id_fkey"
+            columns: ["pop_id"]
+            isOneToOne: false
+            referencedRelation: "pops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pop_atividades_pop_versao_id_fkey"
+            columns: ["pop_versao_id"]
+            isOneToOne: false
+            referencedRelation: "pop_versoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pop_atividades_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pop_etapas: {
         Row: {
           checklist: Json
