@@ -400,14 +400,10 @@ const FormFields = ({
     const value = String(form[field] ?? "");
     return (
       <div className="space-y-2 md:col-span-2">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <Label>{label}</Label>
-          <Button type="button" variant="outline" size="sm" className="h-8 gap-1" onClick={() => openInsertDialog(field)}>
-            <ImagePlus className="h-4 w-4" />
-            Inserir mídia
-          </Button>
-        </div>
-        {/* Editor compartilhado com POPs: mantém Markdown + @referencias e habilita Ctrl+V/drop de mídia sem criar fluxo paralelo. */}
+        <Label>{label}</Label>
+        {/* Editor compartilhado com POPs: Markdown + @referencias + Ctrl+V/drop.
+            O botão "Inserir mídia" fica APENAS dentro da toolbar do editor (onOpenInsertMedia)
+            para evitar duplicidade com o botão antes existente no header deste bloco. */}
         <MediaMentionTextarea
           ref={(node) => { textareaRefs.current.set(String(field), node); }}
           value={value}
@@ -421,9 +417,6 @@ const FormFields = ({
           onOpenInsertMedia={() => openInsertDialog(field)}
           onPreview={() => setPreviewField({ label, value })}
         />
-        <p className="text-xs text-muted-foreground">
-          Use <code>@referencia</code>, o botão “Inserir mídia” ou cole imagens com <kbd className="rounded border bg-background px-1">Ctrl</kbd>+<kbd className="rounded border bg-background px-1">V</kbd>.
-        </p>
       </div>
     );
   };
