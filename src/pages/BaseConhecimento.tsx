@@ -508,7 +508,13 @@ const FormFields = ({
 
               <div className="space-y-2">
                 <Label>Categoria</Label>
-                <Input value={form.categoria} onChange={(e) => onChange({ categoria: e.target.value })} placeholder="Ex.: Operações" />
+                {/* Combobox com criação rápida: usa as categorias já existentes em base_conhecimento
+                    da empresa atual (RLS) e permite criar nova categoria a partir do termo digitado. */}
+                <CategoriaCombobox
+                  value={form.categoria}
+                  onChange={(next) => onChange({ categoria: next })}
+                  options={categoriasExistentes}
+                />
               </div>
 
               <div className="space-y-2">
