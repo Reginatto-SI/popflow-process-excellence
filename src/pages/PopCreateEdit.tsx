@@ -1,4 +1,4 @@
-import { Component, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { Component, type ComponentType, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowDown, ArrowUp, Building2, CheckCircle2, ChevronDown, ChevronRight, Circle, Eye, FileText, Image, Info, ListChecks, Mic, Plus, Shield, Trash2, User, Video, X } from "lucide-react";
@@ -74,7 +74,7 @@ const tipoLabel: Record<PopMidiaTipo, string> = {
   documento: "Documento/PDF",
 };
 
-const tipoIcon: Record<PopMidiaTipo, React.ComponentType<{ className?: string }>> = {
+const tipoIcon: Record<PopMidiaTipo, ComponentType<{ className?: string }>> = {
   imagem: Image,
   audio: Mic,
   video: Video,
