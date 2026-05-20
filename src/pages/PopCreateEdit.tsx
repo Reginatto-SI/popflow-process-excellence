@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Component, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowDown, ArrowUp, Building2, CheckCircle2, ChevronDown, ChevronRight, Circle, Eye, FileText, Image, Info, ListChecks, Mic, Plus, Shield, Trash2, User, Video, X } from "lucide-react";
@@ -88,7 +88,94 @@ const acceptByTipo: Record<PopMidiaTipo, string> = {
   documento: "application/pdf,.pdf,.doc,.docx,.xls,.xlsx,.txt",
 };
 
-const uid = () => Math.random().toString(36).slice(2, 10);
+// Usa randomUUID quando disponível e mantém fallback seguro para ambientes legados/incompatíveis.
+const uid = () =>
+  globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+
+const POP_FORM_DRAFT_KEY = "pop:create-edit:draft:v2";
+
+interface PopDraftPayload {
+  version: 2;
+  updatedAt: string;
+  activeTab: TabKey;
+  steps: StepItem[];
+  midias: MidiaItem[];
+}
+
+const isValidStepItem = (value: unknown): value is StepItem => {
+  if (!value || typeof value !== "object") return false;
+  const step = value as Partial<StepItem>;
+  return (
+    typeof step.uid === "string" &&
+    step.uid.length > 0 &&
+    typeof step.ordem === "number" &&
+    Number.isFinite(step.ordem) &&
+    typeof step.titulo === "string" &&
+    typeof step.descricao === "string" &&
+    typeof step.tempo === "string" &&
+    typeof step.resultadoEsperado === "string" &&
+    typeof step.erroComum === "string" &&
+    typeof step.preRequisito === "string" &&
+    typeof step.checklist === "string"
+  );
+};
+
+const isValidMidiaItem = (value: unknown): value is MidiaItem => {
+  if (!value || typeof value !== "object") return false;
+  const midia = value as Partial<MidiaItem>;
+  return (
+    typeof midia.uid === "string" &&
+    midia.uid.length > 0 &&
+    typeof midia.nome === "string" &&
+    typeof midia.referencia === "string" &&
+    ["imagem", "audio", "video", "documento"].includes(midia.tipo as string) &&
+    typeof midia.ordem === "number" &&
+    Number.isFinite(midia.ordem)
+  );
+};
+
+class PopEditorErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error) {
+    console.error("Falha no editor de POP", error);
+  }
+
+  handleReload = () => window.location.reload();
+
+  handleClearDraft = () => {
+    try {
+      window.localStorage.removeItem(POP_FORM_DRAFT_KEY);
+    } catch {
+      // Storage bloqueado não deve impedir a recuperação da tela.
+    }
+    window.location.reload();
+  };
+
+  render() {
+    if (!this.state.hasError) return this.props.children;
+    return (
+      <AppLayout title="Editor de POP">
+        <Card className="mx-auto mt-8 max-w-2xl">
+          <CardHeader>
+            <CardTitle>Não foi possível continuar a edição do POP</CardTitle>
+            <CardDescription>
+              Detectamos um erro inesperado. Você pode recarregar a página ou limpar o estado temporário salvo no navegador.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            <Button onClick={this.handleReload}>Recarregar página</Button>
+            <Button variant="outline" onClick={this.handleClearDraft}>Limpar estado temporário</Button>
+          </CardContent>
+        </Card>
+      </AppLayout>
+    );
+  }
+}
 
 const MEDIA_REF_REGEX = /@([A-Za-zÀ-ÿ0-9_-]+)/g;
 
@@ -107,7 +194,7 @@ const slugifyRef = (s: string): string =>
     .replace(/^[-_]+|[-_]+$/g, "");
 
 const checklistFromString = (s: string): ChecklistItem[] =>
-  s.split(";").map((t) => t.trim()).filter(Boolean).map((texto) => ({ id: crypto.randomUUID(), texto }));
+  s.split(";").map((t) => t.trim()).filter(Boolean).map((texto) => ({ id: uid(), texto }));
 
 const checklistToString = (items: ChecklistItem[]): string => items.map((i) => i.texto).join("; ");
 
@@ -168,6 +255,25 @@ const PopCreateEdit = () => {
   const [previewMidia, setPreviewMidia] = useState<MidiaItem | null>(null);
   const saveInProgressRef = useRef(false);
   const [isSaving, setIsSaving] = useState(false);
+  useEffect(() => {
+    // Ajuste final: removemos persistência automática para evitar reaproveitar estado parcial entre novos POPs.
+    // Mantemos apenas limpeza defensiva de rascunhos legados/incompatíveis.
+    if (isEdit) return;
+    try {
+      const raw = window.localStorage.getItem(POP_FORM_DRAFT_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as Partial<PopDraftPayload>;
+      if (parsed.version !== 2) {
+        window.localStorage.removeItem(POP_FORM_DRAFT_KEY);
+      }
+    } catch {
+      try {
+        window.localStorage.removeItem(POP_FORM_DRAFT_KEY);
+      } catch {
+        // Storage bloqueado não deve quebrar o carregamento do editor.
+      }
+    }
+  }, [isEdit]);
 
   // Carregar dados em modo edição
   useEffect(() => {
@@ -268,8 +374,8 @@ const PopCreateEdit = () => {
   const removeStep = (uidStep: string) => {
     const next = steps.filter((s) => s.uid !== uidStep);
     next.forEach((s, i) => (s.ordem = i + 1));
-    setSteps(next);
-    if (expandedStepUid === uidStep) setExpandedStepUid(null);
+    setSteps(next.length > 0 ? next : [{ uid: uid(), ordem: 1, titulo: "Nova etapa 1", descricao: "", tempo: "5 min", resultadoEsperado: "", erroComum: "", preRequisito: "", checklist: "" }]);
+    if (expandedStepUid === uidStep) setExpandedStepUid(next[0]?.uid ?? null);
     setAdditionalInfoOpenByStep((prev) => {
       const nextOpen = { ...prev };
       delete nextOpen[uidStep];
@@ -493,6 +599,12 @@ const PopCreateEdit = () => {
         navigate(`/pops/${id}`);
       } else {
         const newId = await createPop.mutateAsync(buildPayload());
+        // Após criar novo POP, limpa rascunho para não contaminar o próximo cadastro.
+        try {
+          window.localStorage.removeItem(POP_FORM_DRAFT_KEY);
+        } catch {
+          // Storage bloqueado não deve impedir salvar.
+        }
         toast.success("POP criado");
         navigate(`/pops/${newId}`);
       }
@@ -1069,4 +1181,10 @@ const PopCreateEdit = () => {
   );
 };
 
-export default PopCreateEdit;
+const PopCreateEditPage = () => (
+  <PopEditorErrorBoundary>
+    <PopCreateEdit />
+  </PopEditorErrorBoundary>
+);
+
+export default PopCreateEditPage;
