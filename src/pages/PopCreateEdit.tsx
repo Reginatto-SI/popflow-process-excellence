@@ -1,5 +1,5 @@
 import { Component, type ComponentType, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useBlocker, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowDown, ArrowUp, Building2, CheckCircle2, ChevronDown, ChevronRight, Circle, Eye, FileText, Image, Info, ListChecks, Mic, Plus, Shield, Trash2, User, Video, X } from "lucide-react";
 
@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
   usePop,
@@ -254,7 +254,27 @@ const PopCreateEdit = () => {
   const [previewStepUid, setPreviewStepUid] = useState<string | null>(null);
   const [previewMidia, setPreviewMidia] = useState<MidiaItem | null>(null);
   const saveInProgressRef = useRef(false);
+  const allowNavigationRef = useRef(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+
+  const markDirty = () => setIsDirty(true);
+  const navigateAfterClean = (to: string) => {
+    // Navegações disparadas após salvar/descartar não devem ser bloqueadas pelo estado dirty recém-limpo.
+    allowNavigationRef.current = true;
+    navigate(to);
+  };
+
+  const requestNavigation = (to: string) => {
+    navigate(to);
+  };
+
+  const blocker = useBlocker(({ currentLocation, nextLocation }) => {
+    const currentPath = `${currentLocation.pathname}${currentLocation.search}${currentLocation.hash}`;
+    const nextPath = `${nextLocation.pathname}${nextLocation.search}${nextLocation.hash}`;
+    // Bloqueia somente saídas reais da rota atual quando há edição pendente; cliques no mesmo caminho não abrem modal.
+    return isDirty && !allowNavigationRef.current && currentPath !== nextPath;
+  });
   useEffect(() => {
     // Ajuste final: removemos persistência automática para evitar reaproveitar estado parcial entre novos POPs.
     // Mantemos apenas limpeza defensiva de rascunhos legados/incompatíveis.
@@ -274,6 +294,18 @@ const PopCreateEdit = () => {
       }
     }
   }, [isEdit]);
+
+  useEffect(() => {
+    if (!isDirty) return;
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
 
   // Carregar dados em modo edição
   useEffect(() => {
@@ -332,8 +364,10 @@ const PopCreateEdit = () => {
     [steps],
   );
 
-  const updateStep = (uidStep: string, field: keyof Omit<StepItem, "id" | "uid" | "ordem">, value: string) =>
+  const updateStep = (uidStep: string, field: keyof Omit<StepItem, "id" | "uid" | "ordem">, value: string) => {
     setSteps((prev) => prev.map((s) => (s.uid === uidStep ? { ...s, [field]: value } : s)));
+    markDirty();
+  };
 
   const moveStep = (index: number, direction: "up" | "down") => {
     const target = direction === "up" ? index - 1 : index + 1;
@@ -342,6 +376,7 @@ const PopCreateEdit = () => {
     [next[index], next[target]] = [next[target], next[index]];
     next.forEach((s, i) => (s.ordem = i + 1));
     setSteps(next);
+    markDirty();
   };
 
   const addStep = () => {
@@ -354,6 +389,7 @@ const PopCreateEdit = () => {
     setAdditionalInfoOpenByStep((prev) => ({ ...prev, [newUid]: false }));
     setExpandedStepUid(newUid);
     setAllStepsExpanded(false);
+    markDirty();
   };
 
   const addStepBelow = (index: number) => {
@@ -369,6 +405,7 @@ const PopCreateEdit = () => {
     setAdditionalInfoOpenByStep((prev) => ({ ...prev, [newUid]: false }));
     setExpandedStepUid(newUid);
     setAllStepsExpanded(false);
+    markDirty();
   };
 
   const removeStep = (uidStep: string) => {
@@ -381,6 +418,7 @@ const PopCreateEdit = () => {
       delete nextOpen[uidStep];
       return nextOpen;
     });
+    markDirty();
   };
 
   const toggleStep = (uidStep: string) => {
@@ -415,13 +453,14 @@ const PopCreateEdit = () => {
       refTouched: false,
     }]);
     setExpandedMidiaUid(newUid);
+    markDirty();
   };
 
   const updateMidia = (
     uidM: string,
     field: keyof Omit<MidiaItem, "id" | "uid" | "ordem">,
     value: string | number | null,
-  ) =>
+  ) => {
     setMidias((prev) => prev.map((m) => {
       if (m.uid !== uidM) return m;
       // Edição manual da referência → sanitiza e marca como tocada
@@ -437,6 +476,8 @@ const PopCreateEdit = () => {
       }
       return { ...m, [field]: value } as MidiaItem;
     }));
+    markDirty();
+  };
 
   const removeMidia = (uidM: string) => {
     const m = midias.find((x) => x.uid === uidM);
@@ -451,6 +492,7 @@ const PopCreateEdit = () => {
       }
     }
     setMidias((prev) => prev.filter((x) => x.uid !== uidM));
+    markDirty();
   };
 
   // ===== Inserção inline de mídia (a partir da aba Etapas) =====
@@ -501,6 +543,7 @@ const PopCreateEdit = () => {
     requestAnimationFrame(() => {
       textareaRefs.current.get(insertDialog.stepUid)?.insertReferenceAtCursor(m.referencia);
     });
+    markDirty();
   };
 
   /** Mídias usadas em uma etapa (referenciadas no texto OU vinculadas pela ordem). */
@@ -573,6 +616,7 @@ const PopCreateEdit = () => {
           ? { ...m, url: pub.publicUrl, nome: m.nome || file.name, uploading: false }
           : m,
       ));
+      markDirty();
       toast.success("Arquivo enviado");
     } catch (err) {
       // Falha: NÃO marca como válida — mantém url anterior (ou null) e remove flag
@@ -581,11 +625,11 @@ const PopCreateEdit = () => {
     }
   };
 
-  const handleSave = async () => {
-    if (saveInProgressRef.current) return;
+  const savePop = async (successNavigation?: string | null) => {
+    if (saveInProgressRef.current) return false;
     if (!titulo.trim()) {
       toast.error("Informe o título");
-      return;
+      return false;
     }
 
     // Bloqueio síncrono evita duplo clique antes do React atualizar o disabled do botão.
@@ -595,8 +639,9 @@ const PopCreateEdit = () => {
     try {
       if (isEdit && id) {
         await updatePop.mutateAsync({ popId: id, input: buildPayload() });
+        setIsDirty(false);
         toast.success("POP atualizado");
-        navigate(`/pops/${id}`);
+        if (successNavigation !== null) navigateAfterClean(successNavigation ?? `/pops/${id}`);
       } else {
         const newId = await createPop.mutateAsync(buildPayload());
         // Após criar novo POP, limpa rascunho para não contaminar o próximo cadastro.
@@ -605,18 +650,41 @@ const PopCreateEdit = () => {
         } catch {
           // Storage bloqueado não deve impedir salvar.
         }
+        setIsDirty(false);
         toast.success("POP criado");
-        navigate(`/pops/${newId}`);
+        if (successNavigation !== null) navigateAfterClean(successNavigation ?? `/pops/${newId}`);
       }
+      return true;
     } catch (err) {
       toast.error((err as Error).message);
+      return false;
     } finally {
       saveInProgressRef.current = false;
       setIsSaving(false);
     }
   };
 
-  const handleDiscard = () => navigate("/pops");
+  const handleSave = () => {
+    void savePop();
+  };
+
+  const handleDiscard = () => requestNavigation("/pops");
+
+  const handleContinueEditing = () => {
+    if (blocker.state === "blocked") blocker.reset();
+  };
+
+  const handleDiscardAndLeave = () => {
+    if (blocker.state !== "blocked") return;
+    setIsDirty(false);
+    blocker.proceed();
+  };
+
+  const handleSaveAndLeave = async () => {
+    if (blocker.state !== "blocked") return;
+    const saved = await savePop(null);
+    if (saved) blocker.proceed();
+  };
 
   if (isEdit && isLoading) {
     return <AppLayout title="Editando POP"><p className="p-6 text-sm text-muted-foreground">Carregando...</p></AppLayout>;
@@ -684,15 +752,15 @@ const PopCreateEdit = () => {
                   <div className="space-y-2 md:col-span-2">
                     {/* Ajuste visual: labels com ícones pequenos melhoram escaneabilidade sem alterar campos ou validações. */}
                     <Label className="flex items-center gap-2 font-semibold text-foreground"><FileText className="h-4 w-4 text-muted-foreground" />Título do POP</Label>
-                    <Input value={titulo} onChange={(e) => setTitulo(e.target.value)} />
+                    <Input value={titulo} onChange={(e) => { setTitulo(e.target.value); markDirty(); }} />
                   </div>
                   <div className="space-y-2 md:col-span-2">
                     <Label className="flex items-center gap-2 font-semibold text-foreground"><ListChecks className="h-4 w-4 text-muted-foreground" />Descrição detalhada</Label>
-                    <Textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} rows={4} />
+                    <Textarea value={descricao} onChange={(e) => { setDescricao(e.target.value); markDirty(); }} rows={4} />
                   </div>
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2 font-semibold text-foreground"><Building2 className="h-4 w-4 text-muted-foreground" />Departamento</Label>
-                    <Input value={departamento} onChange={(e) => setDepartamento(e.target.value)} />
+                    <Input value={departamento} onChange={(e) => { setDepartamento(e.target.value); markDirty(); }} />
                   </div>
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2 font-semibold text-foreground"><User className="h-4 w-4 text-muted-foreground" />Responsável</Label>
@@ -701,12 +769,13 @@ const PopCreateEdit = () => {
                       onChange={(e) => {
                         responsavelEditadoPeloUsuarioRef.current = true;
                         setResponsavel(e.target.value);
+                        markDirty();
                       }}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2 font-semibold text-foreground"><Eye className="h-4 w-4 text-muted-foreground" />Visibilidade</Label>
-                    <Select value={visibilidade} onValueChange={(v) => setVisibilidade(v as PopVisibilidade)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="privado">Privado</SelectItem><SelectItem value="empresa">Empresa</SelectItem></SelectContent></Select>
+                    <Select value={visibilidade} onValueChange={(v) => { setVisibilidade(v as PopVisibilidade); markDirty(); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="privado">Privado</SelectItem><SelectItem value="empresa">Empresa</SelectItem></SelectContent></Select>
                   </div>
                 </CardContent>
               </Card>
@@ -1177,6 +1246,28 @@ const PopCreateEdit = () => {
         onConfirm={handleInsertMediaConfirm}
         slugify={slugifyRef}
       />
+
+      <Dialog open={blocker.state === "blocked"} onOpenChange={(open) => { if (!open && !isSaving) handleContinueEditing(); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Existem alterações não salvas</DialogTitle>
+            <DialogDescription>
+              Você fez alterações neste POP que ainda não foram salvas. Deseja salvar antes de sair?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={handleDiscardAndLeave} disabled={isSaving}>
+              Sair sem salvar
+            </Button>
+            <Button variant="secondary" onClick={handleContinueEditing} disabled={isSaving}>
+              Continuar editando
+            </Button>
+            <Button onClick={handleSaveAndLeave} disabled={isSaving || createPop.isPending || updatePop.isPending}>
+              {isSaving ? "Salvando..." : "Salvar e sair"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 };
