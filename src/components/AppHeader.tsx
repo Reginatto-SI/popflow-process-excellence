@@ -69,9 +69,10 @@ export function AppHeader({ title }: AppHeaderProps) {
             <div className="text-xs text-muted-foreground capitalize">{perfil?.role ?? ""}</div>
           </div>
         </div>
-        <Button variant="ghost" size="icon" aria-label="Sair" onClick={signOut}>
+        <Button variant="ghost" size="icon" aria-label="Sair" onClick={() => navigate("/auth?logout=1")}>
           <LogOut className="h-4 w-4" />
         </Button>
+
       </div>
     </header>
   );
