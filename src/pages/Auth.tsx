@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Lock, Mail, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,14 +11,27 @@ import { toast } from "sonner";
 
 export default function Auth() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { session, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (!loading && session) navigate("/", { replace: true });
-  }, [session, loading, navigate]);
+    if (loading) return;
+    // Logout solicitado via navegação interna (?logout=1) — passa pelo router para que blockers possam interceptar.
+    if (searchParams.get("logout") === "1") {
+      if (session) {
+        void supabase.auth.signOut();
+        return;
+      }
+      // Sem sessão: limpa o parâmetro para evitar loops.
+      setSearchParams({}, { replace: true });
+      return;
+    }
+    if (session) navigate("/", { replace: true });
+  }, [session, loading, navigate, searchParams, setSearchParams]);
+
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
