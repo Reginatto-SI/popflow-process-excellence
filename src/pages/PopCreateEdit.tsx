@@ -691,14 +691,20 @@ const PopCreateEdit = () => {
   const handleDiscardAndLeave = () => {
     if (blocker.state !== "blocked") return;
     setIsDirty(false);
+    isDirtyRef.current = false;
+    bypassBlockerRef.current = true;
     blocker.proceed();
   };
 
   const handleSaveAndLeave = async () => {
     if (blocker.state !== "blocked") return;
     const saved = await savePop(null);
-    if (saved) blocker.proceed();
+    if (saved) {
+      bypassBlockerRef.current = true;
+      blocker.proceed();
+    }
   };
+
 
   if (isEdit && isLoading) {
     return <AppLayout title="Editando POP"><p className="p-6 text-sm text-muted-foreground">Carregando...</p></AppLayout>;
