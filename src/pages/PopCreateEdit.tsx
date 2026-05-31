@@ -254,14 +254,34 @@ const PopCreateEdit = () => {
   const [previewStepUid, setPreviewStepUid] = useState<string | null>(null);
   const [previewMidia, setPreviewMidia] = useState<MidiaItem | null>(null);
   const saveInProgressRef = useRef(false);
-  const allowNavigationRef = useRef(false);
+  const bypassBlockerRef = useRef(false);
+  const isDirtyRef = useRef(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
 
-  const markDirty = () => setIsDirty(true);
+  useEffect(() => {
+    isDirtyRef.current = isDirty;
+  }, [isDirty]);
+
+  const markDirty = () => {
+    if (!isDirtyRef.current) setIsDirty(true);
+    isDirtyRef.current = true;
+  };
+
+  const blocker = useBlocker(({ currentLocation, nextLocation }) => {
+    const currentPath = `${currentLocation.pathname}${currentLocation.search}${currentLocation.hash}`;
+    const nextPath = `${nextLocation.pathname}${nextLocation.search}${nextLocation.hash}`;
+    if (currentPath === nextPath) return false;
+    if (bypassBlockerRef.current) {
+      // Consome o bypass apenas para esta transição.
+      bypassBlockerRef.current = false;
+      return false;
+    }
+    return isDirtyRef.current;
+  });
+
   const navigateAfterClean = (to: string) => {
-    // Navegações disparadas após salvar/descartar não devem ser bloqueadas pelo estado dirty recém-limpo.
-    allowNavigationRef.current = true;
+    bypassBlockerRef.current = true;
     navigate(to);
   };
 
@@ -269,12 +289,6 @@ const PopCreateEdit = () => {
     navigate(to);
   };
 
-  const blocker = useBlocker(({ currentLocation, nextLocation }) => {
-    const currentPath = `${currentLocation.pathname}${currentLocation.search}${currentLocation.hash}`;
-    const nextPath = `${nextLocation.pathname}${nextLocation.search}${nextLocation.hash}`;
-    // Bloqueia somente saídas reais da rota atual quando há edição pendente; cliques no mesmo caminho não abrem modal.
-    return isDirty && !allowNavigationRef.current && currentPath !== nextPath;
-  });
   useEffect(() => {
     // Ajuste final: removemos persistência automática para evitar reaproveitar estado parcial entre novos POPs.
     // Mantemos apenas limpeza defensiva de rascunhos legados/incompatíveis.
