@@ -204,6 +204,44 @@ export type Database = {
           },
         ]
       }
+      departamentos: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          empresa_id: string
+          id: string
+          nome: string
+          nome_normalizado: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          empresa_id: string
+          id?: string
+          nome: string
+          nome_normalizado?: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          empresa_id?: string
+          id?: string
+          nome?: string
+          nome_normalizado?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "departamentos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       developer_logs: {
         Row: {
           acao: string
@@ -627,6 +665,7 @@ export type Database = {
           arquivado: boolean
           created_at: string
           departamento: string
+          departamento_id: string | null
           descricao: string
           empresa_id: string
           id: string
@@ -641,6 +680,7 @@ export type Database = {
           arquivado?: boolean
           created_at?: string
           departamento?: string
+          departamento_id?: string | null
           descricao?: string
           empresa_id: string
           id?: string
@@ -655,6 +695,7 @@ export type Database = {
           arquivado?: boolean
           created_at?: string
           departamento?: string
+          departamento_id?: string | null
           descricao?: string
           empresa_id?: string
           id?: string
@@ -666,6 +707,13 @@ export type Database = {
           visibilidade?: Database["public"]["Enums"]["pop_visibilidade"]
         }
         Relationships: [
+          {
+            foreignKeyName: "pops_departamento_id_fkey"
+            columns: ["departamento_id"]
+            isOneToOne: false
+            referencedRelation: "departamentos"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "pops_empresa_id_fkey"
             columns: ["empresa_id"]
