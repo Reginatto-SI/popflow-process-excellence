@@ -122,7 +122,7 @@ export function usePops() {
     queryFn: async (): Promise<PopWithVersion[]> => {
       const { data, error } = await supabase
         .from("pops")
-        .select("*, departamento_ref:departamentos(id, nome, ativo), owner:usuarios!pops_owner_id_fkey(id, nome, email), versao_ativa:pop_versoes!pops_versao_ativa_fk(id, pop_id, numero, status, created_at)")
+        .select("*, departamento_ref:departamentos!pops_departamento_id_fkey(id, nome, ativo), owner:usuarios!pops_owner_id_fkey(id, nome, email), versao_ativa:pop_versoes!pops_versao_ativa_fk(id, pop_id, numero, status, created_at)")
         .eq("arquivado", false)
         .order("updated_at", { ascending: false });
       if (error) throw error;
@@ -140,7 +140,7 @@ export function usePop(id: string | undefined) {
       if (!id) return null;
       const { data: pop, error } = await supabase
         .from("pops")
-        .select("*, departamento_ref:departamentos(id, nome, ativo), owner:usuarios!pops_owner_id_fkey(id, nome, email)")
+        .select("*, departamento_ref:departamentos!pops_departamento_id_fkey(id, nome, ativo), owner:usuarios!pops_owner_id_fkey(id, nome, email)")
         .eq("id", id)
         .maybeSingle();
       if (error) throw error;

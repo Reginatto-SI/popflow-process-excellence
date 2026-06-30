@@ -107,7 +107,7 @@ const friendlyDeleteError = (error: unknown) => {
 const PopsList = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { data: pops = [], isLoading, isError } = usePops();
+  const { data: pops = [], isLoading, isError, error: popsError } = usePops();
   const { user } = useAuth();
   const deletePop = useDeletePop();
   const { data: departamentosCadastrados = [] } = useDepartamentos();
@@ -197,6 +197,12 @@ const PopsList = () => {
     // Query string vinda das ações rápidas aplica o contexto inicial da listagem de POPs.
     setStatusFiltro(isPopStatus(statusParam) ? statusParam : "todos");
   }, [statusParam]);
+  useEffect(() => {
+    if (!popsError) return;
+    // Diagnóstico temporário: mantém a mensagem amigável na UI e expõe o erro real da query no console.
+    console.error("Falha ao carregar POPs", popsError);
+  }, [popsError]);
+
 
   const limparFiltros = () => {
     setBusca("");
