@@ -51,6 +51,9 @@ export interface PopRow {
   titulo: string;
   descricao: string;
   departamento: string;
+  departamento_id: string | null;
+  departamento_ref?: { id: string; nome: string; ativo: boolean } | null;
+  owner?: { id: string; nome: string; email: string } | null;
   responsavel: string;
   visibilidade: PopVisibilidade;
   owner_id: string;
@@ -119,7 +122,7 @@ export function usePops() {
     queryFn: async (): Promise<PopWithVersion[]> => {
       const { data, error } = await supabase
         .from("pops")
-        .select("*, versao_ativa:pop_versoes!pops_versao_ativa_fk(id, pop_id, numero, status, created_at)")
+        .select("*, departamento_ref:departamentos!pops_departamento_id_fkey(id, nome, ativo), owner:usuarios!pops_owner_id_fkey(id, nome, email), versao_ativa:pop_versoes!pops_versao_ativa_fk(id, pop_id, numero, status, created_at)")
         .eq("arquivado", false)
         .order("updated_at", { ascending: false });
       if (error) throw error;
@@ -137,7 +140,7 @@ export function usePop(id: string | undefined) {
       if (!id) return null;
       const { data: pop, error } = await supabase
         .from("pops")
-        .select("*")
+        .select("*, departamento_ref:departamentos!pops_departamento_id_fkey(id, nome, ativo), owner:usuarios!pops_owner_id_fkey(id, nome, email)")
         .eq("id", id)
         .maybeSingle();
       if (error) throw error;
@@ -216,6 +219,7 @@ export interface CreatePopInput {
   titulo: string;
   descricao: string;
   departamento: string;
+  departamento_id: string | null;
   responsavel: string;
   visibilidade: PopVisibilidade;
   etapas: EtapaInput[];
@@ -282,6 +286,7 @@ export function useCreatePop() {
           titulo: input.titulo,
           descricao: input.descricao,
           departamento: input.departamento,
+          departamento_id: input.departamento_id,
           responsavel: input.responsavel,
           visibilidade: input.visibilidade,
         })
@@ -446,6 +451,7 @@ export function useUpdatePop() {
         pop.titulo !== input.titulo
         || pop.descricao !== input.descricao
         || pop.departamento !== input.departamento
+        || pop.departamento_id !== input.departamento_id
         || pop.responsavel !== input.responsavel
         || pop.visibilidade !== input.visibilidade
       ) {
@@ -742,6 +748,7 @@ export function useUpdatePop() {
           titulo: input.titulo,
           descricao: input.descricao,
           departamento: input.departamento,
+          departamento_id: input.departamento_id,
           responsavel: input.responsavel,
           visibilidade: input.visibilidade,
         })
