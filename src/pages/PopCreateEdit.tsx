@@ -25,6 +25,7 @@ import {
   type PopMidiaTipo,
   type PopVisibilidade,
 } from "@/hooks/usePops";
+import { useDepartamentos } from "@/hooks/useDepartamentos";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { MediaMentionTextarea, type MediaMentionTextareaHandle } from "@/components/MediaMentionTextarea";
@@ -240,8 +241,9 @@ const PopCreateEdit = () => {
   const [activeTab, setActiveTab] = useState<TabKey>("informacoes");
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
-  const [departamento, setDepartamento] = useState("");
+  const [departamentoId, setDepartamentoId] = useState("");
   const [responsavel, setResponsavel] = useState("");
+  const { data: departamentos = [], isLoading: isLoadingDepartamentos } = useDepartamentos();
   const [visibilidade, setVisibilidade] = useState<PopVisibilidade>("empresa");
   const [steps, setSteps] = useState<StepItem[]>([
     { uid: uid(), ordem: 1, titulo: "Nova etapa 1", descricao: "", tempo: "5 min", resultadoEsperado: "", erroComum: "", preRequisito: "", checklist: "" },
@@ -326,7 +328,7 @@ const PopCreateEdit = () => {
     if (!isEdit || !popData) return;
     setTitulo(popData.titulo);
     setDescricao(popData.descricao);
-    setDepartamento(popData.departamento);
+    setDepartamentoId(popData.departamento_id ?? "");
     setResponsavel(popData.responsavel);
     setVisibilidade(popData.visibilidade);
     const etapas = popData.versao_ativa?.etapas ?? [];
@@ -576,7 +578,7 @@ const PopCreateEdit = () => {
 
 
   const buildPayload = (): CreatePopInput => ({
-    titulo, descricao, departamento, responsavel, visibilidade,
+    titulo, descricao, departamento_id: departamentoId, departamento: departamentos.find((d) => d.id === departamentoId)?.nome ?? popData?.departamento ?? "", responsavel, visibilidade,
     // Reordena pelo array atual para impedir payload com ordens duplicadas mesmo se o estado local ficar inconsistente.
     etapas: normalizeEtapasInputOrder(steps.map((s) => ({
       id: s.id,
@@ -643,6 +645,10 @@ const PopCreateEdit = () => {
     if (saveInProgressRef.current) return false;
     if (!titulo.trim()) {
       toast.error("Informe o título");
+      return false;
+    }
+    if (!departamentoId) {
+      toast.error("Selecione um departamento cadastrado.");
       return false;
     }
 
@@ -780,7 +786,21 @@ const PopCreateEdit = () => {
                   </div>
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2 font-semibold text-foreground"><Building2 className="h-4 w-4 text-muted-foreground" />Departamento</Label>
-                    <Input value={departamento} onChange={(e) => { setDepartamento(e.target.value); markDirty(); }} />
+                    <Select value={departamentoId} onValueChange={(value) => { setDepartamentoId(value); markDirty(); }}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={isLoadingDepartamentos ? "Carregando departamentos..." : "Selecione um departamento"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {departamentos.map((departamento) => (
+                          <SelectItem key={departamento.id} value={departamento.id}>
+                            {departamento.nome}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {!isLoadingDepartamentos && departamentos.length === 0 && (
+                      <p className="text-xs text-muted-foreground">Nenhum departamento ativo cadastrado. Cadastre em Configurações &gt; Departamentos antes de salvar.</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2 font-semibold text-foreground"><User className="h-4 w-4 text-muted-foreground" />Responsável</Label>
@@ -1164,7 +1184,7 @@ const PopCreateEdit = () => {
                   <CardHeader><CardTitle>Revisão Final</CardTitle></CardHeader>
                   <CardContent className="space-y-3 text-sm">
                     <p><strong>Título:</strong> {titulo}</p>
-                    <p><strong>Departamento:</strong> {departamento}</p>
+                    <p><strong>Departamento:</strong> {departamentos.find((d) => d.id === departamentoId)?.nome ?? popData?.departamento ?? "—"}</p>
                     <p><strong>Responsável:</strong> {responsavel}</p>
                     <p><strong>Visibilidade:</strong> {visibilidade === "privado" ? "Privado" : "Empresa"}</p>
                     <p><strong>Etapas:</strong> {steps.length}</p>

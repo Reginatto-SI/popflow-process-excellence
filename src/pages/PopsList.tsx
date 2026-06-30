@@ -56,6 +56,8 @@ import {
   type PopStatus,
   type PopVisibilidade,
 } from "@/hooks/usePops";
+import { useDepartamentos } from "@/hooks/useDepartamentos";
+import { useAuth } from "@/hooks/useAuth";
 
 const statusLabel: Record<PopStatus, string> = {
   rascunho: "Rascunho",
@@ -106,7 +108,9 @@ const PopsList = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { data: pops = [], isLoading, isError } = usePops();
+  const { user } = useAuth();
   const deletePop = useDeletePop();
+  const { data: departamentosCadastrados = [] } = useDepartamentos();
 
   const statusParam = searchParams.get("status");
   const acaoParam = searchParams.get("acao");
@@ -118,6 +122,7 @@ const PopsList = () => {
     statusFiltroInicial,
   );
   const [departamentoFiltro, setDepartamentoFiltro] = useState("todos");
+  const [criadorFiltro, setCriadorFiltro] = useState("todos");
   const [visibilidadeFiltro, setVisibilidadeFiltro] = useState<
     "todas" | PopVisibilidade
   >("todas");
@@ -131,13 +136,25 @@ const PopsList = () => {
   );
   const deleteImpact = usePopDeleteImpact(popToDeleteId);
 
-  const departamentos = useMemo(
-    () => [
-      "todos",
-      ...Array.from(new Set(pops.map((p) => p.departamento).filter(Boolean))),
-    ],
-    [pops],
-  );
+  const departamentos = useMemo(() => ["todos", ...departamentosCadastrados], [departamentosCadastrados]);
+
+  const criadores = useMemo(() => {
+    const byId = new Map<string, { id: string; nome: string; email: string }>();
+    for (const pop of pops) {
+      if (!pop.owner_id || byId.has(pop.owner_id)) continue;
+      byId.set(pop.owner_id, {
+        id: pop.owner_id,
+        nome: pop.owner?.nome ?? "",
+        email: pop.owner?.email ?? "",
+      });
+    }
+    return Array.from(byId.values()).sort((a, b) =>
+      (a.nome || a.email || a.id).localeCompare(b.nome || b.email || b.id),
+    );
+  }, [pops]);
+
+  const criadorLabel = (pop: { owner?: { nome: string; email: string } | null }) =>
+    pop.owner?.nome?.trim() || pop.owner?.email?.trim() || "Criador não identificado";
 
   const popsFiltrados = useMemo(() => {
     const termo = busca.trim().toLowerCase();
@@ -146,18 +163,21 @@ const PopsList = () => {
       const bateBusca =
         termo.length === 0 ||
         pop.titulo.toLowerCase().includes(termo) ||
-        pop.departamento.toLowerCase().includes(termo) ||
+        (pop.departamento_ref?.nome ?? pop.departamento).toLowerCase().includes(termo) ||
         pop.responsavel.toLowerCase().includes(termo);
       const bateStatus = statusFiltro === "todos" || status === statusFiltro;
       const bateDepartamento =
         departamentoFiltro === "todos" ||
-        pop.departamento === departamentoFiltro;
+        pop.departamento_id === departamentoFiltro;
+      const bateCriador =
+        criadorFiltro === "todos" ||
+        (criadorFiltro === "meus" ? pop.owner_id === user?.id : pop.owner_id === criadorFiltro);
       const bateVisibilidade =
         visibilidadeFiltro === "todas" ||
         pop.visibilidade === visibilidadeFiltro;
-      return bateBusca && bateStatus && bateDepartamento && bateVisibilidade;
+      return bateBusca && bateStatus && bateDepartamento && bateCriador && bateVisibilidade;
     });
-  }, [pops, busca, statusFiltro, departamentoFiltro, visibilidadeFiltro]);
+  }, [pops, busca, statusFiltro, departamentoFiltro, criadorFiltro, visibilidadeFiltro, user?.id]);
   const popSummary = useMemo(() => {
     return pops.reduce(
       (summary, pop) => {
@@ -182,6 +202,7 @@ const PopsList = () => {
     setBusca("");
     setStatusFiltro("todos");
     setDepartamentoFiltro("todos");
+    setCriadorFiltro("todos");
     setVisibilidadeFiltro("todas");
     // Remove query strings das ações rápidas para manter a listagem em estado neutro.
     navigate("/pops", { replace: true });
@@ -235,7 +256,7 @@ const PopsList = () => {
               </Button>
             </div>
 
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-2">
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               <div className="space-y-2">
                 <Label className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Search className="h-3.5 w-3.5" />
@@ -288,9 +309,33 @@ const PopsList = () => {
                     <SelectValue placeholder="Departamento" />
                   </SelectTrigger>
                   <SelectContent>
-                    {departamentos.map((d) => (
-                      <SelectItem key={d} value={d}>
-                        {d === "todos" ? "Todos os departamentos" : d}
+                    {departamentos.map((departamento) => (
+                      <SelectItem key={departamento === "todos" ? departamento : departamento.id} value={departamento === "todos" ? departamento : departamento.id}>
+                        {departamento === "todos" ? "Todos os departamentos" : departamento.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <UserRound className="h-3.5 w-3.5" />
+                  Criador
+                </Label>
+                <Select
+                  value={criadorFiltro}
+                  onValueChange={setCriadorFiltro}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Criador" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos os criadores</SelectItem>
+                    <SelectItem value="meus">Meus POPs</SelectItem>
+                    {criadores.map((criador) => (
+                      <SelectItem key={criador.id} value={criador.id}>
+                        {criador.nome || criador.email || "Criador não identificado"}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -479,11 +524,15 @@ const PopsList = () => {
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
                             <span className="inline-flex items-center gap-1.5">
                               <Building2 className="h-3.5 w-3.5" />
-                              {pop.departamento || "Sem departamento"}
+                              {(pop.departamento_ref?.nome ?? pop.departamento) || "Sem departamento"}
                             </span>
                             <span className="inline-flex items-center gap-1.5">
                               <UserRound className="h-3.5 w-3.5" />
-                              {pop.responsavel || "Sem responsável"}
+                              Responsável: {pop.responsavel || "Sem responsável"}
+                            </span>
+                            <span className="inline-flex items-center gap-1.5">
+                              <UserRound className="h-3.5 w-3.5" />
+                              Criado por: {criadorLabel(pop)}
                             </span>
                             {pop.versao_ativa?.numero && (
                               <span className="inline-flex items-center gap-1.5">

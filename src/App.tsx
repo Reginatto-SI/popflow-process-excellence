@@ -14,6 +14,7 @@ import PopCreateEdit from "./pages/PopCreateEdit.tsx";
 import PopDetail from "./pages/PopDetail.tsx";
 import PopExecution from "./pages/PopExecution.tsx";
 import BaseConhecimento from "./pages/BaseConhecimento.tsx";
+import ConfiguracoesDepartamentos from "./pages/ConfiguracoesDepartamentos.tsx";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const router = createBrowserRouter(
       <Route path="/pops/:id/editar" element={<RequireAuth><PopCreateEdit /></RequireAuth>} />
       <Route path="/execucao/:id" element={<RequireAuth><PopExecution /></RequireAuth>} />
       <Route path="/base-conhecimento" element={<RequireAuth><BaseConhecimento /></RequireAuth>} />
+      <Route path="/configuracoes" element={<RequireAuth><ConfiguracoesDepartamentos /></RequireAuth>} />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </>,
