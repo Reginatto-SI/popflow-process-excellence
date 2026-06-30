@@ -115,6 +115,60 @@ export const dedupePopEtapas = (etapas: PopEtapaRow[]) => {
   });
 };
 
+
+const fetchPopOwnersById = async (ownerIds: string[]) => {
+  const ids = Array.from(new Set(ownerIds.filter(Boolean)));
+  if (ids.length === 0) return new Map<string, NonNullable<PopRow["owner"]>>();
+
+  const { data, error } = await supabase
+    .from("usuarios")
+    .select("id, nome, email")
+    .in("id", ids);
+
+  if (error) {
+    // Log completo para diagnosticar RLS/relacionamento sem derrubar a lista de POPs.
+    console.error("[usePops] Falha ao carregar criadores dos POPs", error);
+    return new Map<string, NonNullable<PopRow["owner"]>>();
+  }
+
+  return new Map(
+    ((data ?? []) as Array<NonNullable<PopRow["owner"]>>).map((owner) => [owner.id, owner]),
+  );
+};
+
+const fetchPopDepartamentosById = async (departamentoIds: string[]) => {
+  const ids = Array.from(new Set(departamentoIds.filter(Boolean)));
+  if (ids.length === 0) return new Map<string, NonNullable<PopRow["departamento_ref"]>>();
+
+  const { data, error } = await supabase
+    .from("departamentos")
+    .select("id, nome, ativo")
+    .in("id", ids);
+
+  if (error) {
+    // Log completo para diagnosticar RLS/schema cache sem derrubar a lista de POPs.
+    console.error("[usePops] Falha ao carregar departamentos dos POPs", error);
+    return new Map<string, NonNullable<PopRow["departamento_ref"]>>();
+  }
+
+  return new Map(
+    ((data ?? []) as Array<NonNullable<PopRow["departamento_ref"]>>).map((departamento) => [departamento.id, departamento]),
+  );
+};
+
+const hydratePopRelations = async <T extends PopRow>(pops: T[]): Promise<T[]> => {
+  const [departamentosById, ownersById] = await Promise.all([
+    fetchPopDepartamentosById(pops.map((pop) => pop.departamento_id ?? "")),
+    fetchPopOwnersById(pops.map((pop) => pop.owner_id)),
+  ]);
+
+  return pops.map((pop) => ({
+    ...pop,
+    departamento_ref: pop.departamento_id ? departamentosById.get(pop.departamento_id) ?? null : null,
+    owner: ownersById.get(pop.owner_id) ?? null,
+  }));
+};
+
 // ===== Lista =====
 export function usePops() {
   return useQuery({
@@ -122,11 +176,15 @@ export function usePops() {
     queryFn: async (): Promise<PopWithVersion[]> => {
       const { data, error } = await supabase
         .from("pops")
-        .select("*, departamento_ref:departamentos!pops_departamento_id_fkey(id, nome, ativo), owner:usuarios!pops_owner_id_fkey(id, nome, email), versao_ativa:pop_versoes!pops_versao_ativa_fk(id, pop_id, numero, status, created_at)")
+        .select("*, versao_ativa:pop_versoes!pops_versao_ativa_fk(id, pop_id, numero, status, created_at)")
         .eq("arquivado", false)
         .order("updated_at", { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as unknown as PopWithVersion[];
+      if (error) {
+        console.error("[usePops] Falha ao carregar POPs", error);
+        throw error;
+      }
+
+      return hydratePopRelations((data ?? []) as unknown as PopWithVersion[]);
     },
   });
 }
@@ -140,11 +198,16 @@ export function usePop(id: string | undefined) {
       if (!id) return null;
       const { data: pop, error } = await supabase
         .from("pops")
-        .select("*, departamento_ref:departamentos!pops_departamento_id_fkey(id, nome, ativo), owner:usuarios!pops_owner_id_fkey(id, nome, email)")
+        .select("*")
         .eq("id", id)
         .maybeSingle();
-      if (error) throw error;
+      if (error) {
+        console.error("[usePop] Falha ao carregar POP", error);
+        throw error;
+      }
       if (!pop) return null;
+
+      const [popWithRelations] = await hydratePopRelations([pop as unknown as PopRow]);
 
       let versao_ativa: PopFull["versao_ativa"] = null;
       if (pop.versao_ativa_id) {
@@ -169,7 +232,7 @@ export function usePop(id: string | undefined) {
         }
       }
 
-      return { ...(pop as PopRow), versao_ativa };
+      return { ...popWithRelations, versao_ativa };
     },
   });
 }
